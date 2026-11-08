@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.delphi.delphitools.ui.theme.CanonText
@@ -24,6 +25,7 @@ import com.delphi.delphitools.ui.theme.LocalDelphiColours
 /**
  * The output block of a text tool: a heading, the text (selectable) or [empty] when blank,
  * and Share beside a large Copy. [busy] keeps the empty row away while output is still to come.
+ * [styled], the output with its marks, shows in place of [text].
  * [extra] rows sit between the text and the actions.
  */
 @Composable
@@ -36,6 +38,7 @@ fun CanonTextOutput(
     busy: Boolean = false,
     empty: String = "None",
     extra: @Composable ColumnScope.() -> Unit = {},
+    styled: AnnotatedString? = null,
 ) {
     val c = LocalDelphiColours.current
     val context = LocalContext.current
@@ -46,7 +49,7 @@ fun CanonTextOutput(
         if (!blank) {
             SelectionContainer {
                 Text(
-                    text,
+                    styled ?: AnnotatedString(text),
                     style = style,
                     color = c.foreground,
                     modifier = Modifier

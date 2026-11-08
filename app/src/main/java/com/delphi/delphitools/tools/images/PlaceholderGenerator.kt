@@ -17,6 +17,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
@@ -290,13 +291,13 @@ fun PlaceholderGenerator(model: PlaceholderGeneratorModel = viewModel()) {
             CanonGrid {
                 CanonButton(
                     "Copy Data URI",
-                    Modifier.weight(1f),
+                    Modifier.weight(1f).fillMaxHeight(),
                     icon = Icons.Rounded.ContentCopy,
                     flashesCopied = true,
                 ) { model.copyDataUri(context) }
                 CanonButton(
                     "Export",
-                    Modifier.weight(1f),
+                    Modifier.weight(1f).fillMaxHeight(),
                     kind = CanonButtonKind.Primary,
                     icon = Icons.Outlined.Share,
                     oversized = true,

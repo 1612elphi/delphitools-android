@@ -84,11 +84,17 @@ object ImageCompressEngine {
         }
     }.getOrNull()
 
-    private fun encodeHeic(image: Bitmap, quality: Int, scratch: File): ByteArray {
+    // tiled encodes vary run to run (cbr on pixel 8); one frame is repeatable, tiles only past the encoder's size limit
+    private fun encodeHeic(image: Bitmap, quality: Int, scratch: File): ByteArray =
+        runCatching { encodeHeic(image, quality, scratch, grid = false) }.getOrNull()
+            ?: encodeHeic(image, quality, scratch, grid = true)
+
+    private fun encodeHeic(image: Bitmap, quality: Int, scratch: File, grid: Boolean): ByteArray {
         val file = File.createTempFile("compress", ".heic", scratch)
         try {
             HeifWriter.Builder(file.path, image.width, image.height, HeifWriter.INPUT_MODE_BITMAP)
                 .setQuality(quality)
+                .setGridEnabled(grid)
                 .build()
                 .use { writer ->
                     writer.start()

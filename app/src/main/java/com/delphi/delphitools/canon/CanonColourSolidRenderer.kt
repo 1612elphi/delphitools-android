@@ -1,6 +1,5 @@
 package com.delphi.delphitools.canon
 
-import android.graphics.Bitmap
 import android.opengl.EGL14
 import android.opengl.EGLConfig
 import android.opengl.EGLContext
@@ -9,62 +8,72 @@ import android.opengl.EGLExt
 import android.opengl.EGLSurface
 import android.opengl.GLES30
 import android.util.Log
+import android.view.Surface
 import kotlinx.coroutines.asCoroutineDispatcher
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.util.concurrent.Executors
 
-/**
- * Draws the colour solid with the web port's WebGL2 fragment shader (delphicanon
- * src/lib/colour-solid/shader.ts) on GLES 3 into an offscreen pbuffer, read back into a
- * bitmap that Compose draws under the markers. Every call runs on [dispatcher].
- */
+// delphicanon colour-solid/shader.ts port
 internal class ColourSolidRenderer {
     private val executor = Executors.newSingleThreadExecutor()
     val dispatcher = executor.asCoroutineDispatcher()
 
     private var display: EGLDisplay = EGL14.EGL_NO_DISPLAY
     private var context: EGLContext = EGL14.EGL_NO_CONTEXT
-    private var surface: EGLSurface = EGL14.EGL_NO_SURFACE
+    // current without a window
+    private var spare: EGLSurface = EGL14.EGL_NO_SURFACE
+    private var window: EGLSurface = EGL14.EGL_NO_SURFACE
     private var config: EGLConfig? = null
     private var program = 0
     private var slot = -1
     private var failed = false
-    private var width = 0
-    private var height = 0
-    private var pixels: ByteBuffer? = null
-    // the bitmap Compose draws is never the one being written
-    private val bitmaps = ArrayDeque<Bitmap>()
 
-    /** Null when GLES 3 or the shader is unavailable. */
-    fun draw(uniforms: FloatArray, w: Int, h: Int): Bitmap? {
-        if (failed || w <= 0 || h <= 0) return null
+    // false: no gles 3
+    fun attach(surface: Surface): Boolean {
+        if (failed) return false
         if (display == EGL14.EGL_NO_DISPLAY && !setUp()) {
             failed = true
-            return null
+            return false
         }
-        if (w != width || h != height) resize(w, h)
+        detach()
+        window = EGL14.eglCreateWindowSurface(display, config, surface, intArrayOf(EGL14.EGL_NONE), 0)
+        if (window == EGL14.EGL_NO_SURFACE) return fail("eglCreateWindowSurface")
+        EGL14.eglMakeCurrent(display, window, window, context)
+        return true
+    }
+
+    // safe after release
+    fun detachLater() {
+        if (!executor.isShutdown) executor.execute { detach() }
+    }
+
+    fun detach() {
+        if (window == EGL14.EGL_NO_SURFACE) return
+        EGL14.eglMakeCurrent(display, spare, spare, context)
+        EGL14.eglDestroySurface(display, window)
+        window = EGL14.EGL_NO_SURFACE
+    }
+
+    // opaque: behind the window
+    fun draw(uniforms: FloatArray, w: Int, h: Int, background: Int) {
+        if (window == EGL14.EGL_NO_SURFACE || w <= 0 || h <= 0) return
         GLES30.glViewport(0, 0, w, h)
-        GLES30.glClearColor(0f, 0f, 0f, 0f)
+        GLES30.glClearColor((background shr 16 and 0xFF) / 255f, (background shr 8 and 0xFF) / 255f, (background and 0xFF) / 255f, 1f)
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT)
+        // premultiplied shader output
+        GLES30.glEnable(GLES30.GL_BLEND)
+        GLES30.glBlendFunc(GLES30.GL_ONE, GLES30.GL_ONE_MINUS_SRC_ALPHA)
         GLES30.glUseProgram(program)
         GLES30.glUniform4fv(slot, UNIFORM_COUNT, uniforms, 0)
         GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, 3)
-        val buffer = pixels!!
-        buffer.rewind()
-        GLES30.glReadPixels(0, 0, w, h, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, buffer)
-        val bitmap = bitmaps.removeFirst()
-        buffer.rewind()
-        bitmap.copyPixelsFromBuffer(buffer)
-        bitmaps.addLast(bitmap)
-        return bitmap
+        EGL14.eglSwapBuffers(display, window)
     }
 
     fun release() {
         executor.execute {
             if (display != EGL14.EGL_NO_DISPLAY) {
+                detach()
                 EGL14.eglMakeCurrent(display, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT)
-                if (surface != EGL14.EGL_NO_SURFACE) EGL14.eglDestroySurface(display, surface)
+                if (spare != EGL14.EGL_NO_SURFACE) EGL14.eglDestroySurface(display, spare)
                 EGL14.eglDestroyContext(display, context)
                 EGL14.eglTerminate(display)
             }
@@ -80,7 +89,7 @@ internal class ColourSolidRenderer {
         val attributes = intArrayOf(
             EGL14.EGL_RED_SIZE, 8, EGL14.EGL_GREEN_SIZE, 8, EGL14.EGL_BLUE_SIZE, 8, EGL14.EGL_ALPHA_SIZE, 8,
             EGL14.EGL_RENDERABLE_TYPE, EGLExt.EGL_OPENGL_ES3_BIT_KHR,
-            EGL14.EGL_SURFACE_TYPE, EGL14.EGL_PBUFFER_BIT,
+            EGL14.EGL_SURFACE_TYPE, EGL14.EGL_WINDOW_BIT or EGL14.EGL_PBUFFER_BIT,
             EGL14.EGL_NONE,
         )
         val configs = arrayOfNulls<EGLConfig>(1)
@@ -89,7 +98,8 @@ internal class ColourSolidRenderer {
         config = configs[0]
         context = EGL14.eglCreateContext(display, config, EGL14.EGL_NO_CONTEXT, intArrayOf(EGL14.EGL_CONTEXT_CLIENT_VERSION, 3, EGL14.EGL_NONE), 0)
         if (context == EGL14.EGL_NO_CONTEXT) return fail("eglCreateContext")
-        resize(1, 1)
+        spare = EGL14.eglCreatePbufferSurface(display, config, intArrayOf(EGL14.EGL_WIDTH, 1, EGL14.EGL_HEIGHT, 1, EGL14.EGL_NONE), 0)
+        EGL14.eglMakeCurrent(display, spare, spare, context)
         program = GLES30.glCreateProgram()
         for ((type, source) in listOf(GLES30.GL_VERTEX_SHADER to VERTEX, GLES30.GL_FRAGMENT_SHADER to FRAGMENT)) {
             val shader = GLES30.glCreateShader(type)
@@ -107,18 +117,6 @@ internal class ColourSolidRenderer {
         if (linked[0] == 0) return fail("link: " + GLES30.glGetProgramInfoLog(program))
         slot = GLES30.glGetUniformLocation(program, "u")
         return true
-    }
-
-    private fun resize(w: Int, h: Int) {
-        EGL14.eglMakeCurrent(display, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT)
-        if (surface != EGL14.EGL_NO_SURFACE) EGL14.eglDestroySurface(display, surface)
-        surface = EGL14.eglCreatePbufferSurface(display, config, intArrayOf(EGL14.EGL_WIDTH, w, EGL14.EGL_HEIGHT, h, EGL14.EGL_NONE), 0)
-        EGL14.eglMakeCurrent(display, surface, surface, context)
-        width = w
-        height = h
-        pixels = ByteBuffer.allocateDirect(w * h * 4).order(ByteOrder.nativeOrder())
-        bitmaps.clear()
-        repeat(3) { bitmaps.addLast(Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)) }
     }
 
     private fun fail(what: String): Boolean {
@@ -327,8 +325,6 @@ float slicesHit(vec3 o, vec3 d) {
 
 void main() {
   vec2 ndc = gl_FragCoord.xy / U_PARAMS.zw * 2.0 - 1.0;
-  // glReadPixels returns the bottom row first; the bitmap's first row is its top
-  ndc.y = -ndc.y;
   vec3 origin = U_CAMERA.xyz;
   vec3 ray = normalize(U_FORWARD.xyz + ndc.x * U_RIGHT.w * U_RIGHT.xyz + ndc.y * U_UP.w * U_UP.xyz);
 

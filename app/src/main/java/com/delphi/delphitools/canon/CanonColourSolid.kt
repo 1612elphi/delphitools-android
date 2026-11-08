@@ -3,6 +3,7 @@ package com.delphi.delphitools.canon
 import android.provider.Settings
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.AndroidExternalSurface
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -24,11 +25,9 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.FilterQuality
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.onSizeChanged
@@ -54,7 +53,6 @@ import com.delphi.delphitools.colour.takesBlackInk
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.flow.conflate
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlin.math.PI
@@ -657,23 +655,11 @@ fun CanonColourSolid(
     val context = LocalContext.current
     val measurer = rememberTextMeasurer()
     val renderer = remember { ColourSolidRenderer() }
-    var image by remember { mutableStateOf<ImageBitmap?>(null) }
     val wire by animateFloatAsState(if (state.showsWhole) 1f else 0f, tween(200))
     DisposableEffect(renderer) { onDispose { renderer.release() } }
     LaunchedEffect(state) {
         state.density = density
         state.animates = Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
-    }
-    LaunchedEffect(state, renderer) {
-        snapshotFlow {
-            state.version
-            val scale = min(1f, RENDER_SIDE / max(state.width, state.height))
-            val w = (state.width * scale).roundToInt()
-            val h = (state.height * scale).roundToInt()
-            if (w > 0 && h > 0) Triple(state.uniforms(w, h), w, h) else null
-        }.filterNotNull().conflate().collect { (uniforms, w, h) ->
-            withContext(renderer.dispatcher) { renderer.draw(uniforms, w, h) }?.let { image = it.asImageBitmap() }
-        }
     }
     LaunchedEffect(state) {
         while (true) {
@@ -689,6 +675,8 @@ fun CanonColourSolid(
     }
     val colour = state.colour
     val axis = state.sliceAxis ?: 0
+    // state.width isn't observable
+    var viewSize by remember { mutableStateOf(IntSize.Zero) }
     Box(
         modifier
             .clipToBounds()
@@ -696,6 +684,7 @@ fun CanonColourSolid(
                 state.width = it.width.toFloat()
                 state.height = it.height.toFloat()
                 state.version++
+                viewSize = it
             }
             .pointerInput(state) { solidGestures(state, density) }
             .semantics {
@@ -708,11 +697,30 @@ fun CanonColourSolid(
                 }
             },
     ) {
+        val scale = min(1f, RENDER_SIDE / max(viewSize.width, viewSize.height))
+        val buffer = IntSize((viewSize.width * scale).roundToInt(), (viewSize.height * scale).roundToInt())
+        if (buffer.width > 0 && buffer.height > 0) {
+            // caps shader resolution
+            val background = c.muted.toArgb()
+            AndroidExternalSurface(Modifier.fillMaxSize(), surfaceSize = buffer) {
+                onSurface { surface, _, _ ->
+                    surface.onDestroyed { renderer.detachLater() }
+                    if (!withContext(renderer.dispatcher) { renderer.attach(surface) }) return@onSurface
+                    // block outlives resizes
+                    snapshotFlow {
+                        state.version
+                        val live = min(1f, RENDER_SIDE / max(state.width, state.height))
+                        val w = (state.width * live).roundToInt()
+                        val h = (state.height * live).roundToInt()
+                        Triple(state.uniforms(w, h), w, h)
+                    }.conflate().collect { (uniforms, w, h) ->
+                        withContext(renderer.dispatcher) { renderer.draw(uniforms, w, h, background) }
+                    }
+                }
+            }
+        }
         Canvas(Modifier.fillMaxSize()) {
             state.version
-            image?.let {
-                drawImage(it, dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()), filterQuality = FilterQuality.Low)
-            }
             val overlays = state.overlays()
             if (wire > 0f) {
                 val ink = c.foreground.copy(alpha = 0.3f * wire)

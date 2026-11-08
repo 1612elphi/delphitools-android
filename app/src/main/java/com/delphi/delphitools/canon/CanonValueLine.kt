@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.text.modifiers.TextAutoSizeLayoutScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.Icon
@@ -34,7 +35,9 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.delphi.delphitools.ui.theme.CanonText
@@ -102,10 +105,13 @@ fun CanonValueLine(
                     style = style,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    autoSize = TextAutoSize.StepBased(
-                        minFontSize = style.fontSize * if (layout == CanonValueLayout.Numbered) 0.6f else 0.7f,
-                        maxFontSize = style.fontSize,
-                        stepSize = 0.5.sp,
+                    autoSize = FitFirst(
+                        style.fontSize,
+                        TextAutoSize.StepBased(
+                            minFontSize = style.fontSize * if (layout == CanonValueLayout.Numbered) 0.6f else 0.7f,
+                            maxFontSize = style.fontSize,
+                            stepSize = 0.5.sp,
+                        ),
                     ),
                 )
             }
@@ -164,5 +170,13 @@ fun CanonValueLine(
             else -> valueText(Modifier.weight(1f))
         }
         glyph()
+    }
+}
+
+// avoids stepbased relayouts
+private data class FitFirst(val full: TextUnit, val search: TextAutoSize) : TextAutoSize {
+    override fun TextAutoSizeLayoutScope.getFontSize(constraints: Constraints, text: AnnotatedString): TextUnit {
+        if (!performLayout(constraints, text, full).hasVisualOverflow) return full
+        return with(search) { getFontSize(constraints, text) }
     }
 }

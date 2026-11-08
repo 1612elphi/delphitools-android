@@ -116,6 +116,10 @@ import com.delphi.delphitools.tools.turbonerd.BrailleConverter
 import com.delphi.delphitools.tools.turbonerd.IPATranscriber
 import com.delphi.delphitools.tools.turbonerd.MorseCode
 import com.delphi.delphitools.tools.turbonerd.NATOPhonetic
+import com.delphi.delphitools.tools.audiovideo.SubtitleConverter
+import com.delphi.delphitools.tools.devtools.Encoder
+import com.delphi.delphitools.tools.devtools.JwtDecoder
+import com.delphi.delphitools.tools.devtools.UuidGenerator
 import com.delphi.delphitools.gallery.galleryPages
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -482,6 +486,10 @@ private fun ToolPage(tool: Tool) {
             "morse-code" -> MorseCode()
             "nato-phonetic" -> NATOPhonetic()
             "ipa-transcriber" -> IPATranscriber()
+            "subtitle-converter" -> SubtitleConverter()
+            "uuid-genny" -> UuidGenerator()
+            "jwt-decoder" -> JwtDecoder()
+            "encoder" -> Encoder()
             canonGallery.id -> if (galleryPages.isEmpty()) EmptyPage(tool) else GalleryPages()
             else -> EmptyPage(tool)
         }

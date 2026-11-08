@@ -100,6 +100,7 @@ import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.LocalCanonPatternSymbol
 import com.delphi.delphitools.canon.canonClickable
 import com.delphi.delphitools.tools.colour.ColourAtlas
+import com.delphi.delphitools.tools.colour.ColourBlindnessSimulator
 import com.delphi.delphitools.tools.colour.HarmonyGenerator
 import com.delphi.delphitools.tools.colour.TailwindShades
 import com.delphi.delphitools.tools.images.ImageCompressor
@@ -456,6 +457,7 @@ private fun ToolPage(tool: Tool) {
             "colour-atlas" -> ColourAtlas()
             "harmony-genny" -> HarmonyGenerator()
             "tailwind-shades" -> TailwindShades()
+            "colorblind-sim" -> ColourBlindnessSimulator()
             canonGallery.id -> if (galleryPages.isEmpty()) EmptyPage(tool) else GalleryPages()
             else -> EmptyPage(tool)
         }

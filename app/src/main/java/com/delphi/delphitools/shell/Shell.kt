@@ -102,6 +102,7 @@ import com.delphi.delphitools.canon.canonClickable
 import com.delphi.delphitools.tools.images.ImageCompressor
 import com.delphi.delphitools.tools.turbonerd.BrailleConverter
 import com.delphi.delphitools.tools.turbonerd.MorseCode
+import com.delphi.delphitools.tools.turbonerd.NATOPhonetic
 import com.delphi.delphitools.gallery.galleryPages
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -454,6 +455,7 @@ private fun ToolPage(tool: Tool) {
             "image-compressor" -> ImageCompressor()
             "braille-converter" -> BrailleConverter()
             "morse-code" -> MorseCode()
+            "nato-phonetic" -> NATOPhonetic()
             canonGallery.id -> if (galleryPages.isEmpty()) EmptyPage(tool) else GalleryPages()
             else -> EmptyPage(tool)
         }

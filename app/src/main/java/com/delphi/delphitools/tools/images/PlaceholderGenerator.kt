@@ -350,6 +350,7 @@ private fun PlaceholderPicture(spec: PlaceholderSpec, background: Rgb, ink: Rgb)
                 constraints.maxHeight - padding,
             )
             val target = canonDimensionSheet(Size(spec.width.toFloat(), spec.height.toFloat()), area, rightToLeft)
+            // ponytail: one spring for resize and recolour, no reduce-motion check; split them if the 0.25 s recolour matters
             val sheet by animateRectAsState(target, spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow), label = "sheet")
             val fill by animateColorAsState(background.toCanonColor(), spring(dampingRatio = 0.82f), label = "fill")
             val (across, down) = canonDimensionLines(sheet, rightToLeft)

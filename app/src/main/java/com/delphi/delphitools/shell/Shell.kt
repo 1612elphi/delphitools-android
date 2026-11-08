@@ -101,6 +101,7 @@ import com.delphi.delphitools.canon.LocalCanonPatternSymbol
 import com.delphi.delphitools.canon.canonClickable
 import com.delphi.delphitools.tools.audiovideo.TimecodeCalc
 import com.delphi.delphitools.tools.images.ImageCompressor
+import com.delphi.delphitools.tools.images.ImageSplitter
 import com.delphi.delphitools.tools.images.PasteImage
 import com.delphi.delphitools.tools.images.PlaceholderGenerator
 import com.delphi.delphitools.gallery.galleryPages
@@ -456,6 +457,7 @@ private fun ToolPage(tool: Tool) {
             "timecode-calc" -> TimecodeCalc()
             "placeholder-genny" -> PlaceholderGenerator()
             "paste-image" -> PasteImage()
+            "image-splitter" -> ImageSplitter()
             canonGallery.id -> if (galleryPages.isEmpty()) EmptyPage(tool) else GalleryPages()
             else -> EmptyPage(tool)
         }

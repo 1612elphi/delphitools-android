@@ -100,6 +100,7 @@ import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.LocalCanonPatternSymbol
 import com.delphi.delphitools.canon.canonClickable
 import com.delphi.delphitools.tools.images.ImageCompressor
+import com.delphi.delphitools.tools.print.PaperSizes
 import com.delphi.delphitools.tools.typography.PxToRem
 import com.delphi.delphitools.gallery.galleryPages
 import com.delphi.delphitools.ui.theme.CanonText
@@ -452,6 +453,7 @@ private fun ToolPage(tool: Tool) {
         when (tool.id) {
             "image-compressor" -> ImageCompressor()
             "px-to-rem" -> PxToRem()
+            "paper-sizes" -> PaperSizes()
             canonGallery.id -> if (galleryPages.isEmpty()) EmptyPage(tool) else GalleryPages()
             else -> EmptyPage(tool)
         }

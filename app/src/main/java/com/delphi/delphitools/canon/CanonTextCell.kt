@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -29,6 +30,8 @@ fun CanonTextCell(
     placeholder: String = "",
     width: Dp = 180.dp,
     enabled: Boolean = true,
+    textStyle: TextStyle = CanonText.body,
+    keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
 ) {
     val c = LocalDelphiColours.current
     val focusManager = LocalFocusManager.current
@@ -37,9 +40,9 @@ fun CanonTextCell(
         onValueChange = onValueChange,
         enabled = enabled,
         singleLine = true,
-        textStyle = CanonText.body.copy(color = c.foreground),
+        textStyle = textStyle.copy(color = c.foreground),
         cursorBrush = SolidColor(c.primary),
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardOptions = keyboardOptions,
         keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
         modifier = modifier
             .width(width)
@@ -47,7 +50,7 @@ fun CanonTextCell(
             .background(c.card),
         decorationBox = { field ->
             Box(Modifier.padding(horizontal = 10.dp), contentAlignment = Alignment.CenterStart) {
-                if (value.isEmpty()) Text(placeholder, style = CanonText.body, color = c.mutedForeground, maxLines = 1)
+                if (value.isEmpty()) Text(placeholder, style = textStyle, color = c.mutedForeground, maxLines = 1)
                 field()
             }
         },

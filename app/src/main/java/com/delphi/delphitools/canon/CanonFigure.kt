@@ -30,13 +30,15 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.delphi.delphitools.ui.theme.DelphiFont
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
+import kotlin.math.roundToInt
+import com.delphi.delphitools.ui.theme.DelphiMono
 
 private const val ROLL = 350
 private val rollEasing = CubicBezierEasing(0.2f, 0.9f, 0.3f, 1f)
@@ -81,14 +83,17 @@ fun CanonFigure(
         roll.text = text
     }
     val up = roll.up
-    val figure = TextStyle(fontFamily = FontFamily.Monospace, fontSize = size, fontWeight = FontWeight.Bold, color = ink, fontFeatureSettings = TABULAR)
+    val figure = TextStyle(fontFamily = DelphiMono, fontSize = size, fontWeight = FontWeight.Bold, color = ink, fontFeatureSettings = TABULAR)
+    val measurer = rememberTextMeasurer()
+    val baseline = remember(figure.fontSize) { measurer.measure("0", figure).firstBaseline.roundToInt() }
     // ponytail: no shrink to fit (iOS scales down to half before truncating)
     Row(
         modifier.clearAndSetSemantics { contentDescription = text + unit },
         horizontalArrangement = Arrangement.spacedBy(with(LocalDensity.current) { (size * 0.08f).toDp() }),
         verticalAlignment = Alignment.Bottom,
     ) {
-        Row(Modifier.alignByBaseline()) {
+        // animatedcontent drops baseline mid-roll
+        Row(Modifier.alignBy { baseline }) {
             text.forEachIndexed { index, char ->
                 // ponytail: a new leading place appears without rolling in
                 key(text.length - index) {

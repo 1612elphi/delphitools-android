@@ -46,7 +46,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -60,6 +59,7 @@ import com.delphi.delphitools.canon.canonClickable
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.launch
+import com.delphi.delphitools.ui.theme.DelphiMono
 
 // dt-ios Shell/HomeWeb.swift HomeMetrics, WebToolCell and HomeFavouriteCard
 private val columnWidth = 195.dp
@@ -144,7 +144,7 @@ private fun SectionHeading(title: String, count: Int, onJump: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(title.uppercase(), style = CanonText.captionSemibold.copy(letterSpacing = 1.4.sp), color = c.foreground)
-        Text("$count", style = CanonText.caption.copy(fontFamily = FontFamily.Monospace), color = c.mutedForeground)
+        Text("$count", style = CanonText.caption.copy(fontFamily = DelphiMono), color = c.mutedForeground)
         Icon(Icons.AutoMirrored.Outlined.ArrowForwardIos, contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(10.dp))
     }
 }

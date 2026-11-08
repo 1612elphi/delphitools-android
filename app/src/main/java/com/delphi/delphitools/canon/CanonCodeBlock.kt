@@ -39,7 +39,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,8 +46,9 @@ import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import com.delphi.delphitools.ui.theme.DelphiDark
 import kotlinx.coroutines.delay
+import com.delphi.delphitools.ui.theme.DelphiMono
 
-private val codeText = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.sp, lineHeight = 17.sp)
+private val codeText = TextStyle(fontFamily = DelphiMono, fontSize = 12.sp, lineHeight = 17.sp)
 
 // --canon-copied in delphicanon tokens.css, light and dark
 private val copiedLight = Color(0xFF34C759)

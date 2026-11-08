@@ -31,7 +31,6 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
@@ -40,10 +39,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
+import com.delphi.delphitools.ui.theme.DelphiMono
 
 // delphiMono(14) and delphiMono(11, semibold)
-internal val CanonValueMono = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 14.sp)
-private val indexMono = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+internal val CanonValueMono = TextStyle(fontFamily = DelphiMono, fontSize = 14.sp)
+private val indexMono = TextStyle(fontFamily = DelphiMono, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
 
 enum class CanonValueLayout {
     /** The name in a column labelWidth wide, the value on one line beside it, shrinking to fit. */

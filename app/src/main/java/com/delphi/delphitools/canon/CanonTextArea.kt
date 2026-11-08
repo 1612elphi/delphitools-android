@@ -15,14 +15,14 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
+import com.delphi.delphitools.ui.theme.DelphiMono
 
-private val areaText = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp, lineHeight = 18.sp)
+private val areaText = TextStyle(fontFamily = DelphiMono, fontSize = 13.sp, lineHeight = 18.sp)
 
 /**
  * Multi-line monospaced input, wrapping, a fixed height with its own scrolling.

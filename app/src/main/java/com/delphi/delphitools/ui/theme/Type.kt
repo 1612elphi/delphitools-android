@@ -30,6 +30,13 @@ val DelphiFont = FontFamily(
     flex(FontWeight.Bold),
 )
 
+// iosevka 34.9.1, latin subset
+val DelphiMono = FontFamily(
+    Font(R.font.iosevka_regular, FontWeight.Normal),
+    Font(R.font.iosevka_semibold, FontWeight.SemiBold),
+    Font(R.font.iosevka_bold, FontWeight.Bold),
+)
+
 private val base = Typography()
 
 val Typography = Typography(

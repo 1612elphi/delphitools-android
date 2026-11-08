@@ -21,7 +21,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -30,8 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
+import com.delphi.delphitools.ui.theme.DelphiMono
 
-private val bigNumber = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 36.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+private val bigNumber = TextStyle(fontFamily = DelphiMono, fontSize = 36.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
 
 /**
  * A tool's main number, large and centred over its unit, between step buttons that repeat while held.

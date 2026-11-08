@@ -26,7 +26,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
@@ -35,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.delphi.delphitools.ui.theme.DelphiFont
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlin.math.roundToInt
+import com.delphi.delphitools.ui.theme.DelphiMono
 
 sealed interface CanonCanvasSize {
     /** Band height, frame included. */
@@ -78,7 +78,7 @@ internal val LocalCanvasPlacement = compositionLocalOf { CanvasPlacement() }
 internal object LayoutText {
     val title2 = TextStyle(fontFamily = DelphiFont, fontSize = 20.sp, fontWeight = FontWeight.Bold)
     val title3 = TextStyle(fontFamily = DelphiFont, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-    val mono = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+    val mono = TextStyle(fontFamily = DelphiMono, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
 }
 
 private val patternTile = 92.dp

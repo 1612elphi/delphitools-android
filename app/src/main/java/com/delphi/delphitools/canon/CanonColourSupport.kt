@@ -5,7 +5,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.delphi.delphitools.colour.ColourNames
@@ -13,12 +12,13 @@ import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.colour.toArgb
 import com.delphi.delphitools.ui.theme.DelphiFont
 import org.json.JSONArray
+import com.delphi.delphitools.ui.theme.DelphiMono
 
 internal fun Rgb.toCanonColor() = Color(toArgb())
 
-/** Text styles of the colour components missing from CanonText; mono is delphiMono, the system monospace. */
+/** Text styles of the colour components missing from CanonText; mono is delphiMono. */
 internal object CanonColourType {
-    private fun mono(size: Int) = TextStyle(fontFamily = FontFamily.Monospace, fontSize = size.sp)
+    private fun mono(size: Int) = TextStyle(fontFamily = DelphiMono, fontSize = size.sp)
 
     val mono11 = mono(11)
     val mono12 = mono(12)

@@ -52,7 +52,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -69,6 +68,7 @@ import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.delay
 import org.json.JSONObject
+import com.delphi.delphitools.ui.theme.DelphiMono
 
 // dt-ios Favour.feedbackURL
 private const val FEEDBACK = "mailto:tools+ios@rmv.fyi"
@@ -274,7 +274,7 @@ private fun Portrait(name: String, modifier: Modifier) {
                 Image(painterResource(art), null, Modifier.fillMaxSize())
             } else {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(shown, style = CanonText.caption.copy(fontFamily = FontFamily.Monospace), color = c.mutedForeground)
+                    Text(shown, style = CanonText.caption.copy(fontFamily = DelphiMono), color = c.mutedForeground)
                 }
             }
         }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,6 +36,7 @@ import kotlin.math.roundToLong
 /**
  * Two bars to one scale: the original's bytes over the result's, the saving as a figure.
  * Sizes of zero or less are unknown; the result bar and its figure turn red when it grew.
+ * [isWorking] shows a loader beside the figure.
  */
 @Composable
 fun CanonCompressionScale(
@@ -42,6 +44,7 @@ fun CanonCompressionScale(
     after: Long,
     format: String,
     modifier: Modifier = Modifier,
+    isWorking: Boolean = false,
 ) {
     val c = LocalDelphiColours.current
     val context = LocalContext.current
@@ -57,14 +60,14 @@ fun CanonCompressionScale(
             .padding(CanonMetrics.panelPadding),
         verticalArrangement = Arrangement.Bottom,
     ) {
-        // ponytail: no working state; iOS shows a CanonLoader beside the figure while encoding
-        CanonFigure(
-            figure,
+        Row(
             Modifier.align(Alignment.End).padding(bottom = 10.dp),
-            unit = if (known) "%" else "",
-            size = 40.sp,
-            colour = tone,
-        )
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (isWorking) CanonLoader(cell = 5.dp, gap = 1.dp, colour = c.mutedForeground)
+            CanonFigure(figure, unit = if (known) "%" else "", size = 40.sp, colour = tone)
+        }
         ScaleBar("Original", if (before > 0) bytes(before) else null, 1f, c.muted, c.foreground)
         Box(Modifier.height(CanonMetrics.hairline))
         ScaleBar(

@@ -1,7 +1,6 @@
 package com.delphi.delphitools.shell
 
 import android.animation.ValueAnimator
-import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -71,7 +70,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.FileProvider
+import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -401,13 +400,7 @@ private fun shareIntent(context: Context, path: String, filename: String): Inten
     } catch (_: IOException) {
         return null
     }
-    val uri = FileProvider.getUriForFile(context, "${context.packageName}.stickers", file)
-    val send = Intent(Intent.ACTION_SEND)
-        .setType("image/png")
-        .putExtra(Intent.EXTRA_STREAM, uri)
-        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    send.clipData = ClipData.newRawUri(filename, uri)
-    return Intent.createChooser(send, null)
+    return FileExport.chooser(context, file, "image/png")
 }
 
 /** A 2D affine map: x' = a x + c y + tx, y' = b x + d y + ty. */

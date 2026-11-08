@@ -11,7 +11,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.delphi.delphitools.canon.CanonGrid
 import com.delphi.delphitools.canon.CanonHeading
@@ -23,6 +22,7 @@ import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.math.CanonMathKey
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
+import com.delphi.delphitools.ui.theme.DelphiMono
 
 @Composable
 fun MathGallery() {
@@ -35,7 +35,7 @@ fun MathGallery() {
             CanonMathField(text, { text = it }, handle = handle)
             Text(
                 text,
-                style = CanonText.subheadline.copy(fontFamily = FontFamily.Monospace),
+                style = CanonText.subheadline.copy(fontFamily = DelphiMono),
                 color = c.mutedForeground,
                 modifier = Modifier
                     .fillMaxWidth()

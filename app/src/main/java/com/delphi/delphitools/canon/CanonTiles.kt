@@ -18,19 +18,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
+import com.delphi.delphitools.ui.theme.DelphiMono
 
 /** A read-only value; [level], 0 to 1, draws a bar along the tile's bottom edge. */
 @Immutable
 data class CanonTile(val label: String, val value: String, val level: Float? = null)
 
 private val tileWidth = 168.dp
-private val tileValue = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+private val tileValue = TextStyle(fontFamily = DelphiMono, fontSize = 13.sp)
 
 @Composable
 private fun Tile(tile: CanonTile, modifier: Modifier) {

@@ -37,8 +37,8 @@ fun CanonTextOutput(
     style: TextStyle = CanonText.body,
     busy: Boolean = false,
     empty: String = "None",
-    extra: @Composable ColumnScope.() -> Unit = {},
     styled: AnnotatedString? = null,
+    extra: @Composable ColumnScope.() -> Unit = {},
 ) {
     val c = LocalDelphiColours.current
     val context = LocalContext.current

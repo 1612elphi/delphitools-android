@@ -101,6 +101,7 @@ import com.delphi.delphitools.canon.LocalCanonPatternSymbol
 import com.delphi.delphitools.canon.canonClickable
 import com.delphi.delphitools.tools.audiovideo.TimecodeCalc
 import com.delphi.delphitools.tools.images.ImageCompressor
+import com.delphi.delphitools.tools.images.PlaceholderGenerator
 import com.delphi.delphitools.gallery.galleryPages
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -452,6 +453,7 @@ private fun ToolPage(tool: Tool) {
         when (tool.id) {
             "image-compressor" -> ImageCompressor()
             "timecode-calc" -> TimecodeCalc()
+            "placeholder-genny" -> PlaceholderGenerator()
             canonGallery.id -> if (galleryPages.isEmpty()) EmptyPage(tool) else GalleryPages()
             else -> EmptyPage(tool)
         }

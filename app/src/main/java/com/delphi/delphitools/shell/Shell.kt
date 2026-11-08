@@ -101,6 +101,7 @@ import com.delphi.delphitools.canon.LocalCanonPatternSymbol
 import com.delphi.delphitools.canon.canonClickable
 import com.delphi.delphitools.tools.images.ImageCompressor
 import com.delphi.delphitools.tools.print.PaperSizes
+import com.delphi.delphitools.tools.typography.LineHeightCalc
 import com.delphi.delphitools.tools.typography.PxToRem
 import com.delphi.delphitools.tools.typography.WordCounter
 import com.delphi.delphitools.gallery.galleryPages
@@ -456,6 +457,7 @@ private fun ToolPage(tool: Tool) {
             "px-to-rem" -> PxToRem()
             "paper-sizes" -> PaperSizes()
             "word-counter" -> WordCounter()
+            "line-height-calc" -> LineHeightCalc()
             canonGallery.id -> if (galleryPages.isEmpty()) EmptyPage(tool) else GalleryPages()
             else -> EmptyPage(tool)
         }

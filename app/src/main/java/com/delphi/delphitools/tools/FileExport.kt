@@ -40,6 +40,11 @@ object FileExport {
         return Intent.createChooser(send, null)
     }
 
+    /** dt-ios FileExportService.share(text:): the share sheet on plain text. */
+    fun shareText(context: Context, text: String) {
+        context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text), null))
+    }
+
     fun safeFilename(name: String): String {
         val cleaned = name.map { if (it in "/\\:" || it.isISOControl()) '-' else it }.joinToString("")
         return cleaned.ifBlank { "export" }

@@ -17,18 +17,18 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 
 | id | tool | iOS controller | iOS lines | status |
 |---|---|---|---:|---|
-| `colour-atlas` | Colour Atlas | `ColourAtlasViewController` | 318 | review |
-| `colorblind-sim` | Colour Blindness Simulator | `ColourBlindnessSimulatorViewController` | 334 | review |
+| `colour-atlas` | Colour Atlas | `ColourAtlasViewController` | 318 | done |
+| `colorblind-sim` | Colour Blindness Simulator | `ColourBlindnessSimulatorViewController` | 334 | done |
 | `colour-camera` | Colour Camera | `ColourCameraViewController` | 949 | todo |
 | `colour-converter` | Colour Converter | `ColourConverterViewController` | 734 | todo |
 | `contrast-checker` | Contrast Checker | `ContrastCheckerViewController` | 708 | todo |
 | `gradient-genny` | Gradient Generator | `GradientGeneratorViewController` | 1724 | todo |
-| `harmony-genny` | Harmony Generator | `HarmonyGeneratorViewController` | 351 | review |
+| `harmony-genny` | Harmony Generator | `HarmonyGeneratorViewController` | 351 | done |
 | `palette-collection` | Palette Collection | `PaletteCollectionViewController` | 829 | todo |
 | `palette-extractor` | Palette Extractor | `PaletteExtractorViewController` | 1010 | todo |
 | `palette-genny` | Palette Generator | `PaletteGeneratorViewController` | 719 | todo |
 | `pixel-picker` | Pixel Picker | `PixelPickerViewController` | 709 | todo |
-| `tailwind-shades` | Tailwind Shade Generator | `TailwindShadesViewController` | 383 | review |
+| `tailwind-shades` | Tailwind Shade Generator | `TailwindShadesViewController` | 383 | done |
 
 ## Images
 
@@ -45,12 +45,12 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | `image-converter` | Image Converter | `ImageConverterViewController` | 754 | todo |
 | `image-deskewer` | Image De-skewer | `ImageDeskewerViewController` | 778 | todo |
 | `image-masker` | Image Masker | `ImageMaskerViewController` | 843 | todo |
-| `image-splitter` | Image Splitter | `ImageSplitterViewController` | 380 | review |
+| `image-splitter` | Image Splitter | `ImageSplitterViewController` | 380 | done |
 | `image-stitcher` | Image Stitcher | `ImageStitcherViewController` | 1385 | todo |
 | `image-tracer` | Image Tracer | `ImageTracerViewController` | 500 | todo |
 | `metadata-stripper` | Metadata Stripper | `MetadataStripperViewController` | 486 | todo |
-| `paste-image` | Paste Image | `PasteImageViewController` | 325 | review |
-| `placeholder-genny` | Placeholder Generator | `PlaceholderGeneratorViewController` | 382 | review |
+| `paste-image` | Paste Image | `PasteImageViewController` | 325 | done |
+| `placeholder-genny` | Placeholder Generator | `PlaceholderGeneratorViewController` | 382 | done |
 | `svg-optimiser` | SVG Optimiser | `SVGOptimiserViewController` | 147 | todo |
 
 ## AudioVideo
@@ -63,9 +63,9 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | `audio-trimmer` | Audio Trimmer | `AudioTrimmerViewController` | 362 | todo |
 | `auto-subtitle` | Auto Subtitle | `AutoSubtitleViewController` | 644 | todo |
 | `frame-extractor` | Frame Extractor | `FrameExtractorViewController` | 401 | todo |
-| `subtitle-converter` | Subtitle Converter | `SubtitleConverterViewController` | 191 | review |
+| `subtitle-converter` | Subtitle Converter | `SubtitleConverterViewController` | 191 | done |
 | `subtitle-studio` | Subtitle Studio | `SubtitleStudioViewController` | 758 | todo |
-| `timecode-calc` | Timecode Calculator | `TimecodeCalcViewController` | 253 | review |
+| `timecode-calc` | Timecode Calculator | `TimecodeCalcViewController` | 253 | done |
 | `video-atlas` | Video Atlas | `VideoAtlasViewController` | 280 | todo |
 | `video-muter` | Video Muter | `VideoMuterViewController` | 210 | todo |
 | `video-to-gif` | Video to GIF | `VideoToGIFViewController` | 321 | todo |
@@ -82,11 +82,11 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | `font-installer` | Font Installer | `FontInstallerViewController` | 721 | todo |
 | `glyph-browser` | Glyph Browser | `GlyphBrowserViewController` | 389 | todo |
 | `large-type` | Large Type | `LargeTypeViewController` | 921 | todo |
-| `line-height-calc` | Line Height Calculator | `LineHeightCalcViewController` | 447 | review |
-| `px-to-rem` | PX to REM | `PxToRemViewController` | 318 | review |
+| `line-height-calc` | Line Height Calculator | `LineHeightCalcViewController` | 447 | done |
+| `px-to-rem` | PX to REM | `PxToRemViewController` | 318 | done |
 | `text-editor` | Text Editor | `TextEditorViewController` | 604 | todo |
 | `typo-calc` | Typography Calculator | `TypoCalcViewController` | 527 | todo |
-| `word-counter` | Word Counter | `WordCounterViewController` | 398 | review |
+| `word-counter` | Word Counter | `WordCounterViewController` | 398 | done |
 
 ## Pdf
 
@@ -103,7 +103,7 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 
 | id | tool | iOS controller | iOS lines | status |
 |---|---|---|---:|---|
-| `paper-sizes` | Paper Sizes | `PaperSizesViewController` | 354 | review |
+| `paper-sizes` | Paper Sizes | `PaperSizesViewController` | 354 | done |
 | `imposer` | Print Imposer | `ImposerViewController` | 567 | todo |
 | `zine-imposer` | Zine Imposer | `ZineImposerViewController` | 938 | todo |
 
@@ -115,10 +115,10 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | `base-converter` | Base Converter | `BaseConverterViewController` | 644 | todo |
 | `decoder` | Cipher Decoder | `CipherDecoderViewController` | 698 | todo |
 | `cron-builder` | Cron Builder | `CronBuilderViewController` | 862 | todo |
-| `encoder` | Encoding Tools | `EncoderViewController` | 435 | review |
+| `encoder` | Encoding Tools | `EncoderViewController` | 435 | done |
 | `http-status` | HTTP Status | `HTTPStatusViewController` | 520 | todo |
 | `json-formatter` | JSON Formatter | `JSONFormatterViewController` | 1000 | todo |
-| `jwt-decoder` | JWT Decoder | `JWTDecoderViewController` | 402 | review |
+| `jwt-decoder` | JWT Decoder | `JWTDecoderViewController` | 402 | done |
 | `meta-tag-genny` | Meta Tag Generator | `MetaTagGeneratorViewController` | 706 | todo |
 | `password-genny` | Password Generator | `PasswordGeneratorViewController` | 652 | todo |
 | `qr-genny` | QR Generator | `QRGeneratorViewController` | 996 | todo |
@@ -127,7 +127,7 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | `tailwind-cheatsheet` | Tailwind Cheat Sheet | `TailwindCheatsheetViewController` | 723 | todo |
 | `text-diff` | Text Diff | `TextDiffViewController` | 607 | todo |
 | `markdown-writer` | Text Scratchpad | `TextScratchpadViewController` | 549 | todo |
-| `uuid-genny` | UUID Generator | `UUIDGeneratorViewController` | 475 | review |
+| `uuid-genny` | UUID Generator | `UUIDGeneratorViewController` | 475 | done |
 
 ## Calculators
 
@@ -143,10 +143,10 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 
 | id | tool | iOS controller | iOS lines | status |
 |---|---|---|---:|---|
-| `braille-converter` | Braille Converter | `BrailleConverterViewController` | 223 | review |
-| `ipa-transcriber` | IPA Transcription | `IPATranscriberViewController` | 249 | review |
-| `morse-code` | Morse Code | `MorseCodeViewController` | 278 | review |
-| `nato-phonetic` | NATO Phonetic | `NATOPhoneticViewController` | 333 | review |
+| `braille-converter` | Braille Converter | `BrailleConverterViewController` | 223 | done |
+| `ipa-transcriber` | IPA Transcription | `IPATranscriberViewController` | 249 | done |
+| `morse-code` | Morse Code | `MorseCodeViewController` | 278 | done |
+| `nato-phonetic` | NATO Phonetic | `NATOPhoneticViewController` | 333 | done |
 | `nfc-reader-writer` | NFC Reader/Writer | `NFCReaderWriterViewController` | 595 | todo |
 | `shavian-transliterator` | Shavian Transliterator | `ShavianTransliteratorViewController` | 545 | todo |
 

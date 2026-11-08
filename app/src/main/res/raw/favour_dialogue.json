@@ -1,0 +1,231 @@
+{
+  "banner": "Can I ask a favour?",
+  "reminderTitle": "",
+  "start": "hello",
+  "nodes": [
+    {
+      "choices": [
+        {
+          "action": "",
+          "next": "ask",
+          "text": "Yeah I think so"
+        },
+        {
+          "action": "",
+          "next": "improve",
+          "text": "Not really, no"
+        },
+        {
+          "action": "",
+          "next": "who-are-you",
+          "text": "Who are you again"
+        }
+      ],
+      "id": "hello",
+      "portrait": "neutral",
+      "text": "Hey, glad you're here. Can I ask - are you enjoying delphitools? Having a good time?"
+    },
+    {
+      "choices": [
+        {
+          "action": "",
+          "next": "thanks",
+          "text": "Sure I guess"
+        },
+        {
+          "action": "",
+          "next": "remind",
+          "text": "I'm kinda in the middle of something"
+        },
+        {
+          "action": "",
+          "next": "decline",
+          "text": "I don't think so"
+        }
+      ],
+      "id": "ask",
+      "portrait": "hopeful",
+      "text": "Glad to hear it, thanks for downloading. Would you mind leaving a review on the App Store?"
+    },
+    {
+      "choices": [
+        {
+          "action": "review",
+          "next": "",
+          "text": "Open App Store"
+        }
+      ],
+      "id": "thanks",
+      "portrait": "thrilled",
+      "text": "Great, brilliant, thank you. Knew I could count on you."
+    },
+    {
+      "choices": [
+        {
+          "action": "remind",
+          "next": "",
+          "text": "Sure, I guess"
+        },
+        {
+          "action": "later",
+          "next": "",
+          "text": "No, just ask me again another time"
+        },
+        {
+          "action": "",
+          "next": "decline",
+          "text": "You really don't quit, do you?"
+        }
+      ],
+      "id": "remind",
+      "portrait": "hush",
+      "text": "If you'd like, I can add a reminder for later in your reminders app?"
+    },
+    {
+      "choices": [
+        {
+          "action": "close",
+          "next": "",
+          "text": "Fair enough"
+        }
+      ],
+      "id": "decline",
+      "portrait": "mad-dog-2",
+      "text": "All right, all right. I can respect that. Can't blame a guy for trying."
+    },
+    {
+      "choices": [
+        {
+          "action": "",
+          "next": "rant",
+          "text": "Oh buddy, don't get me started"
+        },
+        {
+          "action": "",
+          "next": "pick-brain",
+          "text": "Eh, it's okay, but not that great"
+        },
+        {
+          "action": "",
+          "next": "decline",
+          "text": "I really just wanna skip this"
+        }
+      ],
+      "id": "improve",
+      "portrait": "neutral",
+      "text": "Well, um, I'm sorry to hear that. Any reason for this?"
+    },
+    {
+      "choices": [
+        {
+          "action": "email",
+          "next": "",
+          "text": "Ugh, fine"
+        },
+        {
+          "action": "close",
+          "next": "",
+          "text": "No, leave me be"
+        }
+      ],
+      "id": "rant",
+      "portrait": "intrigued",
+      "text": "Oh, I'd *love* to get you started. Can I give you my email?"
+    },
+    {
+      "choices": [
+        {
+          "action": "email",
+          "next": "",
+          "text": "I guess I could email you"
+        },
+        {
+          "action": "",
+          "next": "decline",
+          "text": "Eh, it's not really worth it"
+        }
+      ],
+      "id": "pick-brain",
+      "portrait": "intrigued",
+      "text": "Mind if I pick your brain? I'd like to know what you don't like and why."
+    },
+    {
+      "choices": [
+        {
+          "action": "",
+          "next": "ask",
+          "text": "Yeah I dig it"
+        },
+        {
+          "action": "",
+          "next": "improve",
+          "text": "Hm, I don't like it that much"
+        },
+        {
+          "action": "",
+          "next": "the-bit",
+          "text": "Did you really make a dialogue tree to get me to review your app?"
+        }
+      ],
+      "id": "who-are-you",
+      "portrait": "wave",
+      "text": "I'm Delphi! I made this app. This little question only appears when you've opened the app a couple of times, so, I bet you kinda like it. So, what do you say?"
+    },
+    {
+      "choices": [
+        {
+          "action": "",
+          "next": "the-pause",
+          "text": "Um,"
+        },
+        {
+          "action": "",
+          "next": "the-pause",
+          "text": "Are you okay?"
+        }
+      ],
+      "id": "the-bit",
+      "portrait": "mad-dog",
+      "text": "Mate, I've done more for less."
+    },
+    {
+      "id": "the-pause",
+      "portrait": "mad-dog-2",
+      "text": "...",
+      "choices": [
+        {
+          "text": "...",
+          "next": "pitch",
+          "action": ""
+        },
+        {
+          "text": "...",
+          "next": "pitch",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "choices": [
+        {
+          "action": "",
+          "next": "thanks",
+          "text": "Sure I guess"
+        },
+        {
+          "action": "",
+          "next": "remind",
+          "text": "I'm kinda in the middle of something"
+        },
+        {
+          "action": "close",
+          "next": "",
+          "text": "You're making me uncomfortable"
+        }
+      ],
+      "id": "pitch",
+      "portrait": "neutral",
+      "text": "Well, anyways, I just wanna ask. Are you up for reviewing this app on the App Store? Not saying it has to be a good review, but it does help."
+    }
+  ]
+}

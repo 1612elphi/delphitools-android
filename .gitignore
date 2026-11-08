@@ -1,0 +1,38 @@
+# macOS noise
+.DS_Store
+
+# claude / local-only working notes
+AGENTS.md
+CLAUDE.md
+/.claude/
+/.superpowers/
+
+# agent worktrees and scratch clones
+/.delta/
+/.emdash/
+/.context/
+
+# editors
+/.cursor/
+/.vscode/
+/.idea/
+/.zed/
+*.iml
+
+# wheelybin: local-only scratch
+/wheelybin/
+
+# session scratch (one-off debug/repro rigs land as root dot-files;
+# anything worth keeping graduates into scripts/verify/)
+/.*.mjs
+
+# gradle / android build output
+.gradle/
+/.kotlin/
+build/
+/captures/
+.externalNativeBuild/
+.cxx/
+
+# sdk path, machine-specific
+local.properties

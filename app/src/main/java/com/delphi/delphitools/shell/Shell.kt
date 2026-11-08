@@ -101,6 +101,7 @@ import com.delphi.delphitools.canon.LocalCanonPatternSymbol
 import com.delphi.delphitools.canon.canonClickable
 import com.delphi.delphitools.tools.images.ImageCompressor
 import com.delphi.delphitools.tools.audiovideo.SubtitleConverter
+import com.delphi.delphitools.tools.devtools.Encoder
 import com.delphi.delphitools.tools.devtools.JwtDecoder
 import com.delphi.delphitools.tools.devtools.UuidGenerator
 import com.delphi.delphitools.gallery.galleryPages
@@ -456,6 +457,7 @@ private fun ToolPage(tool: Tool) {
             "subtitle-converter" -> SubtitleConverter()
             "uuid-genny" -> UuidGenerator()
             "jwt-decoder" -> JwtDecoder()
+            "encoder" -> Encoder()
             canonGallery.id -> if (galleryPages.isEmpty()) EmptyPage(tool) else GalleryPages()
             else -> EmptyPage(tool)
         }

@@ -32,4 +32,23 @@ class MorseEngineTest {
         assertTrue(samples.take(1323).any { it > 10_000 })
         assertTrue(samples.drop(1323).all { it.toInt() == 0 })
     }
+
+    @Test
+    fun keypadPress() {
+        fun press(morse: String, key: MorseEngine.Key) = MorseEngine.press(morse, key)
+        assertEquals(".", press("", MorseEngine.Key.Dit))
+        assertEquals(".-", press(".", MorseEngine.Key.Dah))
+        assertEquals(".- .", press(".- ", MorseEngine.Key.Dit))
+        assertEquals("", press("", MorseEngine.Key.Letter))
+        assertEquals("", press("", MorseEngine.Key.Word))
+        assertEquals(".- ", press(".-", MorseEngine.Key.Letter))
+        assertEquals(".- ", press(".- ", MorseEngine.Key.Letter))
+        assertEquals(".- / ", press(".- ", MorseEngine.Key.Word))
+        assertEquals(".- / ", press(".- / ", MorseEngine.Key.Letter))
+        assertEquals(".- / ", press(".- / ", MorseEngine.Key.Word))
+        assertEquals(".", press(".-", MorseEngine.Key.Back))
+        assertEquals(".-", press(".- ", MorseEngine.Key.Back))
+        assertEquals(".-", press(".- / ", MorseEngine.Key.Back))
+        assertEquals("", press("", MorseEngine.Key.Back))
+    }
 }

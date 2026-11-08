@@ -26,30 +26,59 @@ class MorseTonePlayer(private val scope: CoroutineScope) {
     private var job: Job? = null
     private var length = 0
 
+    // keypad tones, one static track per symbol at keyedWpm
+    private val keyed = mutableMapOf<Char, AudioTrack>()
+    private var keyedWpm = 0
+
+    private fun build(mode: Int, bytes: Int): AudioTrack? = runCatching {
+        AudioTrack.Builder()
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build(),
+            )
+            .setAudioFormat(
+                AudioFormat.Builder()
+                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                    .setSampleRate(MorseEngine.SAMPLE_RATE)
+                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                    .build(),
+            )
+            .setTransferMode(mode)
+            .setBufferSizeInBytes(bytes)
+            .build()
+    }.getOrNull()
+
+    /** Sounds one keyed dot or dash ([symbol] `.` or `-`) at [wpm], over any earlier key tone. */
+    fun key(symbol: Char, wpm: Int) {
+        if (wpm != keyedWpm) {
+            releaseKeys()
+            keyedWpm = wpm
+        }
+        val track = keyed[symbol] ?: run {
+            val samples = MorseEngine.render(symbol.toString(), wpm) ?: return
+            build(AudioTrack.MODE_STATIC, samples.size * 2)?.also {
+                it.write(samples, 0, samples.size)
+                keyed[symbol] = it
+            } ?: return
+        }
+        track.stop()
+        track.reloadStaticData()
+        track.play()
+    }
+
+    fun releaseKeys() {
+        keyed.values.forEach { it.release() }
+        keyed.clear()
+    }
+
     fun play(morse: String, wpm: Int, loops: Boolean = false) {
         stop()
         looping = loops
         val samples = MorseEngine.render(morse, wpm) ?: return
-        val format = AudioFormat.Builder()
-            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-            .setSampleRate(MorseEngine.SAMPLE_RATE)
-            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-            .build()
         val minimum = AudioTrack.getMinBufferSize(MorseEngine.SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
-        val track = runCatching {
-            AudioTrack.Builder()
-                .setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .build(),
-                )
-                .setAudioFormat(format)
-                .setTransferMode(AudioTrack.MODE_STREAM)
-                .setBufferSizeInBytes(minimum * 2)
-                .build()
-                .also { it.play() }
-        }.getOrNull() ?: return
+        val track = build(AudioTrack.MODE_STREAM, minimum * 2)?.also { it.play() } ?: return
         this.track = track
         length = samples.size
         isPlaying = true

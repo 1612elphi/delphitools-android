@@ -62,6 +62,7 @@ object CanonText {
     private fun style(size: Int, weight: FontWeight) =
         TextStyle(fontFamily = DelphiFont, fontSize = size.sp, fontWeight = weight)
 
+    val title2 = style(20, FontWeight.Normal)
     val body = style(15, FontWeight.Normal)
     val bodyMedium = style(15, FontWeight.Medium)
     val bodySemibold = style(15, FontWeight.SemiBold)

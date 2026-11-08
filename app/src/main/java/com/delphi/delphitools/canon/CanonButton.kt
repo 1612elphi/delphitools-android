@@ -51,6 +51,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
@@ -85,6 +86,7 @@ internal val LocalCanonSymbolOnly = compositionLocalOf<CanonSymbolOnly?> { null 
  * [oversized] draws [icon] large and faint behind the title, turned, cut off by the trailing and bottom edges.
  * [repeats]: holding repeats [onClick]. [flashesCopied]: the title shows "Copied" for 1.5 s after a click.
  * [contentDescription] is read by TalkBack when the button shows its symbol alone.
+ * [textStyle] replaces the title's size and family; the weight still follows [kind].
  */
 @Composable
 fun CanonButton(
@@ -98,6 +100,7 @@ fun CanonButton(
     repeats: Boolean = false,
     flashesCopied: Boolean = false,
     contentDescription: String? = null,
+    textStyle: TextStyle? = null,
     onClick: () -> Unit,
 ) {
     val c = LocalDelphiColours.current
@@ -117,7 +120,7 @@ fun CanonButton(
         CanonButtonKind.Secondary -> CanonMetrics.secondaryHeight
         else -> CanonMetrics.controlHeight
     }
-    val style = (if (kind == CanonButtonKind.Segment) CanonText.subheadline else CanonText.body)
+    val style = (textStyle ?: if (kind == CanonButtonKind.Segment) CanonText.subheadline else CanonText.body)
         .copy(fontWeight = if (filled) FontWeight.SemiBold else FontWeight.Medium)
     val ink = when {
         !filled -> c.foreground

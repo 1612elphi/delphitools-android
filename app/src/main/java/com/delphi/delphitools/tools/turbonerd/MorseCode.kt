@@ -1,6 +1,18 @@
 package com.delphi.delphitools.tools.turbonerd
 
 import android.app.Activity
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.automirrored.filled.Backspace
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.SpaceBar
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.path
+import com.delphi.delphitools.ui.theme.CanonText
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -82,6 +94,9 @@ class MorseCodeModel : ViewModel() {
     val player = MorseTonePlayer(viewModelScope)
 
     val decoding get() = direction == 2 || (direction == 0 && MorseEngine.looksLikeMorse(settled))
+
+    // empty auto input keeps the keypad
+    val keying get() = decoding || (direction == 0 && settled.isEmpty())
     val morse get() = if (decoding) settled else MorseEngine.encode(settled)
 
     fun select(direction: Int) {
@@ -100,6 +115,15 @@ class MorseCodeModel : ViewModel() {
         player.stop()
     }
 
+    fun press(key: MorseEngine.Key) {
+        val next = MorseEngine.press(text, key)
+        if (next == text) return
+        text = next
+        settle(next)
+        if (key == MorseEngine.Key.Dit) player.key('.', wpm)
+        if (key == MorseEngine.Key.Dah) player.key('-', wpm)
+    }
+
     fun toggle() = when {
         player.isPaused -> player.resume()
         player.isPlaying -> player.pause()
@@ -111,7 +135,10 @@ class MorseCodeModel : ViewModel() {
         player.looping = looping
     }
 
-    override fun onCleared() = player.stop()
+    override fun onCleared() {
+        player.stop()
+        player.releaseKeys()
+    }
 }
 
 private val STRIP_HEIGHT = 118.dp
@@ -195,20 +222,66 @@ fun MorseCode(model: MorseCodeModel = viewModel()) {
         banner = banner,
         collapsesTo = COLLAPSED_STRIP + CanonReadoutRowHeight,
         footer = {
-            CanonGrid {
-                CanonButton("Loop", Modifier.weight(1f).fillMaxHeight(), selected = model.looping, icon = Icons.Filled.Repeat, onClick = model::toggleLoop)
-                CanonButton(
-                    if (running) "Pause" else "Play",
-                    Modifier.weight(1f).fillMaxHeight(),
-                    kind = CanonButtonKind.Primary,
-                    enabled = MorseEngine.looksLikeMorse(morse),
-                    icon = if (running) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                    onClick = model::toggle,
-                )
-                CanonButton("Stop", Modifier.weight(1f).fillMaxHeight(), enabled = player.isPlaying, icon = Icons.Filled.Stop, onClick = player::stop)
+            Column(verticalArrangement = Arrangement.spacedBy(CanonMetrics.hairline)) {
+                if (model.keying) MorseKeypad(model::press, canDelete = model.text.isNotEmpty())
+                CanonGrid {
+                    CanonButton("Loop", Modifier.weight(1f).fillMaxHeight(), selected = model.looping, icon = Icons.Filled.Repeat, onClick = model::toggleLoop)
+                    CanonButton(
+                        if (running) "Pause" else "Play",
+                        Modifier.weight(1f).fillMaxHeight(),
+                        kind = CanonButtonKind.Primary,
+                        enabled = MorseEngine.looksLikeMorse(morse),
+                        icon = if (running) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                        onClick = model::toggle,
+                    )
+                    CanonButton("Stop", Modifier.weight(1f).fillMaxHeight(), enabled = player.isPlaying, icon = Icons.Filled.Stop, onClick = player::stop)
+                }
             }
         },
     )
+}
+
+private val keyHeight = 72.dp
+
+@Composable
+private fun MorseKeypad(onPress: (MorseEngine.Key) -> Unit, canDelete: Boolean) {
+    Column(verticalArrangement = Arrangement.spacedBy(CanonMetrics.hairline)) {
+        CanonGrid(Modifier.heightIn(min = keyHeight)) {
+            val cell = Modifier.weight(1f).fillMaxHeight()
+            CanonButton("Dit", cell, icon = MorseKeyIcons.dit, textStyle = CanonText.title2) { onPress(MorseEngine.Key.Dit) }
+            CanonButton("Dah", cell, icon = Icons.Filled.Remove, textStyle = CanonText.title2) { onPress(MorseEngine.Key.Dah) }
+        }
+        CanonGrid {
+            val cell = Modifier.weight(1f).fillMaxHeight()
+            CanonButton("Letter gap", cell, icon = Icons.Filled.SpaceBar) { onPress(MorseEngine.Key.Letter) }
+            CanonButton("Word gap", cell, icon = MorseKeyIcons.slash) { onPress(MorseEngine.Key.Word) }
+            CanonButton(
+                "Backspace",
+                cell,
+                enabled = canDelete,
+                icon = Icons.AutoMirrored.Filled.Backspace,
+                repeats = true,
+            ) { onPress(MorseEngine.Key.Back) }
+        }
+    }
+}
+
+// lucide dot and slash, which material lacks
+private object MorseKeyIcons {
+    val dit = ImageVector.Builder("Dit", 24.dp, 24.dp, 24f, 24f)
+        .path(fill = SolidColor(Color.Black)) {
+            moveTo(12f, 10f)
+            arcToRelative(2f, 2f, 0f, true, true, 0f, 4f)
+            arcToRelative(2f, 2f, 0f, true, true, 0f, -4f)
+            close()
+        }
+        .build()
+    val slash = ImageVector.Builder("Slash", 24.dp, 24.dp, 24f, 24f)
+        .path(stroke = SolidColor(Color.Black), strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round) {
+            moveTo(22f, 2f)
+            lineTo(2f, 22f)
+        }
+        .build()
 }
 
 /** empty code: word space */

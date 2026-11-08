@@ -40,6 +40,23 @@ object MorseEngine {
         return stripped.isNotEmpty() && stripped.all { it in ".·•-–—_/" }
     }
 
+    enum class Key { Dit, Dah, Letter, Word, Back }
+
+    private val trailingGap = Regex("[\\s/]+$")
+
+    /** The Morse text after one keypad press; a gap never doubles or leads (dt web keypad.ts). */
+    fun press(morse: String, key: Key): String {
+        val bare = morse.replace(trailingGap, "")
+        val endsInGap = morse.lastOrNull()?.let { it.isWhitespace() || it == '/' } == true
+        return when (key) {
+            Key.Dit -> "$morse."
+            Key.Dah -> "$morse-"
+            Key.Letter -> if (morse.isNotEmpty() && !endsInGap) "$morse " else morse
+            Key.Word -> if (bare.isNotEmpty()) "$bare / " else morse
+            Key.Back -> if (endsInGap) bare else morse.dropLast(1)
+        }
+    }
+
     data class Timing(val on: Boolean, val ms: Double)
 
     // paris timing, 50 units

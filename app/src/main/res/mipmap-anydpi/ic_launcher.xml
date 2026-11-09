@@ -1,6 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  The face sits in a smaller adaptive icon inside this one. Both take the launcher's mask,
+  so the trim between them follows whatever shape the launcher uses. 21.7% inset: the inner
+  shape is 85% of the visible one.
+-->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@drawable/ic_launcher_background" />
-    <foreground android:drawable="@drawable/ic_launcher_foreground" />
-    <monochrome android:drawable="@drawable/ic_launcher_foreground" />
+    <background android:drawable="@color/ic_launcher_trim" />
+    <foreground>
+        <inset android:inset="21.7%">
+            <adaptive-icon>
+                <background android:drawable="@color/ic_launcher_face" />
+                <foreground android:drawable="@drawable/ic_launcher_foreground" />
+            </adaptive-icon>
+        </inset>
+    </foreground>
+    <monochrome>
+        <inset android:inset="21.7%">
+            <adaptive-icon>
+                <background android:drawable="@android:color/transparent" />
+                <foreground android:drawable="@drawable/ic_launcher_monochrome" />
+            </adaptive-icon>
+        </inset>
+    </monochrome>
 </adaptive-icon>

@@ -153,6 +153,7 @@ fun CanonRow(
     flush: Boolean = false,
     controlWeight: Float? = null,
     detail: String? = null,
+    detailColour: Color? = null,
     icon: ImageVector? = null,
     stacked: Boolean = false,
     sizingTitle: String? = null,
@@ -181,7 +182,7 @@ fun CanonRow(
                         color = c.foreground,
                         modifier = if (rowLabel.claimed) Modifier.clearAndSetSemantics {} else Modifier,
                     )
-                    if (detail != null) Text(detail, style = CanonText.caption, color = c.mutedForeground)
+                    if (detail != null) Text(detail, style = CanonText.caption, color = detailColour ?: c.mutedForeground)
                 }
             }
             if (control != null) {

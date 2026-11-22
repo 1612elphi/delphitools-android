@@ -84,7 +84,7 @@ class CanonColourNotationState {
  * typing stops, and turns red when it does not read; a picked colour goes to `onColour`
  * at once. `parse` swaps in a tool's own notation: it reads the text, uses it, and returns
  * false when it does not read. `pickerColour` is the colour the picker opens on, the last
- * shown colour by default.
+ * shown colour by default. `placeholder` shows while the field is empty.
  */
 @Composable
 fun CanonColourNotationInput(
@@ -93,6 +93,7 @@ fun CanonColourNotationInput(
     state: CanonColourNotationState = remember { CanonColourNotationState() },
     parse: ((String) -> Boolean)? = null,
     pickerColour: (() -> Rgb)? = null,
+    placeholder: String = "oklch(0.64 0.15 264)",
 ) {
     val c = LocalDelphiColours.current
     var picking by remember { mutableStateOf<Rgb?>(null) }
@@ -119,7 +120,7 @@ fun CanonColourNotationInput(
             contentAlignment = Alignment.CenterStart,
         ) {
             val style = CanonColourType.mono15.copy(color = if (state.fails) c.destructive else c.foreground)
-            if (state.text.isEmpty()) Text("oklch(0.64 0.15 264)", style = style.copy(color = c.mutedForeground), maxLines = 1)
+            if (state.text.isEmpty()) Text(placeholder, style = style.copy(color = c.mutedForeground), maxLines = 1)
             BasicTextField(
                 value = state.text,
                 onValueChange = state::type,

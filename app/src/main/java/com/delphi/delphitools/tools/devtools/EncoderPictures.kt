@@ -30,13 +30,11 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.delphi.delphitools.canon.CanonFigure
@@ -64,7 +62,7 @@ private const val PITCH_MOST = 7f
 private const val GROUP_GAP = 12f
 private val FED_ROWS = 4..12
 private val labelFont = TextStyle(fontFamily = DelphiFont, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-private val codeFont = TextStyle(fontFamily = DelphiMono, fontSize = 10.sp)
+private val codeBase = TextStyle(fontFamily = DelphiMono, fontSize = 10.sp)
 
 private class RegroupFeed {
     var pitch = 5f
@@ -78,10 +76,17 @@ private class RegroupFeed {
  * bar, a zero a stub, a padding bit a grey stub; bits and output characters alternate in colour so the regrouping shows.
  */
 @Composable
-fun BitRegroupStrip(reading: BitRegroup.Reading, modifier: Modifier = Modifier) {
+fun BitRegroupStrip(
+    reading: BitRegroup.Reading,
+    modifier: Modifier = Modifier,
+    code: BitRegroup.Code = BitRegroup.Code.Base64,
+    codeWeight: FontWeight? = null,
+) {
     val c = LocalDelphiColours.current
     val measurer = rememberTextMeasurer()
     val feed = remember { RegroupFeed() }
+    val ghost = remember(code) { BitRegroup.ghost(code) }
+    val codeFont = remember(codeWeight) { codeBase.copy(fontWeight = codeWeight) }
     val state = rememberCanonGlyphFlowState<BitRegroup.Group>(
         CanonGlyphMetrics(regroupRow, 12.dp, GROUP_GAP.dp),
         measure = { (it.slots.size * feed.pitch - 1).dp },
@@ -90,7 +95,7 @@ fun BitRegroupStrip(reading: BitRegroup.Reading, modifier: Modifier = Modifier) 
     BoxWithConstraints(modifier.fillMaxSize()) {
         val width = (maxWidth - CanonMetrics.panelPadding * 2).value
         LaunchedEffect(reading, width) {
-            val slots = BitRegroup.Base64Code.BYTES_PER_GROUP * 8
+            val slots = code.bytesPerGroup * 8
             val resized = width != feed.width
             feed.width = width
             fitPitch(feed, width - 1, slots)
@@ -114,12 +119,11 @@ fun BitRegroupStrip(reading: BitRegroup.Reading, modifier: Modifier = Modifier) 
             state,
             Modifier.fillMaxSize(),
             paintEmpty = { area ->
-                val ghost = BitRegroup.ghost
                 val w = (ghost.slots.size * feed.pitch - 1).dp.toPx()
                 val h = regroupRow.toPx()
-                drawGroup(ghost, Rect(area.center.x - w / 2, area.center.y - h / 2, area.center.x + w / 2, area.center.y + h / 2), feed.pitch, measurer, c.foreground, c.primary, c.mutedForeground, 0.45f)
+                drawGroup(ghost, Rect(area.center.x - w / 2, area.center.y - h / 2, area.center.x + w / 2, area.center.y + h / 2), feed.pitch, measurer, codeFont, c.foreground, c.primary, c.mutedForeground, 0.45f)
             },
-        ) { group, _, frame -> drawGroup(group, frame, feed.pitch, measurer, c.foreground, c.primary, c.mutedForeground, 1f) }
+        ) { group, _, frame -> drawGroup(group, frame, feed.pitch, measurer, codeFont, c.foreground, c.primary, c.mutedForeground, 1f) }
     }
 }
 
@@ -139,6 +143,7 @@ private fun DrawScope.drawGroup(
     frame: Rect,
     pitchDp: Float,
     measurer: TextMeasurer,
+    codeFont: TextStyle,
     foreground: Color,
     primary: Color,
     muted: Color,
@@ -206,52 +211,6 @@ private fun DrawScope.drawGroup(
         if (!(unit.faint && unit.label.isEmpty())) bracket(span, bitsBottom + 3.dp.toPx(), false, colour.copy(alpha = colour.alpha * 0.6f))
         label(unit.label, span, colour)
         start += unit.span
-    }
-}
-
-private val pairFace = 24.dp
-private val pairMiddle = 16.dp
-private val pairText = TextStyle(fontFamily = DelphiMono, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-
-/** dt-ios SymbolPairStrip, text faces only: each symbol of the input over what it becomes, in wrapped rows; an unchanged symbol is muted. */
-@Composable
-fun SymbolPairStrip(pairs: List<SymbolPair>, modifier: Modifier = Modifier) {
-    // ponytail: no Morse, Bacon or key faces; they come with the cipher tool's port
-    val c = LocalDelphiColours.current
-    val measurer = rememberTextMeasurer()
-    val density = LocalDensity.current
-    val widths = remember { HashMap<String, Dp>() }
-    fun width(text: String) = widths.getOrPut(text) { with(density) { ceil(measurer.measure(text, pairText).size.width.toFloat()).toDp() } }
-    val state = rememberCanonGlyphFlowState<SymbolPair>(
-        CanonGlyphMetrics(pairFace * 2 + pairMiddle, 10.dp, 7.dp),
-        measure = { if (it.newline) 0.dp else maxOf(width(it.top), width(it.bottom)) },
-        kind = { if (it.newline) CanonGlyphKind.Newline else CanonGlyphKind.Glyph },
-    )
-    LaunchedEffect(pairs) { state.show(pairs) }
-    CanonGlyphFlow(
-        state,
-        modifier.fillMaxSize(),
-        paintEmpty = { area ->
-            val half = (pairFace * 2 + pairMiddle).toPx() / 2 - pairFace.toPx() / 2
-            for (y in listOf(area.center.y - half, area.center.y + half)) {
-                drawRect(c.mutedForeground.copy(alpha = 0.3f), Offset(area.left, y - 0.5f), Size(area.width, CanonMetrics.hairline.toPx()))
-            }
-        },
-    ) { pair, _, frame ->
-        if (pair.newline) return@CanonGlyphFlow
-        val lit = if (pair.changes) c.primary else c.mutedForeground
-        val plain = if (pair.changes) c.foreground else c.mutedForeground
-        val face = pairFace.toPx()
-        for ((text, centreY, ink) in listOf(Triple(pair.top, frame.top + face / 2, plain), Triple(pair.bottom, frame.bottom - face / 2, lit))) {
-            val laid = measurer.measure(text, pairText.copy(color = ink))
-            drawText(laid, topLeft = Offset(frame.center.x - laid.size.width / 2, centreY - laid.size.height / 2))
-        }
-        val mid = frame.top + face + pairMiddle.toPx() / 2
-        if (pair.changes) {
-            drawRect(c.mutedForeground.copy(alpha = 0.45f), Offset(frame.center.x - 0.5f, mid - 5.dp.toPx()), Size(CanonMetrics.hairline.toPx(), 10.dp.toPx()))
-        } else {
-            drawRect(c.mutedForeground.copy(alpha = 0.35f), Offset(frame.center.x - 1.dp.toPx(), mid - 1.dp.toPx()), Size(2.dp.toPx(), 2.dp.toPx()))
-        }
     }
 }
 

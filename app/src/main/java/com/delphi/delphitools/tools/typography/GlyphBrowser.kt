@@ -442,6 +442,8 @@ internal fun GlyphChart(
     selected: Int?,
     onPick: (Int) -> Unit,
     onHeading: (Int) -> Unit,
+    typeface: Typeface = Typeface.DEFAULT,
+    covers: ((Int) -> Boolean)? = null,
 ) {
     val c = LocalDelphiColours.current
     val density = LocalDensity.current
@@ -452,8 +454,9 @@ internal fun GlyphChart(
     val geometry = remember(sections, width) { if (width > 0f) GlyphGeometry(sections, width) else null }
     state.geometry = geometry
     state.density = density.density
-    val glyphPaint = remember { Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Typeface.DEFAULT } }
-    val covered = remember { HashMap<Int, Boolean>() }
+    val glyphPaint = remember(typeface) { Paint(Paint.ANTI_ALIAS_FLAG).also { it.typeface = typeface } }
+    val covered = remember(typeface) { HashMap<Int, Boolean>() }
+    fun drawn(codePoint: Int, section: GlyphSection) = section.shows(codePoint) && covers?.invoke(codePoint) != false
 
     Box(
         Modifier
@@ -468,7 +471,7 @@ internal fun GlyphChart(
                 visibleTop = bounds.top - origin
                 visibleBottom = bounds.bottom - origin
             }
-            .pointerInput(geometry, sections) {
+            .pointerInput(geometry, sections, covers) {
                 val laid = geometry ?: return@pointerInput
                 detectTapGestures { point ->
                     val x = point.x / density.density
@@ -479,7 +482,7 @@ internal fun GlyphChart(
                             if (x < GlyphGeometry.ROW_HEADER) return@detectTapGestures
                             val column = ((x - GlyphGeometry.ROW_HEADER) / laid.cell).toInt()
                             val codePoint = item.start + column
-                            if (column < laid.columns && sections[item.section].shows(codePoint)) onPick(codePoint)
+                            if (column < laid.columns && drawn(codePoint, sections[item.section])) onPick(codePoint)
                         }
                     }
                 }
@@ -493,7 +496,7 @@ internal fun GlyphChart(
                 val margin = maxOf(visibleBottom - visibleTop, 200.dp.toPx())
                 val first = laid.item(maxOf(0f, (visibleTop - margin) / density.density)) ?: 0
                 val last = laid.item(minOf(laid.height - 0.5f, (visibleBottom + margin) / density.density)) ?: (laid.items.size - 1)
-                drawChart(laid, sections, first..last, selected, measurer, glyphPaint, covered, c)
+                drawChart(laid, sections, first..last, selected, measurer, glyphPaint, covered, c, covers)
             },
     )
 }
@@ -507,6 +510,7 @@ private fun DrawScope.drawChart(
     glyphPaint: Paint,
     covered: HashMap<Int, Boolean>,
     c: com.delphi.delphitools.ui.theme.DelphiColours,
+    covers: ((Int) -> Boolean)?,
 ) {
     val unit = density
     val cell = geometry.cell * unit
@@ -559,14 +563,15 @@ private fun DrawScope.drawChart(
                 for (column in 0 until geometry.columns) {
                     val codePoint = item.start + column
                     val left = rowHeader + column * cell
-                    if (!section.shows(codePoint)) {
+                    if (!section.shows(codePoint) || covers?.invoke(codePoint) == false) {
                         drawRect(c.muted, Offset(left, y), Size(cell, cell))
                         continue
                     }
                     val isSelected = codePoint == selected
                     if (isSelected) drawRect(c.primary, Offset(left, y), Size(cell, cell))
                     val text = GlyphEngine.shown(codePoint)
-                    val drawn = covered.getOrPut(codePoint) { glyphPaint.hasGlyph(String(Character.toChars(codePoint))) }
+                    // a picked font draws what its cmap covers; the system dims what no font draws
+                    val drawn = covers != null || covered.getOrPut(codePoint) { glyphPaint.hasGlyph(String(Character.toChars(codePoint))) }
                     glyphPaint.color = if (isSelected) litInk else if (drawn) ink else dim
                     val textWidth = glyphPaint.measureText(text)
                     clipRect(left, y, left + cell, y + cell) {

@@ -66,6 +66,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
@@ -452,10 +453,13 @@ internal fun GlyphChart(
     val covered = remember(typeface) { HashMap<Int, Boolean>() }
     fun drawn(codePoint: Int, section: GlyphSection) = section.shows(codePoint) && covers?.invoke(codePoint) != false
 
-    Box(
+    // compose constraints hold under 2^18 px
+    val slices = remember(geometry, density.density) { geometry?.let { glyphSlices(it, density.density) }.orEmpty() }
+
+    Column(
         Modifier
             .fillMaxWidth()
-            .height(with(density) { (geometry?.height ?: GlyphGeometry.DIGITS).dp })
+            .heightIn(min = GlyphGeometry.DIGITS.dp)
             .background(c.card)
             .bringIntoViewRequester(state.requester)
             .onGloballyPositioned {
@@ -484,16 +488,45 @@ internal fun GlyphChart(
             .semantics {
                 contentDescription = "Glyphs"
                 if (selected != null) stateDescription = GlyphEngine.label(selected)
-            }
-            .drawBehind {
-                val laid = geometry ?: return@drawBehind
-                val margin = maxOf(visibleBottom - visibleTop, 200.dp.toPx())
-                val first = laid.item(maxOf(0f, (visibleTop - margin) / density.density)) ?: 0
-                val last = laid.item(minOf(laid.height - 0.5f, (visibleBottom + margin) / density.density)) ?: (laid.items.size - 1)
-                drawChart(laid, sections, first..last, selected, measurer, glyphPaint, covered, c, covers)
             },
-    )
+    ) {
+        val laid = geometry ?: return@Column
+        slices.forEach { slice ->
+            Box(
+                Modifier.fillMaxWidth().height(with(density) { (slice.bottom - slice.top).toDp() }).drawBehind {
+                    val margin = maxOf(visibleBottom - visibleTop, 200.dp.toPx())
+                    if (slice.bottom < visibleTop - margin || slice.top > visibleBottom + margin) return@drawBehind
+                    val first = laid.item(maxOf(0f, (visibleTop - margin) / density.density)) ?: 0
+                    val last = laid.item(minOf(laid.height - 0.5f, (visibleBottom + margin) / density.density)) ?: (laid.items.size - 1)
+                    val items = maxOf(first, slice.items.first)..minOf(last, slice.items.last)
+                    translate(top = -slice.top.toFloat()) {
+                        drawChart(laid, sections, items, selected, measurer, glyphPaint, covered, c, covers)
+                    }
+                },
+            )
+        }
+    }
 }
+
+private class GlyphSlice(val items: IntRange, val top: Int, val bottom: Int)
+
+/** Runs of chart items at most [SLICE_PX] px tall, with their px edges. */
+private fun glyphSlices(geometry: GlyphGeometry, density: Float): List<GlyphSlice> {
+    val slices = mutableListOf<GlyphSlice>()
+    var first = 0
+    for (index in geometry.items.indices) {
+        val top = (geometry.tops[first] * density).roundToInt()
+        val next = (geometry.tops[index + 1] * density).roundToInt()
+        val last = index == geometry.items.lastIndex
+        if (last || (geometry.tops[index + 2] * density).roundToInt() - top > SLICE_PX) {
+            slices += GlyphSlice(first..index, top, next)
+            first = index + 1
+        }
+    }
+    return slices
+}
+
+private const val SLICE_PX = 16_000
 
 private fun DrawScope.drawChart(
     geometry: GlyphGeometry,

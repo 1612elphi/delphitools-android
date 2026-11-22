@@ -1,14 +1,18 @@
 package com.delphi.delphitools.tools.colour
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -26,6 +30,7 @@ import com.delphi.delphitools.canon.CanonSegmented
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.colour.Rgb
+import com.delphi.delphitools.colour.rememberUserPalettes
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 
 // ponytail: no undo or redo; the android shell has no undo commands
@@ -74,6 +79,9 @@ class PaletteGeneratorModel : ViewModel() {
 @Composable
 fun PaletteGenerator(model: PaletteGeneratorModel = viewModel()) {
     val state = model.state
+    val view = LocalView.current
+    val store = rememberUserPalettes()
+    var saving by remember { mutableStateOf(false) }
     val actions = ReelActions(
         onLock = model::toggleLock,
         onEdit = { model.editing = it },
@@ -99,7 +107,7 @@ fun PaletteGenerator(model: PaletteGeneratorModel = viewModel()) {
             }
             CanonRow("Colours", flush = true) { CanonNumberField(state.count, model::resize, range = 3..12) }
             CanonGrid {
-                // ponytail: no Save; android has no user palette store yet
+                CanonButton("Save", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.FavoriteBorder) { saving = true }
                 PaletteExportButton({ model.paletteName }, { model.state.palette }, Modifier.weight(1f).fillMaxHeight(), css = { model.state.css })
             }
         }
@@ -116,6 +124,13 @@ fun PaletteGenerator(model: PaletteGeneratorModel = viewModel()) {
             CanonButton("Regenerate", kind = CanonButtonKind.Primary, icon = Icons.Rounded.Refresh, oversized = true, onClick = model::roll)
         },
     )
+
+    if (saving) {
+        PaletteNameDialog("Save Palette", model.paletteName, "Save", onDismiss = { saving = false }) { typed ->
+            store.add(typed.ifEmpty { model.paletteName }, model.state.palette)
+            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+        }
+    }
 
     model.editing?.let { index ->
         state.palette.getOrNull(index)?.let { initial ->

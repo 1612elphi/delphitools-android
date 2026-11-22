@@ -122,6 +122,10 @@ import com.delphi.delphitools.tools.turbonerd.MorseCode
 import com.delphi.delphitools.tools.turbonerd.NATOPhonetic
 import com.delphi.delphitools.tools.audiovideo.SubtitleConverter
 import com.delphi.delphitools.tools.devtools.Encoder
+import com.delphi.delphitools.tools.devtools.PasswordGenerator
+import com.delphi.delphitools.tools.devtools.CipherDecoder
+import com.delphi.delphitools.tools.devtools.MetaTagGenerator
+import com.delphi.delphitools.tools.devtools.CronBuilder
 import com.delphi.delphitools.tools.devtools.JwtDecoder
 import com.delphi.delphitools.tools.devtools.UuidGenerator
 import com.delphi.delphitools.gallery.galleryPages
@@ -494,6 +498,10 @@ private fun ToolPage(tool: Tool) {
             "uuid-genny" -> UuidGenerator()
             "jwt-decoder" -> JwtDecoder()
             "encoder" -> Encoder()
+            "password-genny" -> PasswordGenerator()
+            "decoder" -> CipherDecoder()
+            "meta-tag-genny" -> MetaTagGenerator()
+            "cron-builder" -> CronBuilder()
             "svg-optimiser" -> SvgOptimiser()
             "metadata-stripper" -> MetadataStripper()
             "image-converter" -> ImageConverter()

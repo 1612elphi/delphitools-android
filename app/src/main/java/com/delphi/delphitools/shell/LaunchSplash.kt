@@ -149,7 +149,7 @@ fun LaunchSplash(onFinished: () -> Unit) {
     val dark = c.background.luminance() < 0.5f
     val finished by rememberUpdatedState(onFinished)
     val resources = LocalResources.current
-    val symbols = remember { tools.map { it.icon }.distinct() }
+    val symbols = remember { allTools.map { it.icon }.distinct() }
     val painters = symbols.map { rememberVectorPainter(it) }
     val letters = remember { glyphDrawables.mapValues { ImageBitmap.imageResource(resources, it.value) } }
     val guests = remember { launchGuests.map { ImageBitmap.imageResource(resources, it.drawable) } }

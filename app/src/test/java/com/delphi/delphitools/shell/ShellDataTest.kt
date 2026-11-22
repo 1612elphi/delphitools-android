@@ -16,7 +16,7 @@ class ShellDataTest {
     @Test
     fun searchMatchesNamesKeywordsAndCategories() {
         assertTrue(searchTools("deuteranopia").any { it.id == "colorblind-sim" })
-        assertTrue(searchTools("QR").any { it.id == "qr-genny" })
+        assertTrue(searchTools("WCAG").any { it.id == "contrast-checker" })
         assertTrue(searchTools("turbo-nerd").all { it.category == ToolCategory.TurboNerd || "turbo-nerd" in it.description.lowercase() })
         assertEquals(tools, searchTools(""))
     }

@@ -158,8 +158,8 @@ private val kicker = CanonText.captionSemibold.copy(letterSpacing = 1.4.sp)
 /** A category header (`tool` null) or a tool, in fan order. */
 private class FanEntry(val category: ToolCategory, val tool: Tool?)
 
-private fun fanEntries(order: List<ToolCategory>): List<FanEntry> = order.flatMap { category ->
-    listOf(FanEntry(category, null)) + toolsIn(category).map { FanEntry(category, it) }
+private fun fanEntries(order: List<ToolCategory>): List<FanEntry> = shownCategories(order).flatMap { (category, inCategory) ->
+    listOf(FanEntry(category, null)) + inCategory.map { FanEntry(category, it) }
 }
 
 private fun List<FanEntry>.wrapped(index: Int) = index.mod(size)

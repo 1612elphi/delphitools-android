@@ -79,8 +79,8 @@ internal fun ToolLattice(state: LazyGridState, onOpen: (Tool) -> Unit, onFavour:
     val showsFavour = stores.showsFavour
     val sections: List<Pair<String, List<Tool>>> = listOf(
         "Debug" to listOf(canonGallery),
-        "Greatest Hits" to greatestHitsIds.mapNotNull(::toolWithId),
-    ) + stores.categoryOrder.map { it.title to toolsIn(it) }
+        "Greatest Hits" to greatestHits,
+    ).filter { it.second.isNotEmpty() } + shownCategories(stores.categoryOrder).map { (category, inCategory) -> category.title to inCategory }
     // hero, then the banner and the favourites when they show; each section is a heading, its cells and an end spacer
     val top = 1 + (if (showsFavour) 1 else 0) + (if (favourites.isNotEmpty()) 1 else 0)
     val headingIndices = sections.runningFold(top) { at, (_, tools) -> at + tools.size + 2 }.dropLast(1)

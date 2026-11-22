@@ -126,7 +126,7 @@ class Tool(
 )
 
 // dt-ios Core/ToolRegistry.swift; descriptions are the existing iOS strings
-val tools: List<Tool> = with(Icons.Outlined) {
+val allTools: List<Tool> = with(Icons.Outlined) {
     listOf(
         Tool("audio-atlas", "Audio Atlas", "Everything about one audio file, on one page", GraphicEq, ToolCategory.AudioVideo),
         Tool("audio-extractor", "Audio Extractor", "Extract the audio out of a video file", MusicNote, ToolCategory.AudioVideo),
@@ -236,15 +236,22 @@ val tools: List<Tool> = with(Icons.Outlined) {
     )
 }
 
+/** The ported tools; the home, the fan, search, favourites and recents list only these. */
+val tools: List<Tool> = allTools.filter { it.id in toolPages }
+
 // iOS debug builds only; the shell shows it in every build
 val canonGallery = Tool("canon-gallery", "Canon Gallery", "Every canon component", Icons.Outlined.Apps, ToolCategory.DevTools)
 
 // ponytail: "workflows" opens the Workflows page on iOS, not ported
-val greatestHitsIds = listOf("qr-genny", "auto-subtitle", "background-remover")
+val greatestHits = listOf("qr-genny", "auto-subtitle", "background-remover").mapNotNull { id -> tools.firstOrNull { it.id == id } }
 
-fun toolWithId(id: String): Tool? = if (id == canonGallery.id) canonGallery else tools.firstOrNull { it.id == id }
+fun toolWithId(id: String): Tool? = if (id == canonGallery.id) canonGallery else allTools.firstOrNull { it.id == id }
 
 fun toolsIn(category: ToolCategory): List<Tool> = tools.filter { it.category == category }
+
+/** Each category in `order` that has a ported tool, with its tools. */
+fun shownCategories(order: List<ToolCategory>): List<Pair<ToolCategory, List<Tool>>> =
+    order.map { it to toolsIn(it) }.filter { it.second.isNotEmpty() }
 
 // dt-ios ToolRegistry searchKeywords
 private val searchKeywords: Map<String, List<String>> = mapOf(

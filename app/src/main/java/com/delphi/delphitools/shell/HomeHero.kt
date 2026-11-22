@@ -197,7 +197,7 @@ fun HomeHero(modifier: Modifier = Modifier) {
 @Composable
 private fun HomePattern(seed: Long, bottom: Float, drifts: Boolean) {
     val primary = LocalDelphiColours.current.primary
-    val icons = remember { tools.map { it.icon }.distinct() }
+    val icons = remember { allTools.map { it.icon }.distinct() }
     val painters = icons.map { rememberVectorPainter(it) }
     val picks = remember(seed) {
         val random = Random(seed)

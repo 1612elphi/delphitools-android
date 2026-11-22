@@ -99,47 +99,6 @@ import com.delphi.delphitools.canon.CanonHeading
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.LocalCanonPatternSymbol
 import com.delphi.delphitools.canon.canonClickable
-import com.delphi.delphitools.tools.audiovideo.TimecodeCalc
-import com.delphi.delphitools.tools.colour.ColourAtlas
-import com.delphi.delphitools.tools.colour.ColourBlindnessSimulator
-import com.delphi.delphitools.tools.colour.HarmonyGenerator
-import com.delphi.delphitools.tools.colour.TailwindShades
-import com.delphi.delphitools.tools.images.ImageCompressor
-import com.delphi.delphitools.tools.images.ImageSplitter
-import com.delphi.delphitools.tools.images.PasteImage
-import com.delphi.delphitools.tools.images.PlaceholderGenerator
-import com.delphi.delphitools.tools.images.SvgOptimiser
-import com.delphi.delphitools.tools.images.MetadataStripper
-import com.delphi.delphitools.tools.images.ImageConverter
-import com.delphi.delphitools.tools.images.Base64ImageEncoder
-import com.delphi.delphitools.tools.print.PaperSizes
-import com.delphi.delphitools.tools.typography.LineHeightCalc
-import com.delphi.delphitools.tools.typography.PxToRem
-import com.delphi.delphitools.tools.typography.WordCounter
-import com.delphi.delphitools.tools.turbonerd.BrailleConverter
-import com.delphi.delphitools.tools.turbonerd.IPATranscriber
-import com.delphi.delphitools.tools.turbonerd.MorseCode
-import com.delphi.delphitools.tools.turbonerd.NATOPhonetic
-import com.delphi.delphitools.tools.audiovideo.SubtitleConverter
-import com.delphi.delphitools.tools.devtools.Encoder
-import com.delphi.delphitools.tools.colour.ContrastChecker
-import com.delphi.delphitools.tools.colour.ColourConverter
-import com.delphi.delphitools.tools.colour.PaletteGenerator
-import com.delphi.delphitools.tools.colour.PaletteCollection
-import com.delphi.delphitools.tools.typography.TypoCalc
-import com.delphi.delphitools.tools.turbonerd.ShavianTransliterator
-import com.delphi.delphitools.tools.typography.GlyphBrowser
-import com.delphi.delphitools.tools.typography.FontExplorer
-import com.delphi.delphitools.tools.devtools.HttpStatus
-import com.delphi.delphitools.tools.devtools.BaseConverter
-import com.delphi.delphitools.tools.devtools.RegexTester
-import com.delphi.delphitools.tools.devtools.TextDiff
-import com.delphi.delphitools.tools.devtools.PasswordGenerator
-import com.delphi.delphitools.tools.devtools.CipherDecoder
-import com.delphi.delphitools.tools.devtools.MetaTagGenerator
-import com.delphi.delphitools.tools.devtools.CronBuilder
-import com.delphi.delphitools.tools.devtools.JwtDecoder
-import com.delphi.delphitools.tools.devtools.UuidGenerator
 import com.delphi.delphitools.gallery.galleryPages
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -488,51 +447,7 @@ private fun Pill(icon: ImageVector, name: String, nameRoom: Dp) {
 @Composable
 private fun ToolPage(tool: Tool) {
     CompositionLocalProvider(LocalCanonPatternSymbol provides tool.icon) {
-        when (tool.id) {
-            "image-compressor" -> ImageCompressor()
-            "timecode-calc" -> TimecodeCalc()
-            "placeholder-genny" -> PlaceholderGenerator()
-            "paste-image" -> PasteImage()
-            "image-splitter" -> ImageSplitter()
-            "px-to-rem" -> PxToRem()
-            "paper-sizes" -> PaperSizes()
-            "word-counter" -> WordCounter()
-            "line-height-calc" -> LineHeightCalc()
-            "colour-atlas" -> ColourAtlas()
-            "harmony-genny" -> HarmonyGenerator()
-            "tailwind-shades" -> TailwindShades()
-            "colorblind-sim" -> ColourBlindnessSimulator()
-            "braille-converter" -> BrailleConverter()
-            "morse-code" -> MorseCode()
-            "nato-phonetic" -> NATOPhonetic()
-            "ipa-transcriber" -> IPATranscriber()
-            "subtitle-converter" -> SubtitleConverter()
-            "uuid-genny" -> UuidGenerator()
-            "jwt-decoder" -> JwtDecoder()
-            "encoder" -> Encoder()
-            "contrast-checker" -> ContrastChecker()
-            "colour-converter" -> ColourConverter()
-            "palette-genny" -> PaletteGenerator()
-            "palette-collection" -> PaletteCollection()
-            "typo-calc" -> TypoCalc()
-            "shavian-transliterator" -> ShavianTransliterator()
-            "glyph-browser" -> GlyphBrowser()
-            "font-explorer" -> FontExplorer()
-            "http-status" -> HttpStatus()
-            "base-converter" -> BaseConverter()
-            "regex-tester" -> RegexTester()
-            "text-diff" -> TextDiff()
-            "password-genny" -> PasswordGenerator()
-            "decoder" -> CipherDecoder()
-            "meta-tag-genny" -> MetaTagGenerator()
-            "cron-builder" -> CronBuilder()
-            "svg-optimiser" -> SvgOptimiser()
-            "metadata-stripper" -> MetadataStripper()
-            "image-converter" -> ImageConverter()
-            "base64-image-encoder" -> Base64ImageEncoder()
-            canonGallery.id -> if (galleryPages.isEmpty()) EmptyPage(tool) else GalleryPages()
-            else -> EmptyPage(tool)
-        }
+        toolPages[tool.id]?.invoke() ?: if (tool.id == canonGallery.id && galleryPages.isNotEmpty()) GalleryPages() else EmptyPage(tool)
     }
 }
 

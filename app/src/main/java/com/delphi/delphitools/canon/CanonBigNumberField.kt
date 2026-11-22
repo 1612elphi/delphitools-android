@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.contentDescription
@@ -36,6 +37,7 @@ private val bigNumber = TextStyle(fontFamily = DelphiMono, fontSize = 36.sp, fon
 /**
  * A tool's main number, large and centred over its unit, between step buttons that repeat while held.
  * The tool parses [text] and sets it; [onStep] gets -1 or 1; [onEndEditing] runs when typing ends.
+ * [textColour] replaces the foreground, for a number the tool cannot read.
  */
 @Composable
 fun CanonBigNumberField(
@@ -48,6 +50,8 @@ fun CanonBigNumberField(
     label: String? = null,
     enabled: Boolean = true,
     onEndEditing: () -> Unit = {},
+    keyboardOptions: KeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+    textColour: Color? = null,
 ) {
     val c = LocalDelphiColours.current
     val focus = remember { FocusRequester() }
@@ -66,9 +70,9 @@ fun CanonBigNumberField(
                 onValueChange = onTextChange,
                 enabled = enabled,
                 singleLine = true,
-                textStyle = bigNumber.copy(color = c.foreground),
+                textStyle = bigNumber.copy(color = textColour ?: c.foreground),
                 cursorBrush = SolidColor(c.primary),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                keyboardOptions = keyboardOptions,
                 keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                 modifier = Modifier
                     .fillMaxWidth()

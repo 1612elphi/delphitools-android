@@ -122,6 +122,10 @@ import com.delphi.delphitools.tools.turbonerd.MorseCode
 import com.delphi.delphitools.tools.turbonerd.NATOPhonetic
 import com.delphi.delphitools.tools.audiovideo.SubtitleConverter
 import com.delphi.delphitools.tools.devtools.Encoder
+import com.delphi.delphitools.tools.devtools.HttpStatus
+import com.delphi.delphitools.tools.devtools.BaseConverter
+import com.delphi.delphitools.tools.devtools.RegexTester
+import com.delphi.delphitools.tools.devtools.TextDiff
 import com.delphi.delphitools.tools.devtools.PasswordGenerator
 import com.delphi.delphitools.tools.devtools.CipherDecoder
 import com.delphi.delphitools.tools.devtools.MetaTagGenerator
@@ -498,6 +502,10 @@ private fun ToolPage(tool: Tool) {
             "uuid-genny" -> UuidGenerator()
             "jwt-decoder" -> JwtDecoder()
             "encoder" -> Encoder()
+            "http-status" -> HttpStatus()
+            "base-converter" -> BaseConverter()
+            "regex-tester" -> RegexTester()
+            "text-diff" -> TextDiff()
             "password-genny" -> PasswordGenerator()
             "decoder" -> CipherDecoder()
             "meta-tag-genny" -> MetaTagGenerator()

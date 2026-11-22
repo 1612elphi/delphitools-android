@@ -110,7 +110,7 @@ class ShavianEngine(
         )
         private val thoughtWords = listOf("caught", "bought", "raw", "spawn", "cause")
 
-        // PALM words take 𐑭, THOUGHT bugs take 𐑷
+        // palm 𐑭, thought 𐑷
         private val overrides: Map<String, Pair<String, String>> =
             palmWords.associateWith { "AA" to "AA_PALM" } + thoughtWords.associateWith { "AA" to "AO" }
 
@@ -119,7 +119,7 @@ class ShavianEngine(
             return codes.map { if (ShavianPhonemeMap.normaliseArpabet(it) == from) to else it }
         }
 
-        /** Y then UW is the yew ligature 𐑿. */
+        // y+uw: yew ligature
         private fun phonemes(codes: List<String>): List<ShavianPhoneme> {
             val merged = mutableListOf<String>()
             var i = 0

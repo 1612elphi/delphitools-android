@@ -215,7 +215,6 @@ data class GennyState(
     val count: Int = 5,
     val locked: Set<Int> = emptySet(),
 ) {
-    /** A base hue hint from the first locked colour, for the colour-theory strategies. */
     private val lockedBaseHue get() = locked.minOrNull()?.takeIf { it < palette.size }?.let { palette[it].oklch()[2] }
 
     private fun keepingLocked(fresh: List<Rgb>) =

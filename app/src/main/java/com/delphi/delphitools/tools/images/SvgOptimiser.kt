@@ -5,7 +5,9 @@ import android.content.Context
 import android.graphics.Color
 import android.net.Uri
 import android.text.format.Formatter
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,7 +18,10 @@ import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -108,6 +113,10 @@ class SvgOptimiserModel(application: Application) : AndroidViewModel(application
         }
         working = true
         val app = getApplication<Application>()
+        if (started?.isLost == true) {
+            engine = null
+            started = null
+        }
         val engine = engine ?: viewModelScope.async { SvgOptimiserEngine.start(app).also { started = it } }.also { engine = it }
         viewModelScope.launch {
             val result = engine.await()?.optimise(trimmed)
@@ -215,11 +224,19 @@ fun SvgOptimiser(model: SvgOptimiserModel = viewModel()) {
  */
 @Composable
 private fun SvgPreview(svg: String, ratio: Float) {
+    var renderer by remember { mutableIntStateOf(0) }
     Box(Modifier.fillMaxSize().padding(16.dp).semantics { contentDescription = "Preview" }, contentAlignment = Alignment.Center) {
         // ponytail: no fade-in on load; add a page-finished alpha animation if the swap flickers
-        AndroidView(
+        key(renderer) { AndroidView(
             factory = { context ->
                 WebView(context).apply {
+                    // default kills the app
+                    webViewClient = object : WebViewClient() {
+                        override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+                            renderer++
+                            return true
+                        }
+                    }
                     setBackgroundColor(Color.TRANSPARENT)
                     settings.javaScriptEnabled = false
                     settings.blockNetworkLoads = true
@@ -235,7 +252,7 @@ private fun SvgPreview(svg: String, ratio: Float) {
                 }
             },
             onRelease = { it.destroy() },
-            modifier = Modifier.aspectRatio(ratio).canonChecks(paper = true),
-        )
+            modifier = Modifier.aspectRatio(ratio.takeIf { it.isFinite() }?.coerceIn(0.01f, 100f) ?: 1f).canonChecks(paper = true),
+        ) }
     }
 }

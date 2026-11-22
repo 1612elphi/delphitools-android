@@ -27,7 +27,6 @@ object PaletteCollectionEngine {
     val coverTilt = Math.toRadians(7.0)
     private val maxSpread = Math.toRadians(80.0)
 
-    /** Share of the room left over that goes above and before the fan; the rest stays below and after it. */
     private const val CORNER_HUG = 0.3
 
     /** `angles` in radians clockwise from upright, the cover last; lengths in the room's units. */
@@ -43,7 +42,7 @@ object PaletteCollectionEngine {
         val degree = Math.toRadians(1.0)
         val cover = Math.PI / 2 + coverTilt
         fun angles(step: Double) = (1 until max(count, 1)).map { cover + step * it } + cover
-        // min x, min y, max x, max y
+        // bounds: min then max
         fun bounds(angles: List<Double>): DoubleArray {
             val box = doubleArrayOf(Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE)
             for (angle in angles) {

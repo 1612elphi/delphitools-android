@@ -54,7 +54,6 @@ import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.delay
 import kotlin.math.sin
 
-// fold, fan-out and delay per chip from the cover outward
 private const val FOLD_MS = 130
 private const val FAN_MS = 520
 private const val STAGGER_MS = 35
@@ -110,7 +109,6 @@ fun PaletteDeck(palette: CuratedPalette?, emptyTitle: String, modifier: Modifier
     }
 }
 
-/** One chip: a colour with its hex and nearest name along it near the tip, or the cover with the palette's name. */
 @Composable
 private fun DeckChip(fan: PaletteCollectionEngine.Fan, angle: Double, colour: Rgb?, title: String?, detail: String?) {
     val c = LocalDelphiColours.current

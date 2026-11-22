@@ -73,14 +73,13 @@ import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.launch
 import kotlin.math.floor
 
-// dt-ios ColourManagement key; the value is the working space's key
+// dt-ios colourmanagement key
 private const val WORKING = "colourManagementWorking"
 
 class ColourConverterModel(app: Application) : AndroidViewModel(app) {
     private val prefs = app.getSharedPreferences("delphitools", Context.MODE_PRIVATE)
     val solid = CanonColourSolidState(SolidSpace.RGB, Rgb.black)
 
-    // sliced row, rgb blue
     val controls = CanonColourControlsState(solid, activeRow = 2)
     val input = CanonColourNotationState()
 
@@ -93,10 +92,8 @@ class ColourConverterModel(app: Application) : AndroidViewModel(app) {
         private set
     val notation get() = ColourConverterNotation(management)
 
-    /** The solid's space as last shown, to tell a space change from a pick. */
     private var solidSpace = solid.space
 
-    /** The point last set here; any other point is a pick. */
     private var expected = emptyList<Double>()
 
     init {
@@ -119,7 +116,6 @@ class ColourConverterModel(app: Application) : AndroidViewModel(app) {
         solid.setPoint(point, animated)
     }
 
-    /** The solid's point for the colour: its channels as the value lines give them. */
     private fun showOnSolid(animated: Boolean) =
         setPoint(ColourConverterNotation.point(notation.values(colour, solid.space), solid.space), animated)
 
@@ -146,7 +142,6 @@ class ColourConverterModel(app: Application) : AndroidViewModel(app) {
         val before = management
         management = ColourManagement(working)
         prefs.edit { putString(WORKING, working.key) }
-        // same colour, new numbers
         colour = management.colour(before.xyz(colour))
         showOnSolid(animated = true)
     }
@@ -235,7 +230,6 @@ fun ColourConverter(model: ColourConverterModel = viewModel()) {
     CanonSplit(sidebar = listOf(canvas), main = listOf(controls, formats, profiles), halves = true, collapsesTo = 240.dp)
 }
 
-/** Changes that come close together, a drag's, follow at once; the rest ease. */
 private class ChangeClock {
     private var last = 0L
     private var key: Any? = null
@@ -389,7 +383,6 @@ private fun ColourChannelRibbons(
     }
 }
 
-/** The ribbons' span, in the value column of the lines above, and the rows they sit in. */
 private class Track(width: Float, density: Density, private val rtl: Boolean) {
     private val inset = with(density) { CanonMetrics.panelPadding.toPx() }
     private val labels = with(density) { (CanonMetrics.panelPadding + labelWidth + 8.dp).toPx() }

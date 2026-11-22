@@ -224,7 +224,6 @@ private fun HttpStatusRow(entry: HttpStatusEntry, isLit: Boolean, onSelect: () -
     }
 }
 
-/** The selected code over a tile per registered code, by class; matches of the search stay lit. */
 @Composable
 private fun HttpStatusChart(entry: HttpStatusEntry?, matches: Set<Int>) {
     val c = LocalDelphiColours.current

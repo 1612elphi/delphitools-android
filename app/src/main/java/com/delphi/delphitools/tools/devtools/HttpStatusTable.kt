@@ -36,7 +36,7 @@ object HttpStatusTable {
         HttpStatusClass(5, "Server Error"),
     )
 
-    // RFC 9110 §15.1: heuristically cacheable by default
+    // rfc 9110 §15.1 cacheable
     private val defaultCacheable = setOf(200, 203, 204, 206, 300, 301, 308, 404, 405, 410, 414, 501)
 
     private fun entry(

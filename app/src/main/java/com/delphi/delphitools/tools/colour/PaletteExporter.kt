@@ -52,7 +52,7 @@ object PaletteExporter {
         fun u32(v: Int) = out.write(ByteBuffer.allocate(4).putInt(v).array())
         fun f32(v: Double) = out.write(ByteBuffer.allocate(4).putFloat(v.toFloat()).array())
         fun utf16(text: String): ByteArray {
-            // utf-16be with a length prefix that counts the null terminator
+            // utf-16be, length counts null
             val units = ByteBuffer.allocate(2 + text.length * 2 + 2).putShort((text.length + 1).toShort())
             text.forEach { units.putChar(it) }
             return units.putShort(0).array()
@@ -74,7 +74,7 @@ object PaletteExporter {
             f32(colour.r)
             f32(colour.g)
             f32(colour.b)
-            // normal, a process colour
+            // normal process colour
             u16(2)
         }
         u16(0xC002)

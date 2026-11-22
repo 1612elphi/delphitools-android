@@ -142,7 +142,7 @@ class CipherDecoderModel : ViewModel() {
         }
     }
 
-    /** 300 decodes: off main. */
+    // 300 decodes: off main
     private fun classify() {
         classifying?.cancel()
         val text = input

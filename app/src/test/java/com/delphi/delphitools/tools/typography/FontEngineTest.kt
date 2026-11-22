@@ -51,7 +51,7 @@ class FontEngineTest {
     @Test
     fun rejects() {
         assertThrows(FontFormatException::class.java) { FontEngine.decode(byteArrayOf(1, 2, 3, 4, 5)) }
-        // woff2 has no decoder here
+        // woff2: no decoder
         assertThrows(FontFormatException::class.java) { FontEngine.decode("wOF2xxxx".toByteArray()) }
         val many = ByteBuffer.allocate(44 + 4096 * 20).putInt(0x774F4646).putInt(0x00010000).putInt(0).putShort(0x1000).array()
         assertThrows(FontFormatException::class.java) { FontEngine.decode(many) }
@@ -77,7 +77,7 @@ class FontEngineTest {
     fun fit() {
         // fills the height
         assertEquals(100f to 106f, FontEngine.fit(0.8f, 0.2f, 1f, 10f, 1000f, 116f, 16f))
-        // shrinks to half, then clips
+        // halves, then clips
         assertEquals(50f to 10f + 16 + 25 + 40, FontEngine.fit(0.8f, 0.2f, 20f, 10f, 1000f, 116f, 16f))
         // fits the width
         assertEquals(80f, FontEngine.fit(0.8f, 0.2f, 12.5f, 10f, 1000f, 116f, 16f).first)
@@ -90,7 +90,6 @@ class FontEngineTest {
         assertFalse(coverage.covers(0) || coverage.covers(10) || coverage.covers(21))
     }
 
-    /** A WOFF 1.0 of [sfnt], every table deflated. */
     private fun woff(sfnt: ByteArray): ByteArray {
         val input = ByteBuffer.wrap(sfnt)
         val count = input.getShort(4).toInt()

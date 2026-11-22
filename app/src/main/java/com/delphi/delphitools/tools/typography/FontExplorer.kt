@@ -121,7 +121,6 @@ internal class LoadedFont(val info: FontInfo, val typeface: Typeface, val capHei
     val metrics = EmMetrics(info.ascent / em, (info.capHeight ?: capHeight) / em, (info.xHeight ?: xHeight) / em, info.descent / em)
 }
 
-/** Ink height above the baseline of [text] in [typeface] at [size] px. */
 private fun inkHeight(typeface: Typeface, text: String, size: Float): Int {
     val paint = Paint().apply {
         this.typeface = typeface
@@ -423,7 +422,6 @@ private fun FontMetricsPicture(
     }
 }
 
-/** One line of [text] from [x] on [baseline], fading out over the last 40 px before [right] when it runs past. */
 private fun DrawScope.fadedText(text: String, paint: Paint, x: Float, baseline: Float, right: Float) {
     val overflows = paint.measureText(text) > right - x + 0.5f
     clipRect(right = right) {
@@ -449,7 +447,6 @@ private fun DrawScope.fadedText(text: String, paint: Paint, x: Float, baseline: 
     }
 }
 
-/** dt-ios FontWaterfall: the preview at eight sizes, each row as deep as the font's ascent and descent need. */
 @Composable
 private fun FontWaterfall(text: String, font: LoadedFont) {
     val c = LocalDelphiColours.current

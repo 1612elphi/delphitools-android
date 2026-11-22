@@ -163,7 +163,6 @@ fun MarkedText(
 
 private class Piece(val left: Float, val right: Float, val line: Int)
 
-/** The range's glyph extent on each line it touches; a line break itself has no width. */
 private fun pieces(result: TextLayoutResult, range: TextSpan, text: String): List<Piece> {
     if (range.length <= 0 || range.start >= text.length) return emptyList()
     val end = minOf(range.end, text.length)

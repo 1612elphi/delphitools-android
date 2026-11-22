@@ -543,7 +543,6 @@ private fun ConversionPicture(
     }
 }
 
-/** Places the element inside [rect]'s bottom trailing corner, [inset] pixels in. */
 private fun Modifier.placedAtCorner(rect: Rect, rightToLeft: Boolean, inset: Float): Modifier = layout { measurable, constraints ->
     val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
     layout(constraints.maxWidth, constraints.maxHeight) {

@@ -45,7 +45,7 @@ class RegexTesterEngineTest {
     @Test
     fun runaway() {
         val started = System.nanoTime()
-        // the JDK memoises iOS's (a+)+$; ICU on a device does not
+        // jdk memoises (a+)+$
         val runaway = RegexTesterEngine.run("((a+)+)+b", "g", "a".repeat(40) + "!", timeLimitMs = 200)
         assertEquals(RegexOutcome.TimedOut, runaway)
         assertTrue((System.nanoTime() - started) / 1_000_000 < 2000)

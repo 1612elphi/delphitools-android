@@ -115,7 +115,7 @@ class PasswordGeneratorModel(application: Application) : AndroidViewModel(applic
     }
 
     fun update(spec: PasswordEngine.PasswordSpec) {
-        // at least one class stays on
+        // one class stays on
         if (PasswordEngine.charset(spec).isEmpty()) return
         this.spec = spec
         regenerate()

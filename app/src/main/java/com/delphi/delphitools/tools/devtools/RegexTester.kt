@@ -235,7 +235,6 @@ fun RegexTester(model: RegexTesterModel = viewModel()) {
     CanonSplit(sidebar = listOf(canvas), main = listOf(patternBlock, testBlock, matches), halves = true, collapsesTo = 150.dp)
 }
 
-/** `/ pattern / flags`: the pattern typed between slashes, the flags after, and a cell that copies the whole literal. */
 @Composable
 private fun PatternRow(pattern: String, flags: String, onType: (String) -> Unit, onCopy: () -> Unit) {
     val c = LocalDelphiColours.current

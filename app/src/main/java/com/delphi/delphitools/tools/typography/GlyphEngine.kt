@@ -171,7 +171,7 @@ object GlyphEngine {
 
     fun name(codePoint: Int): String = Character.getName(codePoint) ?: label(codePoint)
 
-    // untranslated, like names; Swift's Unicode.GeneralCategory case names
+    // swift generalcategory case names
     private val categories = mapOf(
         Character.UPPERCASE_LETTER to "Uppercase Letter",
         Character.LOWERCASE_LETTER to "Lowercase Letter",

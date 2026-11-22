@@ -150,7 +150,7 @@ class BaseConverterModel : ViewModel() {
         fit()
     }
 
-    /** The word grows to hold A and B; it never shrinks on its own. */
+    // word never shrinks
     private fun fit() {
         if (word < needed) word = needed
         shift = shift.coerceAtMost(word - 1)
@@ -183,9 +183,9 @@ class BaseConverterModel : ViewModel() {
     }
 
     fun step(direction: Int) {
+        read()
         val value = reading.value ?: 0uL
         val next = if (direction > 0) (if (value == ULong.MAX_VALUE) value else value + 1uL) else (if (value == 0uL) 0uL else value - 1uL)
-        typing?.cancel()
         reading = BaseReading.Value(next)
         entry = BaseNumber.format(next, radix)
         fit()
@@ -193,7 +193,7 @@ class BaseConverterModel : ViewModel() {
 
     fun toggle(operandIndex: Int, bit: Int) {
         val flipped = 1uL shl bit
-        typing?.cancel()
+        read()
         if (operandIndex == 0) {
             val next = (reading.value ?: 0uL) xor flipped
             reading = BaseReading.Value(next)
@@ -326,7 +326,6 @@ fun BaseConverter(model: BaseConverterModel = viewModel()) {
     }
 }
 
-/** Height that shows the register at [width], the lamps laid out as they would be in a band [LIMIT] tall. */
 private fun idealHeight(width: Float, operands: List<RegisterOperand>, word: Int): Float {
     val geometry = BitRegisterLayout.layout(
         word,
@@ -340,7 +339,6 @@ private fun idealHeight(width: Float, operands: List<RegisterOperand>, word: Int
 
 private class Lamp(val operand: Int, val bit: Int, val x: Float, val y: Float)
 
-/** Lamp brightness where the last change began, per operand and bit, and the operands it changed to. */
 private class LampClock {
     var operands: List<RegisterOperand> = emptyList()
     var word = 0
@@ -422,7 +420,7 @@ private fun BitRegister(operands: List<RegisterOperand>, word: Int, figure: Stri
         val left = areaX + maxOf(0f, (areaW - geometry.width) / 2) + if (signs) SIGN_WIDTH else 0f
         fun x(column: Int) = left + column * (cell + BIT_GAP) + (column / 4) * (NIBBLE_GAP - BIT_GAP)
 
-        // positions first, so drawing and the tap targets agree
+        // positions shared with taps
         val lamps = mutableListOf<Lamp>()
         val signRows = mutableListOf<Pair<Int, Float>>()
         val rules = mutableListOf<Float>()
@@ -498,7 +496,7 @@ private fun BitRegister(operands: List<RegisterOperand>, word: Int, figure: Stri
             }
         }
 
-        // tap targets: the lamp plus half the gap around it, as on iOS
+        // tap target, as ios
         val reach: Dp = (BIT_GAP / 2 + 1).dp
         lamps.filter { operands[it.operand].editable }.forEach { lamp ->
             val on = clock.goal(lamp.operand, lamp.bit) == 1f

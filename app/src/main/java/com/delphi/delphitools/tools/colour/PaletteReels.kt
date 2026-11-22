@@ -101,7 +101,6 @@ class ReelActions(
     val fillers: (Int) -> List<Rgb>,
 )
 
-// reel timing: first spin, extra per later column, start delay per column, share before the overshoot lands
 private const val SPIN_MS = 500
 private const val EXTRA_MS = 80
 private const val STAGGER_MS = 60
@@ -212,7 +211,6 @@ private fun ReelColumn(
         })
         reel = null
     }
-    // the lamp jumps as a clamp does when it holds
     var lockShown by remember { mutableStateOf(isLocked) }
     LaunchedEffect(isLocked, spin?.key) {
         val toggled = lockShown != isLocked
@@ -355,7 +353,7 @@ private fun ReelColumn(
 
 private val infoFormats = listOf(ColourFormat.HEX, ColourFormat.RGB, ColourFormat.HSL, ColourFormat.OKLCH, ColourFormat.LAB)
 
-// rows by what stays longest when the column is short: hex, rgb, oklch, both contrasts, hsl, lab
+// ordered by drop priority
 private val keep = listOf(0, 1, 3, 5, 6, 2, 4)
 private const val LINE = 32f
 private const val CONTRAST = 44f
@@ -421,7 +419,6 @@ private fun ColourInfo(colour: Rgb, ink: Color, modifier: Modifier) {
 // wcag 2.2 1.4.3, 1.4.6
 private val thresholds = listOf("AA" to ContrastLevel.AA, "AAA" to ContrastLevel.AAA)
 
-/** The colour as type on a white or black chip, the contrast ratio, and AA and AAA lamps. */
 @Composable
 private fun InkContrast(colour: Rgb, ink: Color, white: Boolean, scale: Float) {
     val level = if (white) 1.0 else 0.0

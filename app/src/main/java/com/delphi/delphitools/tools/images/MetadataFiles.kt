@@ -17,7 +17,7 @@ object MetadataFiles {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeByteArray(data, 0, data.size, bounds)
         val tags = if (bounds.outWidth > 0) tags(data) else null
-        // like imageio, the profile name only for an embedded icc profile
+        // imageio: embedded icc only
         val profile = bounds.outColorSpace?.name?.takeIf { MetadataStripEngine.contains(data, "acsp") }
         return Read(MetadataStripEngine.report(data, tags, profile), MetadataStripEngine.scan(data, tags))
     }
@@ -40,7 +40,7 @@ object MetadataFiles {
         return when {
             data.size > 3 && data[0] == 0xFF.toByte() && data[1] == 0xD8.toByte() -> Kind.Jpeg
             ascii(0, 4) == "RIFF" && ascii(8, 4) == "WEBP" -> when {
-                // vp8x animation flag; one frame loses animation
+                // vp8x animation flag
                 ascii(12, 4) == "VP8X" && data.size > 20 && data[20].toInt() and 0x02 != 0 -> null
                 ascii(12, 4) == "VP8L" -> Kind.WebPLossless
                 else -> Kind.WebP

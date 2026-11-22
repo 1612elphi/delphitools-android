@@ -60,8 +60,6 @@ object CipherEngine {
         "Base64" to "VGhlIGNyb3cgZmxpZXMgYXQgbWlkbmlnaHQu",
     )
 
-    // scoring
-
     private val englishFrequency = mapOf(
         'A' to 8.167, 'B' to 1.492, 'C' to 2.782, 'D' to 4.253, 'E' to 12.702, 'F' to 2.228,
         'G' to 2.015, 'H' to 6.094, 'I' to 6.966, 'J' to 0.153, 'K' to 0.772, 'L' to 4.025,
@@ -113,13 +111,11 @@ object CipherEngine {
 
     fun englishLikeness(text: String): Double {
         if (text.count { it.isAsciiLetter() } < 3) return 0.0
-        // chi against a hand-picked ceiling
+        // hand-picked chi ceiling
         val chiScore = maxOf(0.0, 1 - chiSquaredScore(text) / 100)
         val wordScore = minOf(1.0, commonWordRatio(text) * 3)
         return chiScore * 0.6 + wordScore * 0.4
     }
-
-    // classical ciphers
 
     private inline fun mapLetters(text: String, transform: (code: Int, base: Int) -> Int): String {
         val out = StringBuilder(text.length)
@@ -167,11 +163,8 @@ object CipherEngine {
         return mapLetters(text) { x, _ -> if (encode) (a * x + b) % 26 else (inverse * ((x - b + 26 * 26) % 26)) % 26 }
     }
 
-    // codes
-
     private class Chunk(val text: String, val isWhitespaceRun: Boolean)
 
-    // whitespace runs and other runs
     private fun chunks(text: String): List<Chunk> {
         val out = mutableListOf<Chunk>()
         val current = StringBuilder()
@@ -224,8 +217,6 @@ object CipherEngine {
         return (0..cleaned.length - 5 step 5).map { baconReverse[cleaned.substring(it, it + 5)] ?: '?' }.joinToString("")
     }
 
-    // transposition
-
     /** Rail per character, the engine's zig-zag; more rails than characters is one rail per character. */
     fun railPattern(count: Int, rails: Int): List<Int> {
         val effective = maxOf(2, minOf(rails, maxOf(count, 2)))
@@ -263,8 +254,6 @@ object CipherEngine {
         val cursors = IntArray(count)
         return pattern.joinToString("") { rows[it][cursors[it]++] }
     }
-
-    // encodings
 
     fun base64Decode(text: String): String =
         EncoderEngine.base64Decode(text, urlSafe = false).getOrElse { throw CipherError(CipherFailure.Base64Invalid) }
@@ -317,8 +306,6 @@ object CipherEngine {
         return String(bytes, Charsets.UTF_8)
     }
 
-    // vigenère key recovery
-
     fun indexOfCoincidence(text: String): Double {
         val counts = IntArray(26)
         var n = 0
@@ -356,15 +343,13 @@ object CipherEngine {
         for (length in 2..upper) {
             iocs += (0 until length).sumOf { indexOfCoincidence(stride(letters, it, length)) } / length
         }
-        // shortest key near the best index
+        // shortest key near best
         val maxIoC = iocs.max()
         if (maxIoC < 0.055) return null
         val bestLength = (2..upper).firstOrNull { iocs[it] >= maxIoC - 0.008 } ?: return null
         val key = (0 until bestLength).map { 'A' + bestCaesarShiftForGroup(stride(letters, it, bestLength)) }.joinToString("")
         return key to iocs[bestLength]
     }
-
-    // manual run
 
     fun runManual(input: String, cipher: CipherId, encode: Boolean, params: CipherParams): String {
         if (input.isEmpty()) return ""
@@ -386,9 +371,7 @@ object CipherEngine {
         }
     }
 
-    // auto-detection
-
-    // letter frequency and word hits settle long before this much text
+    // scores settle on prefix
     private const val PROBE_LIMIT = 1500
 
     private fun attempt(decode: () -> String): String? = try {
@@ -458,7 +441,7 @@ object CipherEngine {
         return best.values.sortedByDescending { it.score }.take(8)
     }
 
-    /** Every substitution is scored on [probe] and only re-run over the whole text once it is kept, so the ~330 trial decodes stay bounded. */
+    // probe bounds trial decodes
     private fun letterCiphers(trimmed: String, probe: String): List<CipherCandidate> {
         val candidates = mutableListOf<CipherCandidate>()
 

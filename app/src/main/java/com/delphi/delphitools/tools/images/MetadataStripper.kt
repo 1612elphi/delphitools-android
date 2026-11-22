@@ -288,7 +288,6 @@ private val mapHeight = 200.dp
 private val sideBySide = 600.dp
 private val lampNames = MetadataScan.Block.entries.map { it.label }
 
-/** dt-ios MetadataDossier: where the file says it was taken, and a lamp per metadata block, struck as it goes. */
 @Composable
 private fun MetadataDossier(
     found: MetadataScan?,
@@ -352,7 +351,6 @@ private fun MetadataDossier(
     }
 }
 
-/** dt-ios LocationMap: the world, dimmed without a location, with crosshairs and a pin on one. */
 @Composable
 private fun LocationMap(location: MetadataScan.Location?, removed: Boolean, land: List<FloatArray>, modifier: Modifier) {
     val c = LocalDelphiColours.current
@@ -399,7 +397,6 @@ private fun LocationMap(location: MetadataScan.Location?, removed: Boolean, land
             drawLine(line, Offset(x, 0f), Offset(x, size.height), density.density)
             drawLine(line, Offset(0f, y), Offset(size.width, y), density.density)
         }
-        // caption and pin placed by the spot: the caption takes the far corner
         Layout(
             content = {
                 Box(

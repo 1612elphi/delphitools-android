@@ -98,7 +98,6 @@ class PaletteCollectionModel(app: Application) : AndroidViewModel(app) {
     var typed by mutableStateOf("")
     private var picked by mutableIntStateOf(0)
 
-    /** Where the palette wheel stood on each shelf. */
     private val stoodAt = mutableStateMapOf<Int, Int>()
 
     val shelves = 1 + PaletteCollectionData.categories.size
@@ -252,7 +251,6 @@ private fun DeleteButton(modifier: Modifier, onDelete: () -> Unit) {
     }
 }
 
-/** The two wheels side by side behind one reading window: categories on the leading side, their palettes beside. */
 @Composable
 private fun PaletteWheels(
     categories: @Composable (Modifier) -> Unit,
@@ -261,7 +259,6 @@ private fun PaletteWheels(
     empty: String?,
 ) {
     val c = LocalDelphiColours.current
-    // the category wheel steps back while a search fills the palette wheel
     val dim by animateFloatAsState(if (searching) 0.25f else 1f, tween(250))
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val split = (maxWidth * 0.36f).coerceIn(112.dp, 210.dp)
@@ -290,7 +287,6 @@ private fun PaletteWheels(
     }
 }
 
-/** A title that grows, darkens and gains weight towards the centre line, with a figure at the trailing edge. */
 @Composable
 private fun WheelTitleRow(title: String, detail: String?, focus: Float, leading: Dp, trailing: Dp, lift: Dp = 0.dp) {
     val c = LocalDelphiColours.current
@@ -317,7 +313,6 @@ private fun WheelTitleRow(title: String, detail: String?, focus: Float, leading:
     }
 }
 
-/** A palette on the wheel: its name over a ribbon of its colours that thickens at the centre. */
 @Composable
 private fun PaletteWheelRow(palette: CuratedPalette, focus: Float) {
     val step = Math.round(focus * 12) / 12f

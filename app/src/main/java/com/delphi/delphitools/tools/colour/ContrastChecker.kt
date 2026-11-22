@@ -116,7 +116,6 @@ private const val MAX_COLOURS = 10
 class ContrastCheckerModel : ViewModel() {
     val solid = CanonColourSolidState(SolidSpace.OKLCH, parseHex("EAEAEA")!!)
 
-    // sliced row, oklch hue
     val controls = CanonColourControlsState(solid, activeRow = 2)
     private var storedForeground by mutableStateOf(parseHex("EAEAEA")!!)
     private var storedBackground by mutableStateOf(parseHex("1A1A2E")!!)
@@ -142,7 +141,6 @@ class ContrastCheckerModel : ViewModel() {
         }
     }
 
-    /** Eases the solid to the edited colour. */
     private fun showActive() {
         val colour = if (network) stored[picked] else if (editsBackground) storedBackground else storedForeground
         solid.setPoint(solid.space.pointFor(colour), animated = true)
@@ -216,7 +214,6 @@ private val suggestions = listOf(
     Suggestion(true, ContrastLevel.AAA, "AAA"),
 )
 
-/** Changes that come close together, a drag's, follow at once; the rest ease. */
 private class ChangePace {
     private var last = 0L
     private var key: Any? = null
@@ -362,7 +359,6 @@ private fun Chip(colour: Rgb, side: Int) {
     )
 }
 
-/** The two wells above the solid: a tap chooses the one the solid edits, the middle cell swaps them. */
 @Composable
 private fun ContrastWells(fg: Rgb, bg: Rgb, editsBackground: Boolean, onSelect: (Boolean) -> Unit, onFlip: () -> Unit) {
     val c = LocalDelphiColours.current
@@ -454,7 +450,6 @@ private val sampleStyle = TextStyle(fontFamily = DelphiFont, fontSize = 17.sp, f
 private val cellRatio = TextStyle(fontFamily = DelphiMono, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
 private val cellGrade = TextStyle(fontFamily = DelphiMono, fontSize = 10.sp, textAlign = TextAlign.Center)
 
-/** Every colour as text on every other: a tap shows that pair in the banner. */
 @Composable
 private fun ContrastNetwork(colours: List<Rgb>, focus: Pair<Int, Int>, onFocus: (Int, Int) -> Unit) {
     val c = LocalDelphiColours.current
@@ -540,7 +535,6 @@ private val specimenGlyphs = listOf(
     Icons.Outlined.Notifications,
 )
 
-/** The foreground on the background: the ratio as a figure, then type at the sizes WCAG names and a row of controls. */
 @Composable
 private fun ContrastSpecimen(fg: Rgb, bg: Rgb, ratio: Double, animated: Boolean) {
     val ground by animateColorAsState(bg.toCanonColor(), pace(animated, 250))
@@ -596,7 +590,6 @@ private fun ContrastSpecimen(fg: Rgb, bg: Rgb, ratio: Double, animated: Boolean)
 private val scaleNotches = listOf(ContrastLevel.AA_LARGE, ContrastLevel.AA, ContrastLevel.AAA)
 private val scaleLabel = TextStyle(fontFamily = DelphiMono, fontSize = 10.sp)
 
-/** The ratio on a log scale from 1 to 21, with the WCAG thresholds as notches. */
 @Composable
 private fun ContrastScale(ratio: Double, animated: Boolean) {
     val c = LocalDelphiColours.current
@@ -649,7 +642,6 @@ private val rules = listOf(
 private val lampWidth = 96.dp
 private val lampLabel = TextStyle(fontFamily = DelphiMono, fontSize = 12.sp)
 
-/** Normal, large and controls against AA and AAA, a lamp per rule, lit when the ratio passes. */
 @Composable
 private fun ContrastLampTable(ratio: Double) {
     val c = LocalDelphiColours.current
@@ -710,7 +702,6 @@ private fun Lamp(level: String, rule: String, threshold: Double?, ratio: Double)
 private val suggestionDetail = TextStyle(fontFamily = DelphiMono, fontSize = 11.sp)
 private val suggestionRatio = TextStyle(fontFamily = DelphiMono, fontSize = 12.sp)
 
-/** One colour moved in lightness until the pair passes a level; a tap applies it. Dim once the level passes, or when none reaches it. */
 @Composable
 private fun SuggestionRow(target: Suggestion, candidate: Rgb?, current: Rgb, fixed: Rgb, met: Boolean, onApply: (Rgb) -> Unit) {
     val c = LocalDelphiColours.current

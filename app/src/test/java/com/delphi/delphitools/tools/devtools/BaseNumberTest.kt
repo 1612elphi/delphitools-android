@@ -20,7 +20,7 @@ class BaseNumberTest {
         assertEquals(BaseReading.Empty, BaseNumber.read("0x", Radix.Decimal))
         assertEquals(BaseReading.TooLarge, BaseNumber.read("18446744073709551616", Radix.Decimal))
         assertEquals(value(ULong.MAX_VALUE), BaseNumber.read("18446744073709551615", Radix.Decimal))
-        // other scripts' digits are not digits
+        // other scripts rejected
         assertEquals(BaseReading.Invalid('١'), BaseNumber.read("١٢", Radix.Decimal))
         assertEquals(BaseReading.Invalid('+'), BaseNumber.read("+5", Radix.Decimal))
     }

@@ -6,7 +6,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ImageConvertTest {
-    // the sheet dt-ios fits a 200 × 100 box to in a 244 × 144 area
     private val sheet = Rect(44f, 44f, 244f, 144f)
 
     @Test

@@ -21,7 +21,7 @@ class GlyphEngineTest {
         assertEquals(Find.CodePoint(0xCAFE), GlyphEngine.find("cafe", blocks))
         assertNull(GlyphEngine.find("zzzz", blocks))
         assertNull(GlyphEngine.find("  ", blocks))
-        // a surrogate is no character
+        // surrogate is no character
         assertNull(GlyphEngine.find("U+D800", blocks))
         assertEquals(1, GlyphEngine.index(0x2195, blocks))
         assertNull(GlyphEngine.index(0x10, blocks))
@@ -59,7 +59,6 @@ class GlyphEngineTest {
     @Test
     fun geometry() {
         val latin = GlyphSection(null, 0x20..0x7F)
-        // phone: eight columns, digits then twelve rows
         val narrow = GlyphGeometry(listOf(latin), 376f)
         assertEquals(8, narrow.columns)
         assertEquals(40.5f, narrow.cell)

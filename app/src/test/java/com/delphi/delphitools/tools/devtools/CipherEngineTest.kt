@@ -37,10 +37,10 @@ class CipherEngineTest {
         assertTrue(classifyAndDecode("").isEmpty())
         assertEquals(CipherId.Caesar, classifyAndDecode(samples[0].second).first().cipherId)
         assertEquals(CipherId.Base64, classifyAndDecode(samples[5].second).first().cipherId)
-        // a long text is scored on a prefix but decoded whole
+        // scored on prefix
         val long = List(40) { samples[1].second }.joinToString(" ")
         assertEquals(long.length, classifyAndDecode(long).first { it.cipherId == CipherId.Rot13 }.output.length)
-        // more rails than characters cannot allocate per rail
+        // rails exceed characters
         assertEquals("hi", CipherEngine.railFenceEncode("hi", 900_000))
         assertEquals("hi", CipherEngine.railFenceDecode("hi", 900_000))
         assertEquals(listOf(0, 1, 2, 1, 0, 1), CipherEngine.railPattern(6, 3))

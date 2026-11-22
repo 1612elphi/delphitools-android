@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.devtools
 
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.FutureTask
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -26,6 +27,9 @@ sealed interface RegexOutcome {
 
 /** dt-core RegexTesterEngine on java.util.regex, which Android backs with ICU as NSRegularExpression is. */
 object RegexTesterEngine {
+    private const val RUNAWAY_LIMIT = 4
+    private val runaways = mutableListOf<Thread>()
+
     /**
      * Flags as JavaScript writes them: g every match, i case insensitive, m line anchors, s dot matches newlines.
      * Matching stops after [limit] matches, and gives up after [timeLimitMs] (catastrophic backtracking).
@@ -33,14 +37,14 @@ object RegexTesterEngine {
     fun run(pattern: String, flags: String, text: String, limit: Int = 1000, timeLimitMs: Long = 400): RegexOutcome {
         if (pattern.isEmpty()) return RegexOutcome.Empty
         var options = 0
-        // ICU folds case by Unicode rules; java.util.regex on the JVM needs UNICODE_CASE for that
+        // jvm needs unicode_case
         if ('i' in flags) options = options or Pattern.CASE_INSENSITIVE or Pattern.UNICODE_CASE
         if ('m' in flags) options = options or Pattern.MULTILINE
         if ('s' in flags) options = options or Pattern.DOTALL
         val regex = try {
             Pattern.compile(pattern, options)
         } catch (_: PatternSyntaxException) {
-            // NSRegularExpression's NSInvalidValue is the pattern itself
+            // ios message: the pattern
             return RegexOutcome.Invalid("Invalid pattern · $pattern")
         }
         val global = 'g' in flags
@@ -68,11 +72,21 @@ object RegexTesterEngine {
             }
             if (late) null else RegexOutcome.Matched(found, truncated, matcher.groupCount())
         }
-        // ponytail: neither ICU on Android nor the JVM can stop a find() in flight, so a runaway one keeps its thread until it ends
-        Thread(work, "regex-tester").apply { isDaemon = true }.start()
+        // ponytail: neither ICU on Android nor the JVM can stop a find() in flight, so a runaway one keeps its thread until it ends;
+        // past RUNAWAY_LIMIT of them every run times out until one ends. A killable process would lift that
+        synchronized(runaways) {
+            runaways.removeAll { !it.isAlive }
+            if (runaways.size >= RUNAWAY_LIMIT) return RegexOutcome.TimedOut
+        }
+        val thread = Thread(work, "regex-tester").apply { isDaemon = true }
+        thread.start()
         return try {
             work.get(maxOf(0, deadline - System.nanoTime()), TimeUnit.NANOSECONDS) ?: RegexOutcome.TimedOut
         } catch (_: TimeoutException) {
+            synchronized(runaways) { runaways += thread }
+            RegexOutcome.TimedOut
+        } catch (_: ExecutionException) {
+            // matcher stack overflow
             RegexOutcome.TimedOut
         } finally {
             abandoned.set(true)

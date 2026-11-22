@@ -8,10 +8,9 @@ sealed interface DiffLine {
     data class Added(override val text: String, val rightIndex: Int) : DiffLine
 }
 
-
 /** dt-core TextDiffer: a line diff that keeps unchanged lines in their order. */
 object TextDiffer {
-    // Character.isNewline; \r\n is one Character in Swift, so it splits once
+    // swift: crlf one character
     private val newline = Regex("\r\n|[\n\r\u000B\u000C\u0085  ]")
 
     fun lines(text: String) = text.split(newline)
@@ -75,7 +74,7 @@ object DiffWords {
         return merged(difference.removals.map { before[it].range }) to merged(difference.insertions.map { after[it].range })
     }
 
-    // CharacterSet.alphanumerics: letters, marks and numbers
+    // letters, marks, numbers
     private fun kind(codePoint: Int): Int = when (Character.getType(codePoint).toByte()) {
         Character.UPPERCASE_LETTER, Character.LOWERCASE_LETTER, Character.TITLECASE_LETTER, Character.MODIFIER_LETTER,
         Character.OTHER_LETTER, Character.NON_SPACING_MARK, Character.ENCLOSING_MARK, Character.COMBINING_SPACING_MARK,

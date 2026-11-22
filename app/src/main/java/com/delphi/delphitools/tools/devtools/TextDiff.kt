@@ -253,7 +253,6 @@ fun TextDiff(model: TextDiffModel = viewModel()) {
 
 private enum class BlockKind { Same, Removed, Added }
 
-/** A run of lines of one kind: line ranges in the original and in the modified text, end exclusive. */
 private class Block(val kind: BlockKind, val left: IntRange, val right: IntRange)
 
 private class RibbonData(val blocks: List<Block>, val oldLengths: List<Int>, val newLengths: List<Int>)
@@ -283,7 +282,6 @@ private fun ribbonData(diff: List<DiffLine>): RibbonData {
 
 private val IntRange.count get() = last - first + 1
 
-/** Ribbons from each run of original lines to its run in the modified text, over a bar per line as long as the line. */
 @Composable
 private fun DiffRibbons(diff: List<DiffLine>, added: Color) {
     val c = LocalDelphiColours.current

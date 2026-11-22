@@ -254,7 +254,7 @@ object BitRegroup {
         val all get() = groups(0 until count)
     }
 
-    /** Binary's one-bit characters read as one label per byte. */
+    // binary: label per byte
     private fun merged(units: List<Unit>, code: Code) =
         if (code.bits != 1 || units.isEmpty()) units else listOf(Unit(units.joinToString("") { it.label }, units.sumOf { it.span }))
 

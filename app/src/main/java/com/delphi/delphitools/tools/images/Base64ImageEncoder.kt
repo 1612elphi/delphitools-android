@@ -288,13 +288,12 @@ private fun EncodedBlock(image: Base64Image, lit: Boolean, onSelect: () -> Unit,
 
 private class Sampled(val id: String, val columns: Int, val rows: Int, val colours: IntArray)
 
-/** dt-ios Base64Mosaic: the Base64 text as a wall of characters, those over the picture tinted by its pixels. */
 @Composable
 private fun Base64Mosaic(image: Base64Image?, modifier: Modifier) {
     val c = LocalDelphiColours.current
     val faint = c.mutedForeground.copy(alpha = FAINT).toArgb()
     val paint = remember { Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD) } }
-    // read in draw: a state here would redraw again
+    // state here redraws twice
     val sampled = remember { arrayOfNulls<Sampled>(1) }
     Canvas(modifier) {
         paint.textSize = 7.sp.toPx()
@@ -335,7 +334,6 @@ private fun Base64Mosaic(image: Base64Image?, modifier: Modifier) {
     }
 }
 
-/** One pixel per character; clear pixels take [faint], the rest keep at least its opacity. */
 private fun sample(image: Bitmap, columns: Int, rows: Int, faint: Int): IntArray {
     val small = image.scale(columns, rows)
     val pixels = IntArray(columns * rows)

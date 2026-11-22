@@ -138,7 +138,7 @@ object MetadataStripEngine {
         )
         val altitude = tags["GPSAltitude"]?.let(::rational) ?: return text
         val below = tags["GPSAltitudeRef"] == "1"
-        // swift rounded(): halves away from zero
+        // swift rounded(): half away
         val metres = altitude.roundToInt()
         return "$text · alt ${if (below) -metres else metres} m"
     }

@@ -20,7 +20,7 @@ data class CuratedPalette(val id: String, val name: String, val category: String
     val rgb get() = colours.mapNotNull(::parseHex)
 }
 
-// the value is the JSON array dt-ios UserPalettesStore writes to Documents/user_palettes.json
+// dt-ios user_palettes.json format
 private const val PALETTES = "userPalettes"
 
 /**
@@ -36,7 +36,7 @@ class UserPalettes private constructor(private val prefs: SharedPreferences) {
     init {
         val raw = prefs.getString(PALETTES, null)
         val read = decode(raw)
-        // the next save would overwrite it
+        // next save overwrites it
         if (raw != null && read == null) prefs.edit { putString("$PALETTES.unreadable", raw) }
         palettes = read.orEmpty()
     }

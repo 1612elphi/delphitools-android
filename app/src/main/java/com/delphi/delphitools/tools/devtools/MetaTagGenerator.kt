@@ -98,7 +98,6 @@ private val caption1 = font(11)
 private val title3 = font(18)
 private val imageLabel = TextStyle(fontFamily = DelphiMono, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
 
-// card width in one column and beside the result, the result's widest, and the room from which the result joins the banner
 private val cardWidth = 272.dp
 private val cardBesideWidth = 300.dp
 private val resultWidth = 420.dp
@@ -280,7 +279,6 @@ private fun LinkPreviewBoard(content: MetaTagFields, onResultShown: (Boolean) ->
     }
 }
 
-/** The surface a preview sits on: the page colour, a hairline and a soft shadow, so it reads as a finished object. */
 @Composable
 private fun Modifier.previewSheet(): Modifier {
     val c = LocalDelphiColours.current
@@ -290,7 +288,6 @@ private fun Modifier.previewSheet(): Modifier {
         .border(CanonMetrics.hairline, c.border)
 }
 
-/** A text, or grey bars where it will go while it is empty: one bar per line, at the given shares of the width. */
 @Composable
 private fun PreviewText(text: String, style: TextStyle, colour: Color, maxLines: Int, empty: List<Float>, modifier: Modifier = Modifier) {
     if (text.isNotBlank()) {
@@ -310,7 +307,6 @@ private fun PreviewText(text: String, style: TextStyle, colour: Color, maxLines:
     }
 }
 
-/** The shared link. A large card puts the image above the text; a summary card puts a square beside it. */
 @Composable
 private fun LinkPreviewCard(content: MetaTagFields, width: Dp) {
     val c = LocalDelphiColours.current
@@ -340,7 +336,6 @@ private fun LinkPreviewCard(content: MetaTagFields, width: Dp) {
     }
 }
 
-/** Where the shared image goes: a muted frame with the picture symbol and the file name, or the size to make it. */
 @Composable
 private fun PreviewImage(address: String, isLarge: Boolean, modifier: Modifier) {
     val c = LocalDelphiColours.current
@@ -357,7 +352,6 @@ private fun PreviewImage(address: String, isLarge: Boolean, modifier: Modifier) 
     }
 }
 
-/** The page as a search result: a mark with the site's initial, the site and the trail, the title in the link colour and the description, cut at the lengths results show. */
 @Composable
 private fun LinkPreviewResult(content: MetaTagFields) {
     val c = LocalDelphiColours.current

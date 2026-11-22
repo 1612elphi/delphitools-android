@@ -30,7 +30,7 @@ enum class BitOperation(val title: String) {
 object BaseNumber {
     val words = listOf(8, 16, 32, 64)
 
-    /** ASCII only: Character.digit also takes other scripts' digits, which iOS rejects. */
+    // ascii only, as ios
     private fun digit(char: Char): Int = when (char) {
         in '0'..'9' -> char - '0'
         in 'a'..'z' -> char - 'a' + 10

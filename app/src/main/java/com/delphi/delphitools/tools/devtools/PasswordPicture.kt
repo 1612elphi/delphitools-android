@@ -62,7 +62,6 @@ private const val SETTLE_WORD_MS = 100
 private const val FRAME_MS = 33L
 private const val DIE_GAP = 3f
 
-// smallest die that still shows six pips apart
 private const val LEAST_DIE = 9f
 private val POOL_SETS = listOf(PasswordEngine.LOWERCASE_SET, PasswordEngine.UPPERCASE_SET, PasswordEngine.DIGIT_SET, PasswordEngine.SYMBOL_SET)
 private val monoBase = TextStyle(fontFamily = DelphiMono, fontWeight = FontWeight.SemiBold)
@@ -165,7 +164,6 @@ fun PasswordPicture(
         fun sized(base: TextStyle, pt: Float) = base.copy(fontSize = with(density) { pt.dp.toSp() })
         fun TextMeasurer.width(s: String, style: TextStyle) = measure(s, style).size.width.toFloat()
 
-        // password grid: as large as fits on one line, down to a floor, then more lines
         val chars = shown.length.coerceAtLeast(if (text == null) 16 else 1)
         val pitchPt = minOf(28f, maxOf(13f, floor(roomPt / chars)))
         val pitch = pitchPt * dp
@@ -177,7 +175,6 @@ fun PasswordPicture(
         val poolPitchPt = minOf(24f, floor(roomPt / POOL_SETS.maxOf { it.length }))
         val poolPitch = poolPitchPt * dp
 
-        // passphrase words: the separator against each word, the dice under it
         val wordPt = minOf(40f, maxOf(24f, (roomPt / 16).roundToInt().toFloat()))
         val wordStyle = sized(wordBase, wordPt)
         val wordLine = measurer.measure("A", wordStyle).size.height.toFloat()

@@ -125,7 +125,7 @@ private val markerChoices = listOf(
     GlossMarker.Acroarc to "꤮ Acroarc",
 )
 
-// Android draws Shavian from the system Noto Sans Shavian fallback
+// system noto sans shavian
 private fun shavian(size: Int) = TextStyle(fontSize = size.sp)
 private val letterStyle = shavian(30)
 private val outputStyle = shavian(24)
@@ -194,7 +194,6 @@ class ShavianTransliteratorModel(application: Application) : AndroidViewModel(ap
     fun remove(slot: Int, index: Int) = edit(slot) { ShavianEngine.removing(index, it) }
 }
 
-/** Marker in the primary colour, guessed words lighter. */
 private fun styled(tokens: List<GlossToken>, c: DelphiColours) = buildAnnotatedString {
     for (token in tokens) {
         when (token) {
@@ -450,8 +449,6 @@ private fun LetterItem(shavian: String, name: String, ipa: String, checked: Bool
     }
 }
 
-// gloss
-
 private enum class ShavianTone { Word, Guess, Mark, Space, Newline }
 
 private data class ShavianGlyph(val shavian: String, val tone: ShavianTone, val marker: String = "", val latin: String = "", val lit: Boolean = false)
@@ -462,7 +459,6 @@ private fun ShavianTone.kind() = when (this) {
     else -> CanonGlyphKind.Glyph
 }
 
-/** Glyphs for [tokens], the slot of the word each one draws, and the glyph of the [lit] slot. */
 private fun glyphs(tokens: List<GlossToken>, lit: Int? = null): Triple<List<ShavianGlyph>, List<Int?>, Int?> {
     val glyphs = mutableListOf<ShavianGlyph>()
     val slots = mutableListOf<Int?>()
@@ -494,7 +490,6 @@ private fun glyphs(tokens: List<GlossToken>, lit: Int? = null): Triple<List<Shav
     return Triple(glyphs, slots, focus)
 }
 
-/** dt-ios ShavianGloss drawing: each word's Shavian over its spelling, on a ruling of tall, short and deep lines. */
 private class GlossPainter(private val measurer: TextMeasurer, density: Density, private val c: DelphiColours) {
     private val px = density.density
     private val tall: Float
@@ -613,7 +608,6 @@ private fun ShavianGloss(tokens: List<GlossToken>, lit: Int?, value: String, mod
     ) { glyph, _, frame -> with(painter) { draw(glyph, frame) } }
 }
 
-/** The gloss in light colours, 1080 wide at up to twice that in pixels. */
 private suspend fun glossPng(context: Context, tokens: List<GlossToken>): ByteArray {
     val glyphs = glyphs(tokens).first
     // ponytail: 24 MP cap (about 96 MB) keeps a pasted book from exhausting memory; long texts export softer

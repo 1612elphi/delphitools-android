@@ -108,7 +108,7 @@ object CronEngine {
             val base = slash[0]
             var step = 1
             if (slash.size == 2) {
-                // a step past Int range stays huge, as in Swift's Int
+                // huge step, as swift
                 val parsed = if (isDigits(slash[1])) slash[1].toLongOrNull()?.coerceAtMost(Int.MAX_VALUE.toLong())?.toInt() else null
                 if (parsed == null || parsed == 0) throw Failed(CronIssue("Bad step", slash[1]))
                 step = parsed

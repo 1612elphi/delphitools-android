@@ -230,7 +230,6 @@ class CronBuilderModel : ViewModel() {
     }
 }
 
-/** Month and weekday values by name; null for the numeric fields. */
 private fun cronName(value: Int, kind: CronFieldKind, locale: Locale): String? = when (kind) {
     CronFieldKind.Month -> if (value in 1..12) Month.of(value).getDisplayName(DateTextStyle.FULL_STANDALONE, locale) else null
     CronFieldKind.Dow -> weekday(value).getDisplayName(DateTextStyle.FULL_STANDALONE, locale)
@@ -239,7 +238,6 @@ private fun cronName(value: Int, kind: CronFieldKind, locale: Locale): String? =
 
 private fun weekday(cron: Int) = DayOfWeek.of((cron % 7 + 6) % 7 + 1)
 
-/** The field in a few words: the mode, or the names it keeps for month and weekday. */
 private fun cronSummary(parse: CronFieldParse, kind: CronFieldKind, locale: Locale): String {
     val shape = parse.shape ?: return "—"
     fun name(value: Int) = cronName(value, kind, locale)
@@ -264,7 +262,6 @@ private fun runFormatter(locale: Locale): DateTimeFormatter =
 
 private val spanUnits = listOf(MeasureUnit.DAY, MeasureUnit.HOUR, MeasureUnit.MINUTE, MeasureUnit.SECOND)
 
-/** Time left in its largest whole unit, rounded down, split into the number and the unit as the system abbreviates them. */
 private fun span(seconds: Long, locale: Locale): Pair<String, String> {
     val (count, unit) = CronEngine.spanUnit(seconds)
     val text = MeasureFormat.getInstance(locale, MeasureFormat.FormatWidth.NARROW).format(Measure(count, spanUnits[unit]))
@@ -369,7 +366,6 @@ fun CronBuilder(model: CronBuilderModel = viewModel()) {
     )
 }
 
-/** A text cell that keeps what is typed while it has focus and hands it on once typing pauses or focus leaves. */
 @Composable
 private fun DraftCell(
     value: String,
@@ -380,7 +376,8 @@ private fun DraftCell(
     onFocus: () -> Unit = {},
     onSettle: (String) -> Unit,
 ) {
-    var draft by remember { mutableStateOf<String?>(null) }
+    // outside change drops draft
+    var draft by remember(value) { mutableStateOf<String?>(null) }
     LaunchedEffect(draft) {
         val pending = draft ?: return@LaunchedEffect
         delay(TYPING_DELAY_MS)
@@ -647,7 +644,6 @@ private fun DrawScope.drawRails(
     }
 }
 
-/** Cell labels when every one fits, else null: names shortest last, numbers as they are. */
 private fun DrawScope.railLabels(measurer: TextMeasurer, kind: CronFieldKind, values: List<Int>, width: Float, locale: Locale): List<String>? {
     val sets = when (kind) {
         CronFieldKind.Month -> listOf(DateTextStyle.SHORT_STANDALONE, DateTextStyle.NARROW_STANDALONE).map { style -> values.map { Month.of(it).getDisplayName(style, locale) } }

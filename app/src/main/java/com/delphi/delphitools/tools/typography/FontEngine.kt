@@ -218,7 +218,7 @@ object FontEngine {
         }
     }
 
-    /** Name IDs to strings: Windows Unicode English first, then any Unicode record, then Mac Roman English. */
+    // windows, unicode, mac roman
     private fun names(data: ByteArray, table: Int, length: Int): Map<Int, String> {
         val count = data.u16(table + 2)
         val strings = table + data.u16(table + 4)
@@ -249,7 +249,7 @@ object FontEngine {
         return best.mapValues { it.value.second }
     }
 
-    /** The best Unicode subtable: format 12 or 13 for full Unicode, else format 4, 6 or 0 for the BMP. */
+    // prefers format 12, 13
     private fun cmap(data: ByteArray, table: Int): FontCoverage {
         val count = data.u16(table + 2)
         var chosen: Int? = null
@@ -279,6 +279,9 @@ object FontEngine {
                 val starts = ends + segments * 2 + 2
                 val deltas = starts + segments * 2
                 val rangeOffsets = deltas + segments * 2
+                // bounds crafted segment counts
+                val covered = java.util.BitSet(0x10000)
+                var budget = 0x10000
                 for (s in 0 until segments) {
                     val end = data.u16(ends + s * 2)
                     val first = data.u16(starts + s * 2)
@@ -286,14 +289,24 @@ object FontEngine {
                     val rangeOffset = data.u16(rangeOffsets + s * 2)
                     if (first > end || first == 0xFFFF) continue
                     if (rangeOffset == 0) {
-                        // a glyph id of 0 after the delta is missing
-                        for (code in first..end) if ((code + delta) and 0xFFFF != 0) ranges += code..code
+                        // glyph 0 is missing
+                        val missing = (0x10000 - delta) and 0xFFFF
+                        covered.set(first, end + 1)
+                        if (missing in first..end) covered.clear(missing)
                     } else {
+                        budget -= end - first + 1
+                        if (budget < 0) break
                         for (code in first..end) {
                             val at = rangeOffsets + s * 2 + rangeOffset + (code - first) * 2
-                            if (at + 1 < data.size && data.u16(at) != 0) ranges += code..code
+                            if (at + 1 < data.size && data.u16(at) != 0) covered.set(code)
                         }
                     }
+                }
+                var run = covered.nextSetBit(0)
+                while (run >= 0) {
+                    val stop = covered.nextClearBit(run)
+                    ranges += run until stop
+                    run = covered.nextSetBit(stop)
                 }
             }
             6 -> {
@@ -310,7 +323,7 @@ object FontEngine {
                     val last = minOf(data.u32(base + 4), 0x10FFFF)
                     val glyph = data.u32(base + 8)
                     if (first < 0 || first > last) continue
-                    // format 12 counts up from the start glyph; 13 maps the group to one glyph
+                    // 13: one glyph per group
                     if (format == 12 && glyph == 0) {
                         if (first < last) ranges += (first + 1)..last
                     } else if (glyph != 0) {

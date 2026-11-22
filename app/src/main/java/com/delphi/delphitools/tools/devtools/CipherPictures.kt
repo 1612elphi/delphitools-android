@@ -303,7 +303,6 @@ private fun cipherCode(cipher: CipherId) = when (cipher) {
     else -> BitRegroup.Code.Base64
 }
 
-/** As the engine reads. */
 private fun encoded(text: String, cipher: CipherId): List<Char> {
     var cleaned = text.filterNot { it.isWhitespace() }
     if (cipher == CipherId.Hex && cleaned.lowercase().startsWith("0x")) cleaned = cleaned.drop(2)
@@ -406,7 +405,7 @@ fun CipherPicture(scene: CipherScene, modifier: Modifier = Modifier) {
         else -> CipherStrip.Pairs
     }
     val code = cipherCode(scene.cipher)
-    // all three stay current, so the one fading out keeps its content
+    // fading face keeps content
     val reading = remember(scene.input, scene.encode, scene.cipher) {
         if (scene.encode) BitRegroup.encoding(scene.input.toByteArray(), code) else BitRegroup.decoding(encoded(scene.input, scene.cipher), code)
     }

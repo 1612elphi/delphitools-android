@@ -45,7 +45,6 @@ class PaletteGeneratorModel : ViewModel() {
 
     val paletteName get() = state.strategy.name
 
-    /** Moves to `next`, spinning the unlocked columns that change. */
     private fun spinTo(next: GennyState) {
         val old = state.palette
         val changed = next.palette.indices.filter { it < old.size && next.palette[it] != old[it] }

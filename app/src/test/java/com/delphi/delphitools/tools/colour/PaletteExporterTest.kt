@@ -13,7 +13,7 @@ class PaletteExporterTest {
         val data = PaletteExporter.ase("Hi", listOf(Rgb.black, Rgb.white)) { "x" }
         assertEquals("ASEF", String(data, 0, 4))
         assertEquals(4, ByteBuffer.wrap(data, 8, 4).int)
-        // header 12, group 6 + 8, two colours 6 + 24 each, end 6
+        // header, group, colours, end
         assertEquals(12 + 14 + 60 + 6, data.size)
     }
 

@@ -201,7 +201,6 @@ fun GlyphBrowser(model: GlyphBrowserModel = viewModel()) {
     val blocks = model.blocks
     val block = GlyphEngine.index(model.selected, blocks)?.let { blocks[it].name }
 
-    // stacked, the collapsed card covers the pane top
     val clearance = with(density) {
         val stacked = window.width.toDp() < stackingWidth
         statusBar + (CanonMetrics.panelPadding + if (stacked) collapsedHeight + CanonMetrics.frame * 2 else 0.dp).toPx()
@@ -266,9 +265,7 @@ fun GlyphBrowser(model: GlyphBrowserModel = viewModel()) {
     }
 }
 
-// card
-
-/** The family of the system font that draws [text]'s last code point; null before Android 12. */
+// null before android 12
 private fun renderingFamily(text: String, paint: Paint): String? {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null
     val glyphs = TextRunShaper.shapeTextRun(text, 0, text.length, 0, text.length, 0f, 0f, false, paint)
@@ -364,7 +361,6 @@ private fun GlyphCard(codePoint: Int, block: String?, direction: Int) {
     }
 }
 
-/** dt-ios GlyphSquare: the glyph's ink centred and scaled to fit 84 % of the square. */
 @Composable
 private fun GlyphSquare(text: String, modifier: Modifier) {
     val ink = LocalDelphiColours.current.foreground.toArgb()
@@ -396,8 +392,6 @@ private fun GlyphSquare(text: String, modifier: Modifier) {
     )
 }
 
-// chart
-
 /** Where the chart sits, for scrolling a code point or a section into view. */
 @Stable
 internal class GlyphChartState {
@@ -419,7 +413,6 @@ internal class GlyphChartState {
         val geometry = geometry ?: return
         val index = geometry.heading(section) ?: return
         val top = geometry.tops[index] * density - clearance
-        // a rect the viewport's height lands its top edge at the top
         requester.bringIntoView(Rect(0f, top, geometry.width * density, top + viewport))
     }
 
@@ -571,7 +564,6 @@ private fun DrawScope.drawChart(
                     val isSelected = codePoint == selected
                     if (isSelected) drawRect(c.primary, Offset(left, y), Size(cell, cell))
                     val text = GlyphEngine.shown(codePoint)
-                    // a picked font draws what its cmap covers; the system dims what no font draws
                     val drawn = covers != null || covered.getOrPut(codePoint) { glyphPaint.hasGlyph(String(Character.toChars(codePoint))) }
                     glyphPaint.color = if (isSelected) litInk else if (drawn) ink else dim
                     val textWidth = glyphPaint.measureText(text)
@@ -588,8 +580,6 @@ private fun DrawScope.drawChart(
         }
     }
 }
-
-// table
 
 @Composable
 private fun GlyphTable(model: GlyphBrowserModel, onDismiss: () -> Unit, onPick: (Int) -> Unit) {

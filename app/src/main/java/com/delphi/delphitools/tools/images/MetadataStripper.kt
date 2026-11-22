@@ -5,12 +5,9 @@ import android.content.Context
 import android.net.Uri
 import android.text.format.Formatter
 import android.webkit.MimeTypeMap
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -40,7 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
@@ -49,11 +45,8 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
@@ -80,7 +73,6 @@ import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonDisplayName
 import com.delphi.delphitools.tools.FileExport
-import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiMono
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.Dispatchers
@@ -294,10 +286,7 @@ fun MetadataStripper(model: MetadataStripperModel = viewModel()) {
 
 private val mapHeight = 200.dp
 private val sideBySide = 600.dp
-private val lampRow = 24.dp
-private val lampGap = 6.dp
-
-private fun lampsHeight(columns: Int) = ((MetadataScan.Block.entries.size + columns - 1) / columns).let { lampRow * it + lampGap * (it - 1) }
+private val lampNames = MetadataScan.Block.entries.map { it.label }
 
 /** dt-ios MetadataDossier: where the file says it was taken, and a lamp per metadata block, struck as it goes. */
 @Composable
@@ -352,12 +341,12 @@ private fun MetadataDossier(
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 map(Modifier.width(mapWidth).height(height))
                 Spacer(Modifier.weight(1f))
-                WordLamps(lamps, stagger, columns = 2, modifier = Modifier.width(minOf(320.dp, width - mapWidth - 32.dp)))
+                WordLamps(lampNames, lamps, columns = 2, stagger = stagger, modifier =Modifier.width(minOf(320.dp, width - mapWidth - 32.dp)))
             }
         } else {
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 map(Modifier.fillMaxWidth().height(width / WorldMap.ASPECT))
-                WordLamps(lamps, stagger, columns = 4, modifier = Modifier.fillMaxWidth())
+                WordLamps(lampNames, lamps, columns = 4, stagger = stagger, modifier =Modifier.fillMaxWidth())
             }
         }
     }
@@ -449,73 +438,5 @@ private fun LocationMap(location: MetadataScan.Location?, removed: Boolean, land
                 text.place(textX, textY)
             }
         }
-    }
-}
-
-/**
- * dt-ios WordLamps: named lamps in rows. On is lit in the primary colour, off is dim, struck is crossed out in red
- * and dimmed. [stagger] is milliseconds between one changed lamp and the next, in reading order.
- */
-@Composable
-private fun WordLamps(states: List<MetadataScan.Lamp>, stagger: Long, columns: Int, modifier: Modifier) {
-    var previous by remember { mutableStateOf(states) }
-    val order = remember(states) {
-        var rank = 0
-        states.indices.map { if (states[it] != previous.getOrNull(it)) rank++ else 0 }
-    }
-    LaunchedEffect(states) { previous = states }
-    Column(modifier.height(lampsHeight(columns)), verticalArrangement = Arrangement.spacedBy(lampGap)) {
-        MetadataScan.Block.entries.chunked(columns).forEach { row ->
-            Row(Modifier.fillMaxWidth().height(lampRow)) {
-                row.forEach { block ->
-                    Lamp(block.label, states[block.ordinal], (order[block.ordinal] * stagger).toInt(), Modifier.weight(1f))
-                }
-                repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
-            }
-        }
-    }
-}
-
-@Composable
-private fun Lamp(name: String, state: MetadataScan.Lamp, delayMs: Int, modifier: Modifier) {
-    val c = LocalDelphiColours.current
-    val lit = state == MetadataScan.Lamp.On
-    val struck = state == MetadataScan.Lamp.Struck
-    val lamp by animateColorAsState(if (lit) c.primary else c.mutedForeground.copy(alpha = 0.25f), tween(250, delayMs + if (struck) 180 else 0))
-    val ink by animateColorAsState(
-        when {
-            lit -> c.primary
-            struck -> c.mutedForeground.copy(alpha = 0.7f)
-            else -> c.mutedForeground.copy(alpha = 0.4f)
-        },
-        tween(250, delayMs + if (struck) 180 else 0),
-    )
-    val strike by animateFloatAsState(if (struck) 1f else 0f, tween(if (struck) 220 else 150, delayMs))
-    val destructive = c.destructive
-    Row(
-        modifier
-            .semantics(mergeDescendants = true) {
-                selected = lit
-                if (struck) stateDescription = "Removed"
-            },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(7.dp),
-    ) {
-        Box(Modifier.size(7.dp).background(lamp))
-        Text(
-            name.uppercase(),
-            style = CanonText.caption.copy(fontWeight = FontWeight.Bold),
-            color = ink,
-            maxLines = 1,
-            modifier = Modifier.drawWithContent {
-                drawContent()
-                if (strike > 0f) {
-                    val start = -3.dp.toPx()
-                    val end = size.width + 3.dp.toPx()
-                    val y = size.height / 2 + 0.5f
-                    drawLine(destructive, Offset(start, y), Offset(start + (end - start) * strike, y), 2.dp.toPx())
-                }
-            },
-        )
     }
 }

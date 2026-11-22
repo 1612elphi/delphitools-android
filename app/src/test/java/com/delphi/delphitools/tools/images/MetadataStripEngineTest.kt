@@ -1,7 +1,7 @@
 package com.delphi.delphitools.tools.images
 
 import com.delphi.delphitools.tools.images.MetadataScan.Block
-import com.delphi.delphitools.tools.images.MetadataScan.Lamp
+import com.delphi.delphitools.tools.images.WordLamp as Lamp
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

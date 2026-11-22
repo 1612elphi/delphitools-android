@@ -20,8 +20,6 @@ data class MetadataScan(val blocks: Set<Block> = emptySet(), val location: Locat
 
     data class Location(val latitude: Double, val longitude: Double)
 
-    enum class Lamp { Off, On, Struck }
-
     companion object {
         /** [location] in degrees to four places, with hemisphere letters. */
         fun label(location: Location): String = String.format(
@@ -32,11 +30,11 @@ data class MetadataScan(val blocks: Set<Block> = emptySet(), val location: Locat
         )
 
         /** A lamp per block: off when [found] lacks it, struck when [left] is known and lacks it. */
-        fun lamps(found: MetadataScan, left: MetadataScan?): List<Lamp> = Block.entries.map { block ->
+        fun lamps(found: MetadataScan, left: MetadataScan?): List<WordLamp> = Block.entries.map { block ->
             when {
-                block !in found.blocks -> Lamp.Off
-                left == null || block in left.blocks -> Lamp.On
-                else -> Lamp.Struck
+                block !in found.blocks -> WordLamp.Off
+                left == null || block in left.blocks -> WordLamp.On
+                else -> WordLamp.Struck
             }
         }
     }

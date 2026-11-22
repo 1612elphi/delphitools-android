@@ -1,7 +1,6 @@
 package com.delphi.delphitools.tools.devtools
 
 import com.delphi.delphitools.tools.turbonerd.MorseEngine
-import java.util.Base64
 
 enum class CipherFailure(val text: String) {
     AffineCoprime("'a' must be coprime with 26 (try 1,3,5,7,9,11,15,17,19,21,23,25)."),
@@ -267,20 +266,8 @@ object CipherEngine {
 
     // encodings
 
-    fun base64Encode(text: String): String = Base64.getEncoder().encodeToString(text.toByteArray())
-
-    // atob tolerates missing padding
-    fun base64Decode(text: String): String {
-        val cleaned = StringBuilder(text.filterNot { it.isWhitespace() })
-        if (cleaned.length % 4 == 1) throw CipherError(CipherFailure.Base64Invalid)
-        while (cleaned.length % 4 != 0) cleaned.append('=')
-        val bytes = try {
-            Base64.getDecoder().decode(cleaned.toString())
-        } catch (_: IllegalArgumentException) {
-            throw CipherError(CipherFailure.Base64Invalid)
-        }
-        return String(bytes, Charsets.UTF_8)
-    }
+    fun base64Decode(text: String): String =
+        EncoderEngine.base64Decode(text, urlSafe = false).getOrElse { throw CipherError(CipherFailure.Base64Invalid) }
 
     private const val BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
 
@@ -392,7 +379,7 @@ object CipherEngine {
             CipherId.Morse -> if (encode) morseEncode(input) else morseDecode(input)
             CipherId.A1z26 -> if (encode) a1z26Encode(input) else a1z26Decode(input)
             CipherId.Bacon -> if (encode) baconEncode(input) else baconDecode(input)
-            CipherId.Base64 -> if (encode) base64Encode(input) else base64Decode(input)
+            CipherId.Base64 -> if (encode) EncoderEngine.base64Encode(input) else base64Decode(input)
             CipherId.Base32 -> if (encode) base32Encode(input) else base32Decode(input)
             CipherId.Hex -> if (encode) hexEncode(input) else hexDecode(input)
             CipherId.Binary -> if (encode) binaryEncode(input) else binaryDecode(input)

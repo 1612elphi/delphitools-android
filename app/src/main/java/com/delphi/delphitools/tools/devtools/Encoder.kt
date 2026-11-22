@@ -85,7 +85,11 @@ fun Encoder(model: EncoderModel = viewModel()) {
     val reading = remember(text, decoding) {
         if (decoding) BitRegroup.decoding(EncoderEngine.base64Characters(text)) else BitRegroup.encoding(text.toByteArray())
     }
-    val pairs = remember(text, decoding) { if (decoding) EncoderEngine.urlDecodePairs(text) else EncoderEngine.urlEncodePairs(text) }
+    val pairs = remember(text, decoding) {
+        (if (decoding) EncoderEngine.urlDecodePairs(text) else EncoderEngine.urlEncodePairs(text)).map {
+            if (it.newline) CipherPair.Newline else CipherPair(CipherFace.Text(it.top), CipherFace.Text(it.bottom), changes = it.changes)
+        }
+    }
 
     val controls = CanonSection.of {
         CanonRows {
@@ -148,7 +152,7 @@ fun Encoder(model: EncoderModel = viewModel()) {
         ) { shown ->
             when (shown) {
                 EncoderScheme.Base64 -> BitRegroupStrip(reading)
-                EncoderScheme.Url -> SymbolPairStrip(pairs)
+                EncoderScheme.Url -> CipherPairStrip(pairs)
                 EncoderScheme.Hash -> DigestGrid(model.algorithm.label, digests[model.algorithm], model.algorithm.bits)
             }
         }

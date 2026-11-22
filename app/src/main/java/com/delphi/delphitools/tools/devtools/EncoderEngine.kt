@@ -63,9 +63,10 @@ object EncoderEngine {
     /** The characters of a Base64 text without whitespace. */
     fun base64Characters(text: String): List<Char> = text.filterNot { it.isWhitespace() }.toList()
 
-    /** Accepts missing padding and the URL-safe alphabet. */
-    fun base64Decode(text: String): Result<String> {
-        val standard = String(base64Characters(text).toCharArray()).replace('-', '+').replace('_', '/')
+    /** Accepts missing padding and, when [urlSafe], the URL-safe alphabet. */
+    fun base64Decode(text: String, urlSafe: Boolean = true): Result<String> {
+        val cleaned = String(base64Characters(text).toCharArray())
+        val standard = if (urlSafe) cleaned.replace('-', '+').replace('_', '/') else cleaned
         if (standard.isEmpty()) return Result.success("")
         // atob tolerates missing padding
         if (standard.length % 4 == 1) return Result.failure(EncoderError(EncoderFailure.Base64))
@@ -182,19 +183,26 @@ object BitRegroup {
 
     data class Group(val slots: List<Slot>, val top: List<Unit>, val bottom: List<Unit>)
 
-    // ponytail: Base64 only; the Base32, hex and binary codes come with the cipher tool's port
-    object Base64Code {
-        const val BITS = 6
-        const val BYTES_PER_GROUP = 3
-        const val CHARS_PER_GROUP = 4
-        const val PADDING = '='
-        const val ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    class Code(val bits: Int, val alphabet: String, val bytesPerGroup: Int, val padding: Char?) {
+        val charsPerGroup get() = bytesPerGroup * 8 / bits
 
-        /** The character's value; also reads the URL-safe `-` and `_`. */
-        fun value(of: Char): Int? = when (of) {
-            '-' -> 62
-            '_' -> 63
-            else -> ALPHABET.indexOf(of).takeIf { it >= 0 }
+        /** The character's value; Base64 also reads the URL-safe `-` and `_`, hex and Base32 either case. */
+        fun value(of: Char): Int? {
+            if (bits == 6) {
+                return when (of) {
+                    '-' -> 62
+                    '_' -> 63
+                    else -> alphabet.indexOf(of).takeIf { it >= 0 }
+                }
+            }
+            return alphabet.indexOf(of, ignoreCase = true).takeIf { it >= 0 }
+        }
+
+        companion object {
+            val Base64 = Code(6, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", 3, '=')
+            val Base32 = Code(5, "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567", 5, '=')
+            val Hex = Code(4, "0123456789abcdef", 1, null)
+            val Binary = Code(1, "01", 1, null)
         }
     }
 
@@ -246,9 +254,13 @@ object BitRegroup {
         val all get() = groups(0 until count)
     }
 
-    fun encoding(bytes: ByteArray): Reading {
-        val per = Base64Code.BYTES_PER_GROUP
-        val bits = Base64Code.BITS
+    /** Binary's one-bit characters read as one label per byte. */
+    private fun merged(units: List<Unit>, code: Code) =
+        if (code.bits != 1 || units.isEmpty()) units else listOf(Unit(units.joinToString("") { it.label }, units.sumOf { it.span }))
+
+    fun encoding(bytes: ByteArray, code: Code = Code.Base64): Reading {
+        val per = code.bytesPerGroup
+        val bits = code.bits
         val total = per * 8
         return Reading((bytes.size + per - 1) / per) { range ->
             val first = minOf(bytes.size, range.first * per)
@@ -260,26 +272,26 @@ object BitRegroup {
                 val used = (real + bits - 1) / bits * bits
                 val slots = chunk.flatMap { slots(it.toInt() and 0xFF) } + List(used - real) { Slot.Pad } + List(total - used) { Slot.Absent }
                 val top = List(per) { i -> if (i < chunk.size) Unit(names[start - first + i], 8) else Unit("", 8, faint = true) }
-                val bottom = List(Base64Code.CHARS_PER_GROUP) { k ->
+                val bottom = List(code.charsPerGroup) { k ->
                     val from = k * bits
-                    if (from >= used) return@List Unit(Base64Code.PADDING.toString(), bits, faint = true)
+                    if (from >= used) return@List Unit(code.padding?.toString() ?: "", bits, faint = true)
                     val value = (0 until bits).fold(0) { acc, b -> acc shl 1 or if (slots[from + b] == Slot.One) 1 else 0 }
-                    Unit(Base64Code.ALPHABET[value].toString(), bits)
+                    Unit(code.alphabet[value].toString(), bits)
                 }
-                Group(slots, top, bottom)
+                Group(slots, top, merged(bottom, code))
             }
         }
     }
 
     /** Encoded text, whitespace already removed. Reading stops at the first character the code does not have. */
-    fun decoding(characters: List<Char>): Reading {
-        val bits = Base64Code.BITS
+    fun decoding(characters: List<Char>, code: Code = Code.Base64): Reading {
+        val bits = code.bits
         val values = mutableListOf<Int>()
         var padding = 0
         for (character in characters) {
-            val value = Base64Code.value(character)
+            val value = code.value(character)
             when {
-                character == Base64Code.PADDING -> padding++
+                character == code.padding -> padding++
                 padding == 0 && value != null -> values += value
                 else -> break
             }
@@ -299,8 +311,8 @@ object BitRegroup {
         }
         val bytes = decoded.toByteArray()
         val kept = bytes.size * 8
-        val perGroup = Base64Code.CHARS_PER_GROUP
-        val per = Base64Code.BYTES_PER_GROUP
+        val perGroup = code.charsPerGroup
+        val per = code.bytesPerGroup
         val length = values.size + padding
         return Reading((length + perGroup - 1) / perGroup) { range ->
             val firstByte = minOf(bytes.size, range.first * per)
@@ -311,7 +323,7 @@ object BitRegroup {
                 for (index in start until start + perGroup) {
                     if (index >= values.size) {
                         repeat(bits) { slots += Slot.Absent }
-                        top += Unit(if (index < length) Base64Code.PADDING.toString() else "", bits, faint = true)
+                        top += Unit(if (index < length) code.padding?.toString() ?: "" else "", bits, faint = true)
                         continue
                     }
                     val value = values[index]
@@ -327,14 +339,14 @@ object BitRegroup {
                 }
                 val byte = start / perGroup * per
                 val bottom = List(per) { j -> if (byte + j < bytes.size) Unit(names[byte + j - firstByte], 8) else Unit("", 8, faint = true) }
-                Group(slots, top, bottom)
+                Group(slots, merged(top, code), bottom)
             }
         }
     }
 
-    /** One group, all zeros, no labels: the strip's picture with no input. */
-    val ghost: Group by lazy {
-        val group = encoding(ByteArray(Base64Code.BYTES_PER_GROUP)).all.first()
-        group.copy(top = group.top.map { Unit("", it.span) }, bottom = group.bottom.map { Unit("", it.span) })
+    /** One group of the code, all zeros, no labels: the strip's picture with no input. */
+    fun ghost(code: Code): Group {
+        val group = encoding(ByteArray(code.bytesPerGroup), code).all.first()
+        return group.copy(top = group.top.map { Unit("", it.span) }, bottom = group.bottom.map { Unit("", it.span) })
     }
 }

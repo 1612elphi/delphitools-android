@@ -8,7 +8,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,7 +33,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.drawText
@@ -53,10 +51,6 @@ import com.delphi.delphitools.canon.CanonGlyphMetrics
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.rememberCanonGlyphFlowState
-import com.delphi.delphitools.tools.devtools.BitRegroup.Group
-import com.delphi.delphitools.tools.devtools.BitRegroup.Reading
-import com.delphi.delphitools.tools.devtools.BitRegroup.Slot
-import com.delphi.delphitools.tools.devtools.BitRegroup.Unit
 import com.delphi.delphitools.tools.turbonerd.MorseEngine
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiFont
@@ -69,275 +63,6 @@ import kotlin.math.exp
 val CIPHER_BAND_HEIGHT = 176.dp
 val CIPHER_COLLAPSED_HEIGHT = 116.dp
 private val captionRoom = 24.dp
-
-/** dt-ios BitRegroup.Code: the codes BitRegroup in EncoderEngine reads as Base64 only. */
-class CipherCode(val bits: Int, val alphabet: String, val bytesPerGroup: Int, val padding: Char?) {
-    val charsPerGroup get() = bytesPerGroup * 8 / bits
-
-    /** The character's value; Base64 also reads the URL-safe `-` and `_`, hex and Base32 either case. */
-    fun value(of: Char): Int? {
-        if (bits == 6) return BitRegroup.Base64Code.value(of)
-        val index = alphabet.indexOf(of, ignoreCase = true)
-        return index.takeIf { it >= 0 }
-    }
-
-    companion object {
-        val Base64 = CipherCode(6, BitRegroup.Base64Code.ALPHABET, 3, '=')
-        val Base32 = CipherCode(5, "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567", 5, '=')
-        val Hex = CipherCode(4, "0123456789abcdef", 1, null)
-        val Binary = CipherCode(1, "01", 1, null)
-    }
-}
-
-/** dt-ios BitRegroup.encoding and decoding over any [CipherCode]. */
-object CipherRegroup {
-    private fun slots(byte: Int) = List(8) { if ((byte shr (7 - it)) and 1 == 1) Slot.One else Slot.Zero }
-
-    /** Binary's one-bit characters read as one label per byte. */
-    private fun merged(units: List<Unit>, code: CipherCode) =
-        if (code.bits != 1 || units.isEmpty()) units else listOf(Unit(units.joinToString("") { it.label }, units.sumOf { it.span }))
-
-    fun encoding(bytes: ByteArray, code: CipherCode): Reading {
-        val per = code.bytesPerGroup
-        val total = per * 8
-        return Reading((bytes.size + per - 1) / per) { range ->
-            val first = minOf(bytes.size, range.first * per)
-            val last = minOf(bytes.size, (range.last + 1) * per)
-            val names = BitRegroup.labels(bytes, first until last)
-            (first until last step per).map { start ->
-                val chunk = bytes.copyOfRange(start, minOf(start + per, bytes.size))
-                val real = chunk.size * 8
-                val used = (real + code.bits - 1) / code.bits * code.bits
-                val slots = chunk.flatMap { slots(it.toInt() and 0xFF) } + List(used - real) { Slot.Pad } + List(total - used) { Slot.Absent }
-                val top = List(per) { i -> if (i < chunk.size) Unit(names[start - first + i], 8) else Unit("", 8, faint = true) }
-                val bottom = List(code.charsPerGroup) { k ->
-                    val from = k * code.bits
-                    if (from >= used) return@List Unit(code.padding?.toString() ?: "", code.bits, faint = true)
-                    val value = (0 until code.bits).fold(0) { acc, b -> acc shl 1 or if (slots[from + b] == Slot.One) 1 else 0 }
-                    Unit(code.alphabet[value].toString(), code.bits)
-                }
-                Group(slots, top, merged(bottom, code))
-            }
-        }
-    }
-
-    /** Encoded text, whitespace already removed. Reading stops at the first character the code does not have. */
-    fun decoding(characters: List<Char>, code: CipherCode): Reading {
-        val values = mutableListOf<Int>()
-        var padding = 0
-        for (character in characters) {
-            val value = code.value(character)
-            when {
-                character == code.padding -> padding++
-                padding == 0 && value != null -> values += value
-                else -> break
-            }
-        }
-        val realBits = values.size * code.bits
-        val decoded = java.io.ByteArrayOutputStream()
-        var accumulator = 0
-        var filled = 0
-        for (value in values) {
-            accumulator = accumulator shl code.bits or value
-            filled += code.bits
-            if (filled >= 8) {
-                decoded.write((accumulator shr (filled - 8)) and 0xFF)
-                filled -= 8
-                accumulator = accumulator and ((1 shl filled) - 1)
-            }
-        }
-        val bytes = decoded.toByteArray()
-        val kept = bytes.size * 8
-        val perGroup = code.charsPerGroup
-        val length = values.size + padding
-        return Reading((length + perGroup - 1) / perGroup) { range ->
-            val firstByte = minOf(bytes.size, range.first * code.bytesPerGroup)
-            val names = BitRegroup.labels(bytes, firstByte until minOf(bytes.size, (range.last + 1) * code.bytesPerGroup))
-            (range.first * perGroup until minOf(length, (range.last + 1) * perGroup) step perGroup).map { start ->
-                val slots = mutableListOf<Slot>()
-                val top = mutableListOf<Unit>()
-                for (index in start until start + perGroup) {
-                    if (index >= values.size) {
-                        repeat(code.bits) { slots += Slot.Absent }
-                        top += Unit(if (index < length) code.padding?.toString() ?: "" else "", code.bits, faint = true)
-                        continue
-                    }
-                    val value = values[index]
-                    val bitBase = index * code.bits
-                    for (bit in 0 until code.bits) {
-                        slots += when {
-                            bitBase + bit in kept until realBits -> Slot.Pad
-                            (value shr (code.bits - 1 - bit)) and 1 == 1 -> Slot.One
-                            else -> Slot.Zero
-                        }
-                    }
-                    top += Unit(characters[index].toString(), code.bits)
-                }
-                val byte = start / perGroup * code.bytesPerGroup
-                val bottom = List(code.bytesPerGroup) { j ->
-                    if (byte + j < bytes.size) Unit(names[byte + j - firstByte], 8) else Unit("", 8, faint = true)
-                }
-                Group(slots, merged(top, code), bottom)
-            }
-        }
-    }
-
-    /** One group of the code, all zeros, no labels: the strip's picture with no input. */
-    fun ghost(code: CipherCode): Group? {
-        val group = encoding(ByteArray(code.bytesPerGroup), code).all.firstOrNull() ?: return null
-        return group.copy(top = group.top.map { Unit("", it.span) }, bottom = group.bottom.map { Unit("", it.span) })
-    }
-}
-
-private val labelRow = 17.dp
-private val bracketRoom = 7.dp
-private val bitHeight = 16.dp
-private val regroupRow = labelRow * 2 + bracketRoom * 2 + bitHeight
-private const val PITCH_LEAST = 3.6f
-private const val PITCH_MOST = 7f
-private const val GROUP_GAP = 12f
-private val FED_ROWS = 4..12
-private val labelFont = TextStyle(fontFamily = DelphiFont, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-private val codeFont = TextStyle(fontFamily = DelphiMono, fontSize = 10.sp, fontWeight = FontWeight.Medium)
-
-private class CipherFeed {
-    var pitch = 5f
-    var firstRow = 0
-    var perRow = 0
-    var width = 0f
-}
-
-/**
- * dt-ios BitRegroupStrip for any [CipherCode].
- * ponytail: copy of BitRegroupStrip in EncoderPictures with the group's slot count and ghost per code; fold the two when that file may change
- */
-@Composable
-fun CipherBitStrip(reading: Reading, code: CipherCode, modifier: Modifier = Modifier) {
-    val c = LocalDelphiColours.current
-    val measurer = rememberTextMeasurer()
-    val feed = remember { CipherFeed() }
-    val ghost = remember(code) { CipherRegroup.ghost(code) }
-    val state = rememberCanonGlyphFlowState<Group>(
-        CanonGlyphMetrics(regroupRow, 12.dp, GROUP_GAP.dp),
-        measure = { (it.slots.size * feed.pitch - 1).dp },
-        kind = { CanonGlyphKind.Glyph },
-    )
-    BoxWithConstraints(modifier.fillMaxSize()) {
-        val width = (maxWidth - CanonMetrics.panelPadding * 2).value
-        LaunchedEffect(reading, width) {
-            val slots = code.bytesPerGroup * 8
-            val resized = width != feed.width
-            feed.width = width
-            fitPitch(feed, width - 1, slots)
-            val glyph = slots * feed.pitch - 1
-            var x = glyph
-            var fits = 1
-            while (x + GROUP_GAP + glyph <= width) {
-                x += GROUP_GAP + glyph
-                fits++
-            }
-            val rows = (reading.count + fits - 1) / fits
-            val oldFirst = feed.firstRow
-            if (fits != feed.perRow || rows - feed.firstRow !in FED_ROWS && (feed.firstRow > 0 || rows > FED_ROWS.last)) {
-                feed.firstRow = maxOf(0, rows - 8)
-            }
-            val dropped = if (fits == feed.perRow) (feed.firstRow - oldFirst) * fits else 0
-            feed.perRow = fits
-            state.show(reading.groups(feed.firstRow * fits until reading.count), dropping = dropped, animated = !resized)
-        }
-        CanonGlyphFlow(
-            state,
-            Modifier.fillMaxSize(),
-            paintEmpty = { area ->
-                val shown = ghost ?: return@CanonGlyphFlow
-                val w = (shown.slots.size * feed.pitch - 1).dp.toPx()
-                val h = regroupRow.toPx()
-                drawGroup(shown, Rect(area.center.x - w / 2, area.center.y - h / 2, area.center.x + w / 2, area.center.y + h / 2), feed.pitch, measurer, c.foreground, c.primary, c.mutedForeground, 0.45f)
-            },
-        ) { group, _, frame -> drawGroup(group, frame, feed.pitch, measurer, c.foreground, c.primary, c.mutedForeground, 1f) }
-    }
-}
-
-private fun fitPitch(feed: CipherFeed, width: Float, slots: Int) {
-    if (width <= 0) return
-    var count = maxOf(1, ceil((width + GROUP_GAP) / (slots * PITCH_MOST + GROUP_GAP)).toInt())
-    var fitted = ((width + GROUP_GAP) / count - GROUP_GAP) / slots
-    if (fitted < PITCH_LEAST && count > 1) {
-        count--
-        fitted = ((width + GROUP_GAP) / count - GROUP_GAP) / slots
-    }
-    feed.pitch = fitted.coerceIn(PITCH_LEAST, PITCH_MOST)
-}
-
-private fun DrawScope.drawGroup(
-    group: Group,
-    frame: Rect,
-    pitchDp: Float,
-    measurer: TextMeasurer,
-    foreground: Color,
-    primary: Color,
-    muted: Color,
-    alpha: Float,
-) {
-    fun ink(unit: Int) = (if (unit % 2 == 0) foreground else primary)
-    fun Color.a(value: Float) = copy(alpha = this.alpha * value * alpha)
-    val pitch = pitchDp.dp.toPx()
-    val hair = CanonMetrics.hairline.toPx()
-    val bitsTop = frame.top + labelRow.toPx() + bracketRoom.toPx()
-    val bitsBottom = bitsTop + bitHeight.toPx()
-    val cell = maxOf(1f, pitch - 1.dp.toPx())
-
-    val owner = group.bottom.flatMapIndexed { index, unit -> List(unit.span) { index } }
-    group.slots.forEachIndexed { index, slot ->
-        val x = frame.left + index * pitch
-        val tint = ink(owner.getOrElse(index) { 0 })
-        when (slot) {
-            Slot.One -> drawRect(tint.a(1f), Offset(x, bitsTop), Size(cell, bitHeight.toPx()))
-            Slot.Zero -> drawRect(tint.a(0.4f), Offset(x, bitsBottom - 3.dp.toPx()), Size(cell, 3.dp.toPx()))
-            Slot.Pad -> drawRect(muted.a(0.6f), Offset(x + hair / 2, bitsTop + hair / 2), Size(cell - hair, bitHeight.toPx() - hair), style = Stroke(hair))
-            Slot.Absent -> drawRect(muted.a(0.3f), Offset(x + cell / 2 - hair / 2, bitsBottom - hair), Size(hair, hair))
-        }
-    }
-
-    fun bracket(span: Rect, y: Float, down: Boolean, colour: Color) {
-        val left = span.left + hair / 2
-        val right = span.right - hair / 2
-        val tip = if (down) y + 2.5.dp.toPx() else y - 2.5.dp.toPx()
-        val path = Path().apply {
-            moveTo(left, tip)
-            lineTo(left, y)
-            lineTo(right, y)
-            lineTo(right, tip)
-        }
-        drawPath(path, colour, style = Stroke(hair))
-    }
-
-    fun label(text: String, span: Rect, colour: Color) {
-        if (text.isEmpty()) return
-        // hex and binary: mono
-        val isCode = text.length > 1 && text.all { it.code < 0x80 }
-        val laid = measurer.measure(text, (if (isCode) codeFont else labelFont).copy(color = colour))
-        drawText(laid, topLeft = Offset(span.center.x - laid.size.width / 2, span.center.y - laid.size.height / 2))
-    }
-
-    var start = 0
-    for (unit in group.top) {
-        val span = Rect(frame.left + start * pitch, frame.top, frame.left + (start + unit.span) * pitch - 1.dp.toPx(), frame.top + labelRow.toPx())
-        val colour = if (unit.faint) muted.a(0.6f) else foreground.a(1f)
-        if (!(unit.faint && unit.label.isEmpty())) bracket(span, bitsTop - 3.dp.toPx(), true, colour.copy(alpha = colour.alpha * 0.5f))
-        label(unit.label, span, colour)
-        start += unit.span
-    }
-    start = 0
-    group.bottom.forEachIndexed { index, unit ->
-        val top = bitsBottom + bracketRoom.toPx()
-        val span = Rect(frame.left + start * pitch, top, frame.left + (start + unit.span) * pitch - 1.dp.toPx(), top + labelRow.toPx())
-        val colour = if (unit.faint) muted.a(0.6f) else ink(index).a(1f)
-        if (!(unit.faint && unit.label.isEmpty())) bracket(span, bitsBottom + 3.dp.toPx(), false, colour.copy(alpha = colour.alpha * 0.6f))
-        label(unit.label, span, colour)
-        start += unit.span
-    }
-}
 
 /** dt-ios SymbolPairStrip.Pair.Face. */
 sealed interface CipherFace {
@@ -572,10 +297,10 @@ fun cipherCaption(cipher: CipherId, params: CipherParams): Pair<String, String> 
 }
 
 private fun cipherCode(cipher: CipherId) = when (cipher) {
-    CipherId.Base32 -> CipherCode.Base32
-    CipherId.Hex -> CipherCode.Hex
-    CipherId.Binary -> CipherCode.Binary
-    else -> CipherCode.Base64
+    CipherId.Base32 -> BitRegroup.Code.Base32
+    CipherId.Hex -> BitRegroup.Code.Hex
+    CipherId.Binary -> BitRegroup.Code.Binary
+    else -> BitRegroup.Code.Base64
 }
 
 /** As the engine reads. */
@@ -683,7 +408,7 @@ fun CipherPicture(scene: CipherScene, modifier: Modifier = Modifier) {
     val code = cipherCode(scene.cipher)
     // all three stay current, so the one fading out keeps its content
     val reading = remember(scene.input, scene.encode, scene.cipher) {
-        if (scene.encode) CipherRegroup.encoding(scene.input.toByteArray(), code) else CipherRegroup.decoding(encoded(scene.input, scene.cipher), code)
+        if (scene.encode) BitRegroup.encoding(scene.input.toByteArray(), code) else BitRegroup.decoding(encoded(scene.input, scene.cipher), code)
     }
     val pairs = remember(scene) { cipherPairs(scene.cipher, scene.encode, scene.params, scene.input, scene.output) }
     val figureAlpha by animateFloatAsState(if (scene.score != null) 1f else 0f, tween(200), label = "figure")
@@ -702,7 +427,7 @@ fun CipherPicture(scene: CipherScene, modifier: Modifier = Modifier) {
             Crossfade(strip, Modifier.fillMaxSize(), tween(250), label = "strip") { shown ->
                 when (shown) {
                     CipherStrip.Pairs -> CipherPairStrip(pairs)
-                    CipherStrip.Bits -> CipherBitStrip(reading, code)
+                    CipherStrip.Bits -> BitRegroupStrip(reading, code = code, codeWeight = FontWeight.Medium)
                     CipherStrip.Fence -> RailFenceZigzag(if (scene.encode) scene.input else scene.output, scene.params.rails)
                 }
             }

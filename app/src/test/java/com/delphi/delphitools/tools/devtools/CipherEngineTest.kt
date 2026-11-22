@@ -26,7 +26,8 @@ class CipherEngineTest {
         assertEquals("HI", CipherEngine.baconDecode(CipherEngine.baconEncode("HI")))
         assertEquals("WEAREDISCOVERED", CipherEngine.railFenceDecode(CipherEngine.railFenceEncode("WEAREDISCOVERED", 3), 3))
         assertEquals("WECRLTEERDSOEEFEAOCAIVDEN", CipherEngine.railFenceEncode("WEAREDISCOVEREDFLEEATONCE", 3))
-        assertEquals("crow", CipherEngine.base64Decode(CipherEngine.base64Encode("crow")))
+        assertEquals("crow", CipherEngine.base64Decode(EncoderEngine.base64Encode("crow")))
+        assertTrue(runCatching { CipherEngine.base64Decode("_-8") }.exceptionOrNull() is CipherError)
         assertEquals("crow", CipherEngine.base32Decode(CipherEngine.base32Encode("crow")))
         assertEquals("crow", CipherEngine.hexDecode(CipherEngine.hexEncode("crow")))
         assertEquals("crow", CipherEngine.binaryDecode(CipherEngine.binaryEncode("crow")))
@@ -59,17 +60,17 @@ class CipherEngineTest {
         assertEquals(listOf(CipherFace.Text("B"), CipherFace.Text("C")), cipherPairs(CipherId.Bacon, false, params, "AAAAB AAABA", "").map { it.bottom })
         assertEquals(listOf(true, false), cipherPairs(CipherId.Caesar, true, params, "a!", "d!").map { it.changes })
 
-        fun encode(bytes: ByteArray, code: CipherCode) = CipherRegroup.encoding(bytes, code).all
-        fun decode(text: String, code: CipherCode) = CipherRegroup.decoding(text.toList(), code).all
-        assertEquals(listOf("M", "Y", "=", "=", "=", "=", "=", "="), encode("f".toByteArray(), CipherCode.Base32)[0].bottom.map { it.label })
-        assertEquals(listOf("4", "8"), encode(byteArrayOf(0x48), CipherCode.Hex)[0].bottom.map { it.label })
-        assertEquals(listOf("01001000"), encode(byteArrayOf(0x48), CipherCode.Binary)[0].bottom.map { it.label })
-        assertEquals("J", decode("4A", CipherCode.Hex)[0].bottom[0].label)
-        assertEquals(listOf("T", "W", "E", "="), encode("Ma".toByteArray(), CipherCode.Base64)[0].bottom.map { it.label })
-        assertEquals("FF", decode("_w", CipherCode.Base64)[0].bottom[0].label)
-        assertEquals(15, CipherCode.Hex.value('F'))
-        assertEquals(1, CipherCode.Base32.value('b'))
-        assertEquals(27, CipherCode.Base64.value('b'))
-        assertNull(CipherCode.Binary.value('2'))
+        fun encode(bytes: ByteArray, code: BitRegroup.Code) = BitRegroup.encoding(bytes, code).all
+        fun decode(text: String, code: BitRegroup.Code) = BitRegroup.decoding(text.toList(), code).all
+        assertEquals(listOf("M", "Y", "=", "=", "=", "=", "=", "="), encode("f".toByteArray(), BitRegroup.Code.Base32)[0].bottom.map { it.label })
+        assertEquals(listOf("4", "8"), encode(byteArrayOf(0x48), BitRegroup.Code.Hex)[0].bottom.map { it.label })
+        assertEquals(listOf("01001000"), encode(byteArrayOf(0x48), BitRegroup.Code.Binary)[0].bottom.map { it.label })
+        assertEquals("J", decode("4A", BitRegroup.Code.Hex)[0].bottom[0].label)
+        assertEquals(listOf("T", "W", "E", "="), encode("Ma".toByteArray(), BitRegroup.Code.Base64)[0].bottom.map { it.label })
+        assertEquals("FF", decode("_w", BitRegroup.Code.Base64)[0].bottom[0].label)
+        assertEquals(15, BitRegroup.Code.Hex.value('F'))
+        assertEquals(1, BitRegroup.Code.Base32.value('b'))
+        assertEquals(27, BitRegroup.Code.Base64.value('b'))
+        assertNull(BitRegroup.Code.Binary.value('2'))
     }
 }

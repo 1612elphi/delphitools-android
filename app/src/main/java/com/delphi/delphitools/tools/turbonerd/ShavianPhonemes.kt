@@ -1,6 +1,6 @@
 package com.delphi.delphitools.tools.turbonerd
 
-// ponytail: the IPA side of dt-ios ShavianPhonemeMap and ShavianHeuristic; the rest comes with the Shavian tool
+/** dt-ios ShavianPhonemeMap and ShavianHeuristic. */
 object ShavianPhonemeMap {
     /** Shavian letter to IPA, the 48 letters. */
     val ipaOfLetter: Map<String, String> = mapOf(
@@ -37,7 +37,49 @@ object ShavianPhonemeMap {
     }
 
     fun ipaString(arpabet: String): String? = arpabetToIpa[normaliseArpabet(arpabet)]
+
+    /** The 48 letters with their names, in dt-ios order: consonants, then short and long vowels. */
+    val letters: List<ShavianLetter> = listOf(
+        "𐑐" to "peep", "𐑑" to "tot", "𐑒" to "kick", "𐑓" to "fee", "𐑔" to "thigh", "𐑕" to "so", "𐑖" to "sure", "𐑗" to "church",
+        "𐑚" to "bib", "𐑛" to "dead", "𐑜" to "gag", "𐑝" to "vow", "𐑞" to "they", "𐑟" to "zoo", "𐑠" to "measure", "𐑡" to "judge",
+        "𐑘" to "yea", "𐑢" to "woe", "𐑙" to "hung", "𐑣" to "ha-ha", "𐑥" to "mime", "𐑯" to "nun", "𐑤" to "loll", "𐑮" to "roar",
+    ).map { (shavian, name) -> ShavianLetter(shavian, name, ipaOfLetter.getValue(shavian), vowel = false) } + listOf(
+        "𐑨" to "ash", "𐑩" to "ado", "𐑪" to "on", "𐑫" to "wool", "𐑦" to "if", "𐑧" to "egg", "𐑳" to "up",
+        "𐑱" to "ate", "𐑰" to "eat", "𐑲" to "ice", "𐑴" to "oak", "𐑵" to "ooze", "𐑶" to "oil", "𐑬" to "out", "𐑷" to "awe",
+        "𐑸" to "are", "𐑹" to "or", "𐑺" to "air", "𐑻" to "err", "𐑼" to "array", "𐑽" to "ear", "𐑾" to "ian", "𐑿" to "yew",
+    ).map { (shavian, name) -> ShavianLetter(shavian, name, ipaOfLetter.getValue(shavian), vowel = true) }
+
+    private val byLetter = letters.associateBy { it.shavian }
+
+    fun letter(shavian: String): ShavianLetter? = byLetter[shavian]
+
+    private val arpabetToShavian = mapOf(
+        "P" to "𐑐", "T" to "𐑑", "K" to "𐑒", "F" to "𐑓",
+        "TH" to "𐑔", "S" to "𐑕", "SH" to "𐑖", "CH" to "𐑗",
+        "B" to "𐑚", "D" to "𐑛", "G" to "𐑜", "V" to "𐑝",
+        "DH" to "𐑞", "Z" to "𐑟", "ZH" to "𐑠", "JH" to "𐑡",
+        "Y" to "𐑘", "W" to "𐑢", "NG" to "𐑙", "HH" to "𐑣",
+        "M" to "𐑥", "N" to "𐑯", "L" to "𐑤", "R" to "𐑮",
+        "AE" to "𐑨", "AH0" to "𐑩", "AH" to "𐑳", "AA" to "𐑪", "AA_PALM" to "𐑭",
+        "UH" to "𐑫", "IH" to "𐑦", "EH" to "𐑧",
+        "EY" to "𐑱", "IY" to "𐑰", "IY0" to "𐑦", "AY" to "𐑲",
+        "OW" to "𐑴", "UW" to "𐑵", "OY" to "𐑶",
+        "AW" to "𐑬", "AO" to "𐑷",
+        "ER" to "𐑼",
+        "YUW" to "𐑿",
+    )
+
+    fun shavianChar(arpabet: String): String? = arpabetToShavian[normaliseArpabet(arpabet)]
+
+    /** Consonant voicing and articulation groups. */
+    val consonantGroups = listOf(
+        listOf("𐑐", "𐑚"), listOf("𐑑", "𐑛"), listOf("𐑒", "𐑜"), listOf("𐑓", "𐑝"),
+        listOf("𐑔", "𐑞"), listOf("𐑕", "𐑟"), listOf("𐑖", "𐑠"), listOf("𐑗", "𐑡"),
+        listOf("𐑥", "𐑯", "𐑙"), listOf("𐑤", "𐑮"), listOf("𐑘", "𐑢"), listOf("𐑣"),
+    )
 }
+
+data class ShavianLetter(val shavian: String, val name: String, val ipa: String, val vowel: Boolean)
 
 object ShavianHeuristic {
     // longest first for greedy matching

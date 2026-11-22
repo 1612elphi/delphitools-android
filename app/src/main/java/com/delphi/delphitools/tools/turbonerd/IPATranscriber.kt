@@ -84,7 +84,7 @@ class IPATranscriberModel(application: Application) : AndroidViewModel(applicati
                 // full first: it is 10x the core and wins on any shared word
                 val merged = HashMap<String, List<String>>(150_000)
                 for (name in listOf("shavian-dictionary-full.json", "shavian-dictionary-core.json")) {
-                    runCatching { assets.open(name).reader().use { read(it, merged) } }
+                    runCatching { assets.open(name).reader().use { readShavianDictionary(it, merged) } }
                 }
                 merged
             }
@@ -102,20 +102,21 @@ class IPATranscriberModel(application: Application) : AndroidViewModel(applicati
         if (loading) return
         tokens = IPAEngine.transcribe(input) { dictionary[it] }
     }
+}
 
-    private fun read(reader: java.io.Reader, into: MutableMap<String, List<String>>) {
-        val json = JsonReader(reader)
-        json.beginObject()
-        while (json.hasNext()) {
-            val word = json.nextName()
-            val phones = ArrayList<String>(8)
-            json.beginArray()
-            while (json.hasNext()) phones += json.nextString()
-            json.endArray()
-            into.putIfAbsent(word, phones)
-        }
-        json.endObject()
+/** A Shavian ARPABET dictionary, word to phones; words already in [into] keep their entry. */
+internal fun readShavianDictionary(reader: java.io.Reader, into: MutableMap<String, List<String>>) {
+    val json = JsonReader(reader)
+    json.beginObject()
+    while (json.hasNext()) {
+        val word = json.nextName()
+        val phones = ArrayList<String>(8)
+        json.beginArray()
+        while (json.hasNext()) phones += json.nextString()
+        json.endArray()
+        into.putIfAbsent(word, phones)
     }
+    json.endObject()
 }
 
 private const val DASH = "—"

@@ -83,10 +83,10 @@ class SvgOptimiserModel(application: Application) : AndroidViewModel(application
     fun read(uri: Uri) {
         val app = getApplication<Application>()
         viewModelScope.launch {
-            val contents = withContext(Dispatchers.IO) {
-                runCatching { app.contentResolver.openInputStream(uri)?.use { it.readBytes() } }.getOrNull()?.let(::decodeTextFile)
+            val (name, contents) = withContext(Dispatchers.IO) {
+                runCatching { app.contentResolver.openInputStream(uri)?.use { it.readBytes() } }.getOrNull()?.let(::decodeTextFile)?.let { app.contentResolver.canonDisplayName(uri) to it }
             } ?: return@launch
-            file = SvgFile(app.contentResolver.canonDisplayName(uri) ?: "image.svg", contents)
+            file = SvgFile(name ?: "image.svg", contents)
             optimise(contents)
         }
     }

@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.images
 
+import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.app.Application
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -96,7 +97,6 @@ private val presets = listOf(
     Preset("Thumb", 300, 200), Preset("Social", 1200, 630), Preset("Avatar", 400, 400),
 )
 private val formats = listOf("PNG", "SVG")
-private const val TYPING_MS = 400L
 private const val MEASURE_MS = 300L
 private val figureSize = 96.sp
 
@@ -133,7 +133,7 @@ class PlaceholderGeneratorModel(application: Application) : AndroidViewModel(app
         typing?.cancel()
         if (settles) {
             typing = viewModelScope.launch {
-                delay(TYPING_MS)
+                delay(TYPING_DELAY_MS)
                 refresh()
             }
             return

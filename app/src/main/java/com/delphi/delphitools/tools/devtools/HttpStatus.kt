@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.devtools
 
+import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -82,7 +83,6 @@ import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 
-private const val TYPING_DELAY_MS = 400L
 private const val COPIED_MS = 1500L
 private const val LEAST_PITCH = 28f
 private const val MOST_PITCH = 46f

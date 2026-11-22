@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.typography
 
+import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.content.ClipData
 import android.content.ClipboardManager
 import androidx.compose.animation.core.Easing
@@ -65,7 +66,6 @@ import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 /** Milliseconds without a keystroke before the picture follows the typed value. */
-internal const val TYPING_DELAY_MS = 400L
 
 internal val settleTween = tween<Float>(600, easing = Easing(PxToRemEngine::settle))
 

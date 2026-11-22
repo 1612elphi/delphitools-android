@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.print
 
+import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VectorConverter
@@ -80,7 +81,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-private const val QUERY_DELAY_MS = 400L
 private const val COLUMNS = 3
 private val glyphBox = 40.dp
 private val cellMono = TextStyle(fontFamily = DelphiMono, fontSize = 11.sp)
@@ -115,7 +115,7 @@ class PaperSizesModel : ViewModel() {
         findText = text
         typing?.cancel()
         typing = viewModelScope.launch {
-            delay(QUERY_DELAY_MS)
+            delay(TYPING_DELAY_MS)
             query = PaperQuery.parse(text)
         }
     }

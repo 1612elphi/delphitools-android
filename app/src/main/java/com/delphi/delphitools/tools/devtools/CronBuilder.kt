@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.devtools
 
+import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.icu.text.MeasureFormat
@@ -106,7 +107,6 @@ import java.time.format.TextStyle as DateTextStyle
 import java.time.temporal.WeekFields
 import java.util.Locale
 
-private const val TYPING_DELAY = 400L
 private const val RUN_COUNT = 5
 private const val ARITY = "A cron expression has five fields: minute, hour, day, month, weekday"
 private val RAIL_NAMES = listOf("Minute", "Hour", "Day", "Month", "Weekday")
@@ -383,7 +383,7 @@ private fun DraftCell(
     var draft by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(draft) {
         val pending = draft ?: return@LaunchedEffect
-        delay(TYPING_DELAY)
+        delay(TYPING_DELAY_MS)
         onSettle(pending)
     }
     CanonTextCell(

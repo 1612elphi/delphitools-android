@@ -124,8 +124,11 @@ class Base64ImageEncoderModel(application: Application) : AndroidViewModel(appli
         val app = getApplication<Application>()
         viewModelScope.launch {
             for (uri in uris) {
-                val name = app.contentResolver.canonDisplayName(uri) ?: "image"
-                when (val loaded = withContext(Dispatchers.IO) { read(app, uri, name) }) {
+                val (name, loaded) = withContext(Dispatchers.IO) {
+                    val name = app.contentResolver.canonDisplayName(uri) ?: "image"
+                    name to read(app, uri, name)
+                }
+                when (loaded) {
                     is Loaded.Image -> {
                         images = listOf(loaded.image) + images
                         selected = loaded.image.id

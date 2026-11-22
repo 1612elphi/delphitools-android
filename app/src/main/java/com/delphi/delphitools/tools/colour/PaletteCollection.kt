@@ -33,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -141,7 +142,8 @@ fun PaletteCollection(model: PaletteCollectionModel = viewModel()) {
     val view = LocalView.current
     val format = LocalColourFormats.current.primary
     val store = model.store
-    val (shown, shownMine) = model.found(format)
+    val found by remember(format) { derivedStateOf { model.found(format) } }
+    val (shown, shownMine) = found
     val selected = model.selected(shown.size)
     val palette = shown.getOrNull(selected)
     val searching = model.query.isNotEmpty()

@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.devtools
 
+import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.content.ClipData
 import android.content.ClipboardManager
 import androidx.compose.foundation.Canvas
@@ -78,7 +79,6 @@ import com.delphi.delphitools.ui.theme.DelphiMono
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.delay
 
-private const val TYPING_DELAY = 400L
 private val urlStyle = TextStyle(fontFamily = DelphiMono, fontSize = 15.sp)
 private val urlKeyboard = KeyboardOptions(
     capitalization = KeyboardCapitalization.None,
@@ -130,7 +130,7 @@ fun MetaTagGenerator(model: MetaTagGeneratorModel = viewModel()) {
             model.shown = f
             return@LaunchedEffect
         }
-        delay(TYPING_DELAY)
+        delay(TYPING_DELAY_MS)
         model.shown = f
     }
     val html = remember(shown) { MetaTagEngine.html(shown) }

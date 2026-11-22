@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.typography
 
+import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box

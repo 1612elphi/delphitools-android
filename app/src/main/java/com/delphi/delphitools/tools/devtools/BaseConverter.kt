@@ -1,5 +1,7 @@
 package com.delphi.delphitools.tools.devtools
 
+import com.delphi.delphitools.canon.mix
+import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -87,21 +89,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.pow
 
-private const val TYPING_DELAY_MS = 400L
 private const val PAD = 16f
 private const val LIMIT = 460f
 private const val SHORTEST = 200f
 private const val CHANGE_MS = 220f
 private const val RIPPLE_MS = 6f
 private val operandMono = TextStyle(fontFamily = DelphiMono, fontSize = 17.sp)
-
-/** Mixed in sRGB, as UIKit mixes; Compose's lerp goes through Oklab. */
-private fun mix(a: Color, b: Color, t: Float) = Color(
-    a.red + (b.red - a.red) * t,
-    a.green + (b.green - a.green) * t,
-    a.blue + (b.blue - a.blue) * t,
-    a.alpha + (b.alpha - a.alpha) * t,
-)
 
 enum class RegisterRole { Only, Operand, Result }
 

@@ -101,6 +101,7 @@ fun MarkedText(
         lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Top, LineHeightStyle.Trim.None),
     )
     val gutterWidth = if (gutterColumns > 0) with(density) { measurer.measure("0".repeat(gutterColumns), gutterStyle).size.width.toDp() } else 0.dp
+    val gutterLabels = remember(marks.gutter, gutterStyle, density) { marks.gutter.map { if (it.isEmpty()) null else measurer.measure(it, gutterStyle) } }
     val lead = padding.calculateLeftPadding(direction) + if (gutterWidth > 0.dp) gutterWidth + gutterGap else 0.dp
     val top = padding.calculateTopPadding()
     val starts = remember(text) { paragraphStarts(text) }
@@ -133,9 +134,8 @@ fun MarkedText(
                     if (gutterWidth > 0.dp && marks.gutter.isNotEmpty()) {
                         val left = padding.calculateLeftPadding(direction).toPx()
                         starts.forEachIndexed { index, start ->
-                            val label = marks.gutter.getOrNull(index)?.takeIf { it.isNotEmpty() } ?: return@forEachIndexed
+                            val measured = gutterLabels.getOrNull(index) ?: return@forEachIndexed
                             if (start > text.length) return@forEachIndexed
-                            val measured = measurer.measure(label, gutterStyle)
                             val baseline = result.getLineBaseline(result.getLineForOffset(start))
                             drawText(measured, topLeft = Offset(left, origin.y + baseline - measured.firstBaseline))
                         }

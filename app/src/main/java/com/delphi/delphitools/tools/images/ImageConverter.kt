@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.images
 
+import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
@@ -32,7 +33,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -106,7 +106,6 @@ import kotlin.math.roundToInt
 
 private const val PREVIEW_PIXELS = 1600
 private const val SLIDER_SETTLE_MS = 250L
-private const val TYPING_SETTLE_MS = 400L
 
 /** dt-ios ImageConverterViewModel and the controller's file state: one source, re-encoded on every change. */
 class ImageConverterModel(application: Application) : AndroidViewModel(application) {
@@ -149,8 +148,6 @@ class ImageConverterModel(application: Application) : AndroidViewModel(applicati
         private set
     var isConverting by mutableStateOf(false)
         private set
-    var convertedBytes by mutableLongStateOf(0)
-        private set
 
     private var loading: Job? = null
     private var task: Job? = null
@@ -169,10 +166,11 @@ class ImageConverterModel(application: Application) : AndroidViewModel(applicati
             val decoded = withContext(Dispatchers.IO) {
                 ImageFiles.decode(ImageDecoder.createSource(resolver, uri), ImageConvert.LONGEST_SIDE)?.let { it to ImageCompressEngine.preview(it.image, PREVIEW_PIXELS) }
             } ?: return@launch
-            val bytes = withContext(Dispatchers.IO) {
-                runCatching {
+            val (bytes, name) = withContext(Dispatchers.IO) {
+                val bytes = runCatching {
                     resolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { if (it.moveToFirst()) it.getLong(0) else 0L }
                 }.getOrNull() ?: 0L
+                bytes to resolver.canonDisplayName(uri)
             }
             val (file, preview) = decoded
             source = file.image
@@ -181,7 +179,7 @@ class ImageConverterModel(application: Application) : AndroidViewModel(applicati
             sourceHeight = file.image.height
             customWidth = file.image.width
             customHeight = file.image.height
-            sourceName = resolver.canonDisplayName(uri) ?: ""
+            sourceName = name ?: ""
             sourceDetail = "${file.width} × ${file.height} · ${Formatter.formatShortFileSize(app, bytes)}"
             resultPreview = null
             sourcePreview = preview.asImageBitmap()
@@ -199,7 +197,6 @@ class ImageConverterModel(application: Application) : AndroidViewModel(applicati
         sourceHeight = 0
         resultPreview = null
         converted = null
-        convertedBytes = 0
         failed = false
         isConverting = false
     }
@@ -237,13 +234,13 @@ class ImageConverterModel(application: Application) : AndroidViewModel(applicati
     fun changeWidth(value: Int, typing: Boolean) {
         customWidth = value
         if (lock && sourceWidth > 0) customHeight = ImageConvert.locked(value, sourceWidth, sourceHeight)
-        convert(if (typing) TYPING_SETTLE_MS else 0)
+        convert(if (typing) TYPING_DELAY_MS else 0)
     }
 
     fun changeHeight(value: Int, typing: Boolean) {
         customHeight = value
         if (lock && sourceHeight > 0) customWidth = ImageConvert.locked(value, sourceHeight, sourceWidth)
-        convert(if (typing) TYPING_SETTLE_MS else 0)
+        convert(if (typing) TYPING_DELAY_MS else 0)
     }
 
     fun changeLock(on: Boolean) {
@@ -285,7 +282,6 @@ class ImageConverterModel(application: Application) : AndroidViewModel(applicati
             val preview = withContext(Dispatchers.Default) { data?.let { ImageCompressEngine.thumbnail(it, PREVIEW_PIXELS) } }
             isConverting = false
             converted = data
-            convertedBytes = data?.size?.toLong() ?: 0
             failed = data == null
             resultPreview = preview?.asImageBitmap()
         }

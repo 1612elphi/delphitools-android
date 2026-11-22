@@ -135,7 +135,7 @@ fun canonMathInks(): CanonMathInks {
 }
 
 /** Mixed in sRGB, as UIKit mixes; Compose's own lerp goes through Oklab. */
-private fun mix(a: Color, b: Color, t: Float) = Color(
+internal fun mix(a: Color, b: Color, t: Float) = Color(
     a.red + (b.red - a.red) * t,
     a.green + (b.green - a.green) * t,
     a.blue + (b.blue - a.blue) * t,

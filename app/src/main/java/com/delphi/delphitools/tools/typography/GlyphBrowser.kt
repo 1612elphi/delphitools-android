@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.typography
 
+import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.app.Application
 import android.graphics.Paint
 import android.graphics.Typeface

@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.audiovideo
 
+import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.content.ClipData
 import android.content.ClipboardManager
 import androidx.compose.foundation.background
@@ -70,7 +71,6 @@ import kotlinx.coroutines.delay
 import java.text.NumberFormat
 import java.util.Locale
 
-private const val TYPING_MS = 400L
 private const val DEFAULT_RATE = 4
 private val pictureSize = 30.sp
 private const val DASH = "—"
@@ -86,7 +86,7 @@ fun TimecodeCalc() {
     var shown by remember { mutableStateOf(digitsA to digitsB) }
     LaunchedEffect(digitsA, digitsB) {
         if (shown == digitsA to digitsB) return@LaunchedEffect
-        delay(TYPING_MS)
+        delay(TYPING_DELAY_MS)
         shown = digitsA to digitsB
     }
     val rate = Timecode.rates[rateIndex]

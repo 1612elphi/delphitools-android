@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.devtools
 
+import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.content.ClipboardManager
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.icons.Icons
@@ -34,7 +35,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private const val TYPING_PAUSE_MS = 400L
 private const val DASH = "—"
 
 class JwtDecoderModel : ViewModel() {
@@ -50,7 +50,7 @@ class JwtDecoderModel : ViewModel() {
         token = text
         typing?.cancel()
         typing = viewModelScope.launch {
-            delay(TYPING_PAUSE_MS)
+            delay(TYPING_DELAY_MS)
             refresh()
         }
     }

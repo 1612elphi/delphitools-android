@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.images
 
+import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.animation.ValueAnimator
 import android.app.Application
 import android.content.Context
@@ -84,7 +85,6 @@ private val counts = 1..20
 /** Longest edge decoded; larger photos split at this size. */
 private const val MAX_PIXELS = 4096
 private const val PREVIEW_PIXELS = 1600
-private const val TYPING_MS = 400L
 
 // widest seam between tiles, and the least tile width that still carries its label
 private val seamWidth = 8.dp
@@ -141,7 +141,7 @@ class ImageSplitterModel(application: Application) : AndroidViewModel(applicatio
             return
         }
         typing = viewModelScope.launch {
-            delay(TYPING_MS)
+            delay(TYPING_DELAY_MS)
             grid = IntSize(columns, rows)
         }
     }

@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.devtools
 
+import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -82,7 +83,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 
-private const val TYPING_DELAY_MS = 400L
 private const val LIST_LIMIT = 100
 private const val RAIL_LEVELS = 4
 private const val WIDEST = 736f

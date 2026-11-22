@@ -147,14 +147,11 @@ class ShavianTransliteratorModel(application: Application) : AndroidViewModel(ap
 
     init {
         val assets = application.assets
-        fun load(name: String) = HashMap<String, List<String>>().also { map ->
-            runCatching { assets.open(name).reader().use { readShavianDictionary(it, map) } }
-        }
         viewModelScope.launch {
-            engine.core = withContext(Dispatchers.IO) { load("shavian-dictionary-core.json") }
+            engine.core = ShavianDictionary.core(assets)
             coreLoaded = true
             retokenise()
-            engine.full = withContext(Dispatchers.IO) { load("shavian-dictionary-full.json") }
+            engine.full = ShavianDictionary.full(assets)
             tokens = engine.reResolve(tokens)
             ready = true
         }

@@ -88,11 +88,12 @@ class PasswordGeneratorModel(application: Application) : AndroidViewModel(applic
         regenerate(animated = false)
         val assets = application.assets
         viewModelScope.launch {
-            val text = withContext(Dispatchers.IO) {
-                runCatching { assets.open("password-eff-wordlist.txt").reader().use { it.readText() } }.getOrDefault("")
+            val parsed = withContext(Dispatchers.IO) {
+                val text = runCatching { assets.open("password-eff-wordlist.txt").reader().use { it.readText() } }.getOrDefault("")
+                PasswordEngine.parseRolls(text) to PasswordEngine.parseWordlist(text)
             }
-            rolls = PasswordEngine.parseRolls(text)
-            wordlist = PasswordEngine.parseWordlist(text)
+            rolls = parsed.first
+            wordlist = parsed.second
             regenerate(animated = false)
         }
     }

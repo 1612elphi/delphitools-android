@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.typography
 
+import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.icu.text.MeasureFormat

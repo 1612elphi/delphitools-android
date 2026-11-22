@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.audiovideo
 
+import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.app.Application
 import android.content.ClipboardManager
 import android.content.Context
@@ -51,7 +52,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private const val TYPING_PAUSE_MS = 400L
 
 /** ntsc: nominal × 1000/1001 */
 private val rates = listOf(
@@ -104,7 +104,7 @@ class SubtitleConverterModel(application: Application) : AndroidViewModel(applic
         draft = text
         typing?.cancel()
         typing = viewModelScope.launch {
-            delay(TYPING_PAUSE_MS)
+            delay(TYPING_DELAY_MS)
             setInput(text, "")
         }
     }

@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -122,6 +123,16 @@ internal val MathDark = CanonMathColours(
     mathYellow = Color(0xFFE9BD33),
     tintShare = 0.2f,
 )
+
+/** The keypad's tint inks, for tools that colour with them (UIColor.mathBlue and its siblings on iOS). */
+@Immutable
+data class CanonMathInks(val blue: Color, val clay: Color, val green: Color, val yellow: Color)
+
+@Composable
+fun canonMathInks(): CanonMathInks {
+    val m = if (LocalDelphiColours.current === DelphiDark) MathDark else MathLight
+    return CanonMathInks(m.mathBlue, m.mathClay, m.mathGreen, m.mathYellow)
+}
 
 /** Mixed in sRGB, as UIKit mixes; Compose's own lerp goes through Oklab. */
 private fun mix(a: Color, b: Color, t: Float) = Color(

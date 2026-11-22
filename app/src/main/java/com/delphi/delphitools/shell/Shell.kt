@@ -122,6 +122,14 @@ import com.delphi.delphitools.tools.turbonerd.MorseCode
 import com.delphi.delphitools.tools.turbonerd.NATOPhonetic
 import com.delphi.delphitools.tools.audiovideo.SubtitleConverter
 import com.delphi.delphitools.tools.devtools.Encoder
+import com.delphi.delphitools.tools.colour.ContrastChecker
+import com.delphi.delphitools.tools.colour.ColourConverter
+import com.delphi.delphitools.tools.colour.PaletteGenerator
+import com.delphi.delphitools.tools.colour.PaletteCollection
+import com.delphi.delphitools.tools.typography.TypoCalc
+import com.delphi.delphitools.tools.turbonerd.ShavianTransliterator
+import com.delphi.delphitools.tools.typography.GlyphBrowser
+import com.delphi.delphitools.tools.typography.FontExplorer
 import com.delphi.delphitools.tools.devtools.HttpStatus
 import com.delphi.delphitools.tools.devtools.BaseConverter
 import com.delphi.delphitools.tools.devtools.RegexTester
@@ -502,6 +510,14 @@ private fun ToolPage(tool: Tool) {
             "uuid-genny" -> UuidGenerator()
             "jwt-decoder" -> JwtDecoder()
             "encoder" -> Encoder()
+            "contrast-checker" -> ContrastChecker()
+            "colour-converter" -> ColourConverter()
+            "palette-genny" -> PaletteGenerator()
+            "palette-collection" -> PaletteCollection()
+            "typo-calc" -> TypoCalc()
+            "shavian-transliterator" -> ShavianTransliterator()
+            "glyph-browser" -> GlyphBrowser()
+            "font-explorer" -> FontExplorer()
             "http-status" -> HttpStatus()
             "base-converter" -> BaseConverter()
             "regex-tester" -> RegexTester()

@@ -125,12 +125,12 @@ fun CanonJumpColumn(
     }
 }
 
-/** A CanonHeading with a chevron; inside a CanonJumpColumn (every CanonSplit pane) it opens the jump grid of its column. */
+/** A CanonHeading with a chevron; inside a CanonJumpColumn (every CanonSplit pane) it opens the jump grid of its column. [jumpTitle] titles its tile in the grid. */
 @Composable
-fun CanonJumpHeading(text: String, modifier: Modifier = Modifier, detail: String = "") {
+fun CanonJumpHeading(text: String, modifier: Modifier = Modifier, detail: String = "", jumpTitle: String = text) {
     val targets = LocalCanonJumpTargets.current
-    val heading = remember { CanonJumpTargets.Heading(CanonJumpSection(text, detail)) }
-    heading.section = CanonJumpSection(text, detail)
+    val heading = remember { CanonJumpTargets.Heading(CanonJumpSection(jumpTitle, detail)) }
+    heading.section = CanonJumpSection(jumpTitle, detail)
     DisposableEffect(targets, heading) {
         targets?.headings?.add(heading)
         onDispose { targets?.headings?.remove(heading) }

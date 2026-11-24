@@ -233,7 +233,8 @@ class ImageStitcherModel(application: Application) : AndroidViewModel(applicatio
             val loaded = withContext(Dispatchers.IO) {
                 uris.mapNotNull { uri ->
                     val decoded = runCatching { ImageFiles.decode(ImageDecoder.createSource(resolver, uri), DECODE_PIXELS) }.getOrNull() ?: return@mapNotNull null
-                    val preview = ImageCompressEngine.preview(decoded.image, PREVIEW_PIXELS).asImageBitmap()
+                    val preview = ImageFiles.unlessOutOfMemory { ImageCompressEngine.preview(decoded.image, PREVIEW_PIXELS).asImageBitmap() }
+                        ?: return@mapNotNull null
                     val stem = resolver.canonDisplayName(uri)?.substringBeforeLast('.')?.ifEmpty { null } ?: "image"
                     Triple(StitchSource(UUID.randomUUID(), decoded.image.width, decoded.image.height, stem), decoded.image, preview)
                 }
@@ -351,7 +352,7 @@ class ImageStitcherModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch {
             val data = withContext(Dispatchers.Default) {
                 try {
-                    render(layout, images, opaque)?.let(encode)
+                    render(layout, images, opaque)?.let { rendered -> encode(rendered).also { rendered.recycle() } }
                 } catch (_: OutOfMemoryError) {
                     null
                 }

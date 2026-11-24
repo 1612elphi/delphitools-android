@@ -135,13 +135,15 @@ class ImageClipperModel(application: Application) : AndroidViewModel(application
                 val decoded = runCatching { ImageFiles.decode(ImageDecoder.createSource(resolver, uri), CLIP_MAX_PIXELS) }.getOrNull()
                     ?: return@withContext null
                 val image = decoded.image
-                val preview = ImageCompressEngine.preview(image, CLIP_PREVIEW_PIXELS).asImageBitmap()
-                val kept = if (!image.hasAlpha()) {
-                    IntRect(0, 0, image.width, image.height)
-                } else {
-                    ImageClipEngine.boundingRect(image.width, image.height) { y, row -> image.getPixels(row, 0, image.width, 0, y, image.width, 1) }
+                ImageFiles.unlessOutOfMemory {
+                    val preview = ImageCompressEngine.preview(image, CLIP_PREVIEW_PIXELS).asImageBitmap()
+                    val kept = if (!image.hasAlpha()) {
+                        IntRect(0, 0, image.width, image.height)
+                    } else {
+                        ImageClipEngine.boundingRect(image.width, image.height) { y, row -> image.getPixels(row, 0, image.width, 0, y, image.width, 1) }
+                    }
+                    ClipSource(image, preview, name, decoded.width, decoded.height) to kept
                 }
-                ClipSource(image, preview, name, decoded.width, decoded.height) to kept
             }
             working = false
             failedName = if (loaded == null) name else null
@@ -164,7 +166,10 @@ class ImageClipperModel(application: Application) : AndroidViewModel(application
         val source = source ?: return null
         val kept = kept ?: return null
         return withContext(Dispatchers.Default) {
-            ImageFiles.png(Bitmap.createBitmap(source.image, kept.left, kept.top, kept.width, kept.height))
+            ImageFiles.unlessOutOfMemory {
+                val clipped = Bitmap.createBitmap(source.image, kept.left, kept.top, kept.width, kept.height)
+                ImageFiles.png(clipped).also { if (clipped !== source.image) clipped.recycle() }
+            }
         }
     }
 

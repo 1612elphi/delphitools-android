@@ -25,6 +25,22 @@ class AVEditAudioEngineTest {
     }
 
     @Test
+    fun pcmResamplerHalvesWithoutSeams() {
+        val source = sine(96000, 0.1, 0.5, channels = 2, hz = 1000.0)
+        val whole = PcmResampler(96000, 48000, 2).process(source)
+        val split = PcmResampler(96000, 48000, 2).let { r -> source.toList().chunked(998).flatMap { r.process(it.toShortArray()).toList() } }
+        assertArrayEquals(whole, split.toShortArray())
+        val expected = sine(48000, 0.1, 0.5, channels = 2, hz = 1000.0)
+        assertEquals(expected.size, whole.size)
+        whole.forEachIndexed { i, s -> assertEquals(expected[i].toFloat(), s.toFloat(), 2f) }
+        // 88.2 kHz to 48 kHz, interpolated between source frames
+        val ramp = ShortArray(882) { it.toShort() }
+        val down = PcmResampler(88200, 48000, 1).process(ramp)
+        assertEquals(480, down.size)
+        assertEquals((100 * 88200 / 48000.0).toFloat(), down[100].toFloat(), 0.5f)
+    }
+
+    @Test
     fun planGain() {
         assertEquals(AudioGainPlan(6.0, false, -4.0), AVEditAudioEngine.planGain(-20.0, -10.0, -14.0))
         assertEquals(AudioGainPlan(2.0, true, -1.0), AVEditAudioEngine.planGain(-20.0, -3.0, -14.0))

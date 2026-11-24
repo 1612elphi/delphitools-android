@@ -59,8 +59,10 @@ private class WavSink(output: File, private val rate: Int, private val channels:
     override fun release() = file.close()
 }
 
-/** 16-bit PCM through the platform AAC encoder into an M4A. */
-private class AacSink(output: File, private val rate: Int, private val channels: Int) : AudioSink {
+/** 16-bit PCM through the platform AAC encoder into an M4A, resampled to the encoder's limit when above it. */
+internal class AacSink(output: File, sourceRate: Int, private val channels: Int) : AudioSink {
+    private val rate = min(sourceRate, AVEditAudioEngine.AAC_MAX_RATE)
+    private val resampler = if (sourceRate > rate) PcmResampler(sourceRate, rate, channels) else null
     private val codec = MediaCodec.createEncoderByType(AVEditEngine.AAC_MIME)
     private val muxer = MediaMuxer(output.path, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
     private val info = MediaCodec.BufferInfo()
@@ -77,7 +79,8 @@ private class AacSink(output: File, private val rate: Int, private val channels:
         codec.start()
     }
 
-    override fun write(pcm: ShortArray) {
+    override fun write(input: ShortArray) {
+        val pcm = resampler?.process(input) ?: input
         var offset = 0
         while (offset < pcm.size) {
             val index = codec.dequeueInputBuffer(10_000)

@@ -153,9 +153,46 @@ class AudioMeter(
     }
 }
 
+/**
+ * Interleaved 16-bit PCM from [from] to [to] Hz by linear interpolation, fed chunk by chunk; the last frame of each chunk
+ * carries over, so the output is the same however the input is split.
+ */
+// ponytail: no anti-alias filter, content above the new Nyquist folds back; add a windowed-sinc low pass if that is heard
+class PcmResampler(from: Int, to: Int, private val channels: Int) {
+    private val step = from.toDouble() / to
+    private val previous = ShortArray(channels)
+    private var consumed = 0L
+    private var produced = 0L
+
+    fun process(pcm: ShortArray): ShortArray {
+        val end = consumed + pcm.size / channels
+        val out = ShortArray(((end - consumed) / step + 2).toInt() * channels)
+        var frames = 0
+        while (true) {
+            val position = produced * step
+            val index = position.toLong()
+            if (index + 1 >= end) break
+            val fraction = position - index
+            for (channel in 0 until channels) {
+                fun at(frame: Long) = if (frame < consumed) previous[channel] else pcm[((frame - consumed) * channels).toInt() + channel]
+                val a = at(index)
+                out[frames * channels + channel] = (a + (at(index + 1) - a) * fraction).roundToInt().toShort()
+            }
+            frames++
+            produced++
+        }
+        if (end > consumed) pcm.copyInto(previous, 0, pcm.size - channels, pcm.size)
+        consumed = end
+        return out.copyOf(frames * channels)
+    }
+}
+
 /** dt-ios AVEditAudio, AVInfoAudioDSP and AVInfoWaveformRender arithmetic, with no device in it. */
 object AVEditAudioEngine {
     const val LEVEL_FLOOR = -60.0
+
+    /** The highest rate the platform AAC encoder takes. */
+    const val AAC_MAX_RATE = 48_000
 
     /** dt-ios AVInfoProbe.levelShare: a level bar's share, 0 to 1, for decibels between [LEVEL_FLOOR] and full scale. */
     fun levelShare(decibels: Double): Float = (1 - decibels / LEVEL_FLOOR).coerceIn(0.0, 1.0).toFloat()

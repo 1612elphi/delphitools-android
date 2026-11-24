@@ -15,6 +15,9 @@ object PdfCompressEngine {
         data class Rasterise(val dpi: Double, val quality: Double) : Mode
     }
 
+    /** Larger images are kept as they are; 40 MP is 160 MB as a bitmap. */
+    const val MAX_IMAGE_PIXELS = 40_000_000L
+
     /** An image's samples to re-encode: a JPEG as stored, or 8-bit RGB rows. */
     class ImageSamples(val width: Int, val height: Int, val jpeg: ByteArray?, val rgb: ByteArray?)
 
@@ -59,11 +62,13 @@ object PdfCompressEngine {
         if (!rgb(file, file.resolve(dict["ColorSpace"]))) return null
         val width = (file.resolve(dict["Width"]) as? Number)?.toInt() ?: return null
         val height = (file.resolve(dict["Height"]) as? Number)?.toInt() ?: return null
-        if (width <= 0 || height <= 0) return null
+        if (width <= 0 || height <= 0 || width.toLong() * height > MAX_IMAGE_PIXELS) return null
+        val bytes = width.toLong() * height * 3
         return when (PdfFilters.filters(dict)) {
             listOf("DCTDecode") -> ImageSamples(width, height, stream.data, null)
-            listOf("FlateDecode") -> PdfFilters.decode(stream)
-                ?.takeIf { it.size >= width * height * 3 }
+            // a predictor adds one byte a row
+            listOf("FlateDecode") -> runCatching { PdfFilters.decode(stream, limit = bytes + height + 4096) }.getOrNull()
+                ?.takeIf { it.size >= bytes }
                 ?.let { ImageSamples(width, height, null, it) }
             else -> null
         }

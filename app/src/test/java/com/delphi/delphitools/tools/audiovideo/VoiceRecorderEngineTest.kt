@@ -1,15 +1,23 @@
 package com.delphi.delphitools.tools.audiovideo
 
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import kotlin.math.abs
 
 class VoiceRecorderEngineTest {
+    @get:Rule
+    val folder = TemporaryFolder()
+
+    private fun held(rate: Int) = VoiceHeld(rate, folder.newFile())
+
     @Test
     fun heldFoldsPeaksAndPunchesIn() {
-        val held = VoiceHeld(1000)
+        val held = held(1000)
         assertEquals(20, held.window)
         // fold crosses buffer edges
         held.append(FloatArray(30) { 0.5f })
@@ -32,16 +40,33 @@ class VoiceRecorderEngineTest {
         assertEquals(60, held.head)
         // clipping
         held.append(floatArrayOf(2f, -2f))
-        assertEquals(32767.toShort(), held.samples[60])
-        assertEquals((-32767).toShort(), held.samples[61])
+        assertArrayEquals(shortArrayOf(32767, -32767), held.read(60, 2))
+        // punch-in kept the samples around it in the file
+        assertEquals((-8192).toShort(), held.read(44, 1)[0])
+        assertEquals(32767.toShort(), held.read(45, 1)[0])
+        assertEquals(124L, held.file.length())
+        held.close()
     }
 
     @Test
     fun heldGrowsPastItsFirstBuffer() {
-        val held = VoiceHeld(100)
+        val held = held(100)
         repeat(30) { held.append(FloatArray(100) { 0.1f }) }
         assertEquals(3000, held.count)
         assertEquals(1500, held.peakCount)
+        held.close()
+    }
+
+    @Test
+    fun heldStopsAtTheLongestTake() {
+        val held = held(10)
+        val limit = (VoiceRecorderEngine.MAX_SECONDS * 10).toInt()
+        held.append(FloatArray(limit + 50))
+        assertEquals(limit, held.count)
+        assertEquals(VoiceRecorderEngine.MAX_SECONDS, held.duration, 0.0)
+        held.append(FloatArray(5))
+        assertEquals(limit, held.count)
+        held.close()
     }
 
     @Test

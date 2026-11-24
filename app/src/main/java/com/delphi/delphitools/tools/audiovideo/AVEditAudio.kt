@@ -33,13 +33,13 @@ private class StopDecode : Exception() {
     override fun fillInStackTrace() = this
 }
 
-private interface AudioSink {
+internal interface AudioSink {
     fun write(pcm: ShortArray)
     fun finish()
     fun release()
 }
 
-private class WavSink(output: File, private val rate: Int, private val channels: Int) : AudioSink {
+internal class WavSink(output: File, private val rate: Int, private val channels: Int) : AudioSink {
     private val file = RandomAccessFile(output, "rw").apply { write(ByteArray(44)) }
     private var bytes = 0L
 

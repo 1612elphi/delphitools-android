@@ -1,24 +1,35 @@
 package com.delphi.delphitools.tools.audiovideo
 
+import java.io.Closeable
+import java.io.File
+import java.io.RandomAccessFile
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
 /**
- * dt-ios AVInfoRecorder.Held: the take as it is held, mono 16-bit at the input's rate, with the peak of every [window] frames.
- * [head] is the frame the next captured sample goes to; behind [count] after a scrub back.
+ * dt-ios AVInfoRecorder.Held: the take as it is held, mono 16-bit little-endian at the input's rate in [file], with the peak
+ * of every [window] frames in memory. [head] is the frame the next captured sample goes to; behind [count] after a scrub back.
+ * Appends come from the capture thread while the page reads the peaks; up to [VoiceRecorderEngine.MAX_SECONDS] is kept.
  */
-class VoiceHeld(val rate: Int) {
+class VoiceHeld(val rate: Int, val file: File) : Closeable {
     val window = max(1, (rate * VoiceRecorderEngine.PEAK_INTERVAL).roundToInt())
-    var samples = ShortArray(rate * 10)
-        private set
+    private val limit = (VoiceRecorderEngine.MAX_SECONDS * rate).roundToInt()
+    private val data = RandomAccessFile(file, "rw").apply { setLength(0) }
+
+    @Volatile
     var count = 0
         private set
-    var peaks = FloatArray(512)
-        private set
+    val peaks = FloatArray(limit / window + 1)
+
+    @Volatile
     var peakCount = 0
         private set
+
+    @Volatile
     var head = 0
         private set
 
@@ -26,30 +37,47 @@ class VoiceHeld(val rate: Int) {
     val duration get() = count.toDouble() / rate
 
     /** Records at the head: over what is held there after a scrub back, and on past the end. */
+    @Synchronized
     fun append(floats: FloatArray, length: Int = floats.size) {
-        val end = head + length
-        if (end > samples.size) samples = samples.copyOf(max(end, samples.size * 2))
-        for (index in 0 until length) samples[head + index] = (floats[index].coerceIn(-1f, 1f) * 32767).roundToInt().toShort()
-        count = max(count, end)
+        val frames = min(length, limit - head)
+        if (frames <= 0) return
+        val bytes = ByteBuffer.allocate(frames * 2).order(ByteOrder.LITTLE_ENDIAN)
+        for (index in 0 until frames) bytes.putShort((floats[index].coerceIn(-1f, 1f) * 32767).roundToInt().toShort())
+        data.seek(head * 2L)
+        data.write(bytes.array())
+        val end = head + frames
+        val total = max(count, end)
         val first = head / window
-        head = end
-        // only windows written
-        for (index in first until min(count / window, (end + window - 1) / window)) {
-            var loudest = 0
-            for (frame in index * window until (index + 1) * window) loudest = max(loudest, abs(samples[frame].toInt()))
-            val peak = loudest / 32768f
-            if (index < peakCount) {
-                peaks[index] = peak
-            } else {
-                if (peakCount == peaks.size) peaks = peaks.copyOf(peaks.size * 2)
-                peaks[peakCount++] = peak
+        // only windows written; a partly written one keeps what was held around it
+        val last = min(total / window, (end + window - 1) / window)
+        if (last > first) {
+            val span = read(first * window, (last - first) * window)
+            for (index in first until last) {
+                var loudest = 0
+                for (frame in (index - first) * window until (index - first + 1) * window) loudest = max(loudest, abs(span[frame].toInt()))
+                peaks[index] = loudest / 32768f
             }
+            peakCount = max(peakCount, last)
         }
+        count = total
+        head = end
     }
 
+    @Synchronized
     fun scrub(seconds: Double) {
         head = (seconds * rate).roundToInt().coerceIn(0, count)
     }
+
+    /** [frames] samples from [start]. */
+    @Synchronized
+    fun read(start: Int, frames: Int): ShortArray {
+        val bytes = ByteArray(frames * 2)
+        data.seek(start * 2L)
+        data.readFully(bytes)
+        return ShortArray(frames).also { ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(it) }
+    }
+
+    override fun close() = data.close()
 }
 
 /** What the take strip draws: peaks behind the head, peaks ahead of it (dim) after [gap] empty columns, and the slip between peaks in px. */
@@ -60,7 +88,7 @@ object VoiceRecorderEngine {
     /** Seconds of audio behind each peak. */
     const val PEAK_INTERVAL = 0.02
 
-    /** Longest take held: an hour of 16-bit at 48 kHz is 346 MB. */
+    /** Longest take held: an hour of 16-bit at 48 kHz is 346 MB of scratch file and 703 KB of peaks. */
     const val MAX_SECONDS = 3600.0
 
     /** dp per peak; with 20 ms peaks the take runs at 100 dp/s. */

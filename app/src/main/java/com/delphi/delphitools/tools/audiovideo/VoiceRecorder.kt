@@ -9,11 +9,7 @@ import android.content.pm.PackageManager
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioRecord
-import android.media.MediaCodec
-import android.media.MediaCodecInfo
-import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
-import android.media.MediaMuxer
 import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.net.Uri
@@ -114,9 +110,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.RandomAccessFile
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -141,8 +134,9 @@ class VoiceTake(val file: File, val date: Long, val duration: Double) {
 }
 
 /**
- * dt-ios AVInfoRecorder: microphone capture and the take library. The take is held in memory until Stop, so a scrub back can
- * record over its tail; Stop writes it as AAC (WAV when the encoder fails) into the app's files. A move to the background ends it.
+ * dt-ios AVInfoRecorder: microphone capture and the take library. The take is held in a cache scratch file until Stop, so a
+ * scrub back can record over its tail; Stop writes it as AAC (WAV when the encoder fails) into the app's files. A move to the
+ * background ends it.
  */
 class VoiceRecorderModel(application: Application) : AndroidViewModel(application) {
     var permission by mutableStateOf(VoicePermission.Undetermined)
@@ -253,13 +247,15 @@ class VoiceRecorderModel(application: Application) : AndroidViewModel(applicatio
             }.getOrNull()?.takeIf { it.state == AudioRecord.STATE_INITIALIZED }
         } ?: return
         record = created
-        held = VoiceHeld(created.sampleRate)
+        val held = VoiceHeld(created.sampleRate, File.createTempFile("take", ".pcm", getApplication<Application>().cacheDir))
+        this.held = held
         tail = FloatArray(0)
         tailStart = 0
         if (!capture()) {
             created.release()
             record = null
-            held = null
+            this.held = null
+            discard(held)
             return
         }
         recording = true
@@ -269,27 +265,33 @@ class VoiceRecorderModel(application: Application) : AndroidViewModel(applicatio
 
     private fun capture(): Boolean {
         val record = record ?: return false
+        val held = held ?: return false
         if (runCatching { record.startRecording() }.isFailure || record.recordingState != AudioRecord.RECORDSTATE_RECORDING) return false
         reader = viewModelScope.launch(Dispatchers.IO) {
             // device buffers of up to 20 ms
             val buffer = FloatArray(max(1, record.sampleRate / 50))
             while (isActive) {
                 val read = record.read(buffer, 0, buffer.size, AudioRecord.READ_BLOCKING)
-                if (read < 0) break
+                // a pause or stop cancels before stopping the record, which then fails the read
+                if (read < 0) {
+                    if (isActive) viewModelScope.launch { if (this@VoiceRecorderModel.held === held) stop() }
+                    break
+                }
                 if (read == 0) continue
-                val floats = buffer.copyOf(read)
-                withContext(Dispatchers.Main) { absorb(floats) }
+                // a pause cancels this job before it scrubs; the lock keeps a late buffer off the new head
+                val kept = synchronized(held) {
+                    if (isActive) held.append(buffer, read)
+                    isActive
+                }
+                if (!kept) break
+                viewModelScope.launch {
+                    if (this@VoiceRecorderModel.held !== held) return@launch
+                    publish()
+                    if (held.duration >= VoiceRecorderEngine.MAX_SECONDS) stop()
+                }
             }
         }
         return true
-    }
-
-    private fun absorb(floats: FloatArray) {
-        val held = held ?: return
-        if (!recording || paused) return
-        held.append(floats)
-        publish()
-        if (held.duration >= VoiceRecorderEngine.MAX_SECONDS) stop()
     }
 
     private fun publish() {
@@ -326,7 +328,8 @@ class VoiceRecorderModel(application: Application) : AndroidViewModel(applicatio
 
     fun stop() {
         if (!recording) return
-        reader?.cancel()
+        val capturing = reader
+        capturing?.cancel()
         reader = null
         record?.let {
             runCatching { it.stop() }
@@ -338,12 +341,16 @@ class VoiceRecorderModel(application: Application) : AndroidViewModel(applicatio
         position = 0.0
         val held = held ?: return
         this.held = null
-        if (held.count == 0) return
+        if (held.count == 0) {
+            discard(held)
+            return
+        }
         val stamp = SimpleDateFormat("yyyy-MM-dd'T'HH-mm-ss", Locale.ROOT).apply { timeZone = TimeZone.getTimeZone("UTC") }.format(Date())
         folder.mkdirs()
         val name = free("recording-$stamp", "m4a")
         writing += name
         saves.launch {
+            capturing?.join()
             save(held, File(folder, name))
             withContext(Dispatchers.Main) {
                 writing -= name
@@ -418,86 +425,35 @@ class VoiceRecorderModel(application: Application) : AndroidViewModel(applicatio
     override fun onCleared() = leave()
 
     private companion object {
-        /** AAC, or uncompressed WAV beside it when the encoder fails, so the take is kept. */
+        /** AAC, or uncompressed WAV beside it when the encoder fails, so the take is kept; the scratch file goes either way. */
         fun save(held: VoiceHeld, file: File) {
             try {
-                writeAac(held, file)
+                write(held, AacSink(file, held.rate, 1))
             } catch (_: Exception) {
                 file.delete()
-                runCatching { writeWav(held, File(file.parentFile, file.nameWithoutExtension + ".wav")) }
-            }
-        }
-
-        fun writeAac(held: VoiceHeld, file: File) {
-            val format = MediaFormat.createAudioFormat(AVEditEngine.AAC_MIME, held.rate, 1).apply {
-                setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC)
-                setInteger(MediaFormat.KEY_BIT_RATE, 128_000)
-            }
-            val encoder = MediaCodec.createEncoderByType(AVEditEngine.AAC_MIME)
-            var muxer: MediaMuxer? = null
-            try {
-                encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-                encoder.start()
-                val mux = MediaMuxer(file.path, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
-                muxer = mux
-                var track = -1
-                var offset = 0
-                var inputDone = false
-                val info = MediaCodec.BufferInfo()
-                while (true) {
-                    if (!inputDone) {
-                        val index = encoder.dequeueInputBuffer(10_000)
-                        if (index >= 0) {
-                            val buffer = encoder.getInputBuffer(index)!!.order(ByteOrder.LITTLE_ENDIAN)
-                            val frames = min(buffer.remaining() / 2, held.count - offset)
-                            val pts = offset * 1_000_000L / held.rate
-                            if (frames <= 0) {
-                                encoder.queueInputBuffer(index, 0, 0, pts, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
-                                inputDone = true
-                            } else {
-                                buffer.asShortBuffer().put(held.samples, offset, frames)
-                                encoder.queueInputBuffer(index, 0, frames * 2, pts, 0)
-                                offset += frames
-                            }
-                        }
-                    }
-                    val index = encoder.dequeueOutputBuffer(info, 10_000)
-                    if (index == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-                        track = mux.addTrack(encoder.outputFormat)
-                        mux.start()
-                    } else if (index >= 0) {
-                        val data = encoder.getOutputBuffer(index)!!
-                        if (info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG == 0 && info.size > 0 && track >= 0) {
-                            data.position(info.offset)
-                            data.limit(info.offset + info.size)
-                            mux.writeSampleData(track, data, info)
-                        }
-                        encoder.releaseOutputBuffer(index, false)
-                        if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) break
-                    }
-                }
-                mux.stop()
+                runCatching { write(held, WavSink(File(file.parentFile, file.nameWithoutExtension + ".wav"), held.rate, 1)) }
             } finally {
-                runCatching { encoder.stop() }
-                encoder.release()
-                runCatching { muxer?.release() }
+                discard(held)
             }
         }
 
-        fun writeWav(held: VoiceHeld, file: File) {
-            RandomAccessFile(file, "rw").use { out ->
-                out.setLength(0)
-                out.write(AVEditEngine.wavHeader(held.rate, 1, held.count * 2L))
-                val chunk = ByteBuffer.allocate(held.rate * 2).order(ByteOrder.LITTLE_ENDIAN)
+        fun write(held: VoiceHeld, sink: AudioSink) {
+            try {
                 var start = 0
                 while (start < held.count) {
-                    val count = min(held.rate, held.count - start)
-                    chunk.clear()
-                    chunk.asShortBuffer().put(held.samples, start, count)
-                    out.write(chunk.array(), 0, count * 2)
-                    start += count
+                    val frames = min(held.rate, held.count - start)
+                    sink.write(held.read(start, frames))
+                    start += frames
                 }
+                sink.finish()
+            } finally {
+                sink.release()
             }
+        }
+
+        fun discard(held: VoiceHeld) = synchronized(held) {
+            held.close()
+            held.file.delete()
         }
     }
 }

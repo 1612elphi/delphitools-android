@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.delphi.delphitools.ui.theme.CanonText
@@ -40,6 +41,7 @@ fun CanonTextCell(
     keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
     colour: Color? = null,
     onEndEditing: () -> Unit = {},
+    visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
     val c = LocalDelphiColours.current
     val focusManager = LocalFocusManager.current
@@ -53,6 +55,7 @@ fun CanonTextCell(
         cursorBrush = SolidColor(c.primary),
         keyboardOptions = keyboardOptions,
         keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+        visualTransformation = visualTransformation,
         modifier = modifier
             .width(width)
             .heightIn(min = CanonMetrics.controlHeight)

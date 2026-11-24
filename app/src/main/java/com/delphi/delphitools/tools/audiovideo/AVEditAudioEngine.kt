@@ -1,5 +1,8 @@
 package com.delphi.delphitools.tools.audiovideo
 
+import android.media.AudioFormat
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.abs
@@ -322,4 +325,20 @@ object AVEditAudioEngine {
     fun signedGain(db: Double): String = String.format(Locale.ROOT, "%s%.1f dB", if (db >= 0) "+" else "", db)
 
     fun micros(frames: Long, rate: Int): Long = if (rate > 0) (frames * 1e6 / rate).roundToLong() else 0
+
+    /** A decoder output buffer, from its position to its limit, as samples from -1 to 1; null for an encoding not handled. */
+    fun pcmFloats(data: ByteBuffer, encoding: Int): FloatArray? {
+        val bytes = data.slice().order(ByteOrder.LITTLE_ENDIAN)
+        return when (encoding) {
+            AudioFormat.ENCODING_PCM_16BIT -> bytes.asShortBuffer().let { s -> FloatArray(s.remaining()) { s.get(it) / 32768f } }
+            AudioFormat.ENCODING_PCM_FLOAT -> bytes.asFloatBuffer().let { f -> FloatArray(f.remaining()).also(f::get) }
+            AudioFormat.ENCODING_PCM_32BIT -> bytes.asIntBuffer().let { s -> FloatArray(s.remaining()) { s.get(it) / 2147483648f } }
+            AudioFormat.ENCODING_PCM_24BIT_PACKED -> FloatArray(bytes.remaining() / 3) {
+                val at = it * 3
+                val sample = (bytes.get(at).toInt() and 0xFF) or (bytes.get(at + 1).toInt() and 0xFF shl 8) or (bytes.get(at + 2).toInt() shl 16)
+                sample / 8388608f
+            }
+            else -> null
+        }
+    }
 }

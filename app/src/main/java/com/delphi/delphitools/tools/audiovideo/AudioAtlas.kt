@@ -97,7 +97,6 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.max
@@ -149,7 +148,7 @@ internal object AudioAtlasMedia {
             fun MediaFormat.int(key: String, fallback: Int) = if (containsKey(key)) getInteger(key) else fallback
             var rate = format.int(MediaFormat.KEY_SAMPLE_RATE, 44100)
             var channels = format.int(MediaFormat.KEY_CHANNEL_COUNT, 2)
-            var float = false
+            var encoding = AudioFormat.ENCODING_PCM_16BIT
             var started = false
             var next = -1L
             val info = MediaCodec.BufferInfo()
@@ -174,18 +173,12 @@ internal object AudioAtlasMedia {
                     val out = decoder.outputFormat
                     rate = out.int(MediaFormat.KEY_SAMPLE_RATE, rate)
                     channels = out.int(MediaFormat.KEY_CHANNEL_COUNT, channels)
-                    float = out.int(MediaFormat.KEY_PCM_ENCODING, AudioFormat.ENCODING_PCM_16BIT) == AudioFormat.ENCODING_PCM_FLOAT
+                    encoding = out.int(MediaFormat.KEY_PCM_ENCODING, AudioFormat.ENCODING_PCM_16BIT)
                 } else if (index >= 0) {
-                    val data = decoder.getOutputBuffer(index)!!.order(ByteOrder.LITTLE_ENDIAN)
+                    val data = decoder.getOutputBuffer(index)!!
                     data.position(info.offset)
                     data.limit(info.offset + info.size)
-                    val samples = if (float) {
-                        val floats = data.asFloatBuffer()
-                        FloatArray(floats.remaining()).also(floats::get)
-                    } else {
-                        val shorts = data.asShortBuffer()
-                        FloatArray(shorts.remaining()) { shorts.get(it) / 32768f }
-                    }
+                    val samples = AVEditAudioEngine.pcmFloats(data, encoding) ?: error("pcm encoding $encoding")
                     decoder.releaseOutputBuffer(index, false)
                     val frames = samples.size / max(1, channels)
                     if (frames > 0) {

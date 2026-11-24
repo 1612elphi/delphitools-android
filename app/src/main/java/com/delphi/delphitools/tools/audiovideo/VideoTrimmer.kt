@@ -2,44 +2,24 @@ package com.delphi.delphitools.tools.audiovideo
 
 import android.app.Application
 import android.net.Uri
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FirstPage
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.LastPage
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.outlined.ContentCut
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -50,7 +30,6 @@ import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonDecimalField
 import com.delphi.delphitools.canon.CanonGrid
 import com.delphi.delphitools.canon.CanonHeading
-import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.CanonReadout
 import com.delphi.delphitools.canon.CanonReadoutBand
 import com.delphi.delphitools.canon.CanonReadoutRowHeight
@@ -70,7 +49,6 @@ import kotlin.math.roundToInt
 private const val THUMBNAIL_COUNT = 24
 private val STRIP_HEIGHT = 56.dp
 private val EDITOR_HEIGHT = 72.dp
-private val GRIP = 14.dp
 
 // height over width
 private const val TALLEST = 1.25f
@@ -165,7 +143,7 @@ fun VideoTrimmer(model: VideoTrimmerModel = viewModel()) {
     val ready = duration > 0 && model.end > model.start
     val selection = if (ready) model.start..model.end else null
     val aspect = if (facts != null && facts.height > 0) facts.width.toFloat() / facts.height else 16f / 9
-    val hasPlayhead = playback.playhead != null
+    val hasPlayhead by remember(playback) { derivedStateOf { playback.playhead != null } }
 
     val sourceRows = CanonSection.of {
         CanonRows {
@@ -188,7 +166,9 @@ fun VideoTrimmer(model: VideoTrimmerModel = viewModel()) {
         background = LocalDelphiColours.current.muted,
         boxing = CanonCanvasBoxing.UnlessWide,
     ) {
-        TrimEditor(source, model.start, model.end, playback.playhead, ready, model::drag)
+        AVEditTrimEditor(duration, model.start, model.end, ready, model::drag) { inset ->
+            AVEditFilmstrip(source.thumbnails, duration, playback.playhead, inset = inset, selection = selection)
+        }
     }
     val cut = CanonSection.of {
         CanonRows {
@@ -261,89 +241,4 @@ fun VideoTrimmer(model: VideoTrimmerModel = viewModel()) {
             }
         },
     )
-}
-
-/** dt-ios AVEditTrimEditor: the filmstrip between two grips that drag the in and out points, with the selection framed. */
-// ponytail: grips are not TalkBack-adjustable; the Start and End fields are the accessible way in
-@Composable
-private fun TrimEditor(
-    source: AVEditSource,
-    start: Double,
-    end: Double,
-    playhead: Double?,
-    enabled: Boolean,
-    onChange: (Double, Double) -> Unit,
-) {
-    val c = LocalDelphiColours.current
-    val density = LocalDensity.current
-    val rightToLeft = LocalLayoutDirection.current == LayoutDirection.Rtl
-    val duration = source.duration
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        AVEditFilmstrip(source.thumbnails, duration, playhead, inset = GRIP, selection = if (enabled) start..end else null)
-        if (!enabled) return@BoxWithConstraints
-        val width = constraints.maxWidth.toFloat()
-        val grip = with(density) { GRIP.toPx() }
-        val target = with(density) { CanonMetrics.controlHeight.toPx() }
-        val axis = AVEditAxis(duration, width, grip, rightToLeft)
-        val (left, right) = listOf(axis.x(start), axis.x(end)).sorted()
-        with(density) {
-            Box(
-                Modifier
-                    .offset { IntOffset(left.roundToInt(), 0) }
-                    .width((right - left).toDp())
-                    .fillMaxHeight()
-                    .border(CanonMetrics.frame, c.primary)
-            )
-        }
-        val change by rememberUpdatedState(onChange)
-        val selection by rememberUpdatedState(start to end)
-        val stripWidth = max(1f, width - grip * 2)
-        for (isStart in listOf(true, false)) {
-            // the start grip sits left of the selection unless right to left
-            val onLeft = isStart != rightToLeft
-            val barX = if (onLeft) left - grip else right
-            val targetX = (if (onLeft) barX - (target - grip) else barX).coerceIn(0f, max(0f, width - target))
-            val seconds = if (isStart) start else end
-            Box(
-                Modifier
-                    .offset { IntOffset(targetX.roundToInt(), 0) }
-                    .width(with(density) { target.toDp() })
-                    .fillMaxHeight()
-                    .semantics {
-                        contentDescription = if (isStart) "Start" else "End"
-                        stateDescription = AVEditEngine.timestamp(seconds)
-                    }
-                    .pointerInput(isStart) {
-                        var origin = 0.0
-                        var moved = 0f
-                        detectHorizontalDragGestures(onDragStart = {
-                            origin = if (isStart) selection.first else selection.second
-                            moved = 0f
-                        }) { pointer, amount ->
-                            pointer.consume()
-                            moved += amount
-                            val delta = moved / stripWidth * duration * if (rightToLeft) -1 else 1
-                            val next = ((origin + delta) * 1000).roundToInt() / 1000.0
-                            if (isStart) change(next, selection.second) else change(selection.first, next)
-                        }
-                    }
-            ) {
-                Box(
-                    Modifier
-                        .offset { IntOffset((barX - targetX).roundToInt(), 0) }
-                        .width(GRIP)
-                        .fillMaxHeight()
-                        .background(c.primary),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        if (onLeft) Icons.Filled.ChevronLeft else Icons.Filled.ChevronRight,
-                        contentDescription = null,
-                        tint = c.primaryForeground,
-                        modifier = Modifier.size(16.dp),
-                    )
-                }
-            }
-        }
-    }
 }

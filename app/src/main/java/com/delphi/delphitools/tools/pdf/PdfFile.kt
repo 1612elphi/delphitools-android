@@ -31,6 +31,8 @@ class PdfPage(val ref: PdfRef, val dict: Map<String, Any?>, val inherited: Map<S
 
 private val inheritable = listOf("Resources", "MediaBox", "CropBox", "Rotate")
 
+private const val MAX_TREE_DEPTH = 4096
+
 /**
  * An existing PDF read from [bytes]: the cross-reference chain (tables, streams, hybrids), objects in object streams,
  * and the page tree. A damaged chain is rebuilt by scanning for `obj` headers.
@@ -54,22 +56,27 @@ class PdfFile(val bytes: ByteArray) {
 
     init {
         val read = runCatching { readChain() }.getOrNull()
-        rebuilt = read == null
-        if (read != null) {
-            trailer = read.first
+        // ponytail: encrypted files refused; decrypting needs RC4/AES and the standard security handler
+        if (read?.first?.get("Encrypt") != null) throw PdfSyntaxException("encrypted")
+        val chained = read?.let { readPages(it.first) }.orEmpty()
+        rebuilt = chained.isEmpty()
+        if (!rebuilt) {
+            trailer = read!!.first
             startXref = read.second
             usesXrefStream = read.third
+            pages = chained
         } else {
             offsets.clear()
             gens.clear()
             compressed.clear()
+            cache.clear()
+            objectStreams.clear()
             trailer = rebuild()
             startXref = -1
             usesXrefStream = compressed.isNotEmpty()
+            if (trailer["Encrypt"] != null) throw PdfSyntaxException("encrypted")
+            pages = readPages(trailer)
         }
-        if (trailer["Encrypt"] != null) throw PdfSyntaxException("encrypted")
-        // ponytail: encrypted files refused; decrypting needs RC4/AES and the standard security handler
-        pages = readPages()
         if (pages.isEmpty()) throw PdfSyntaxException("no pages")
     }
 
@@ -78,11 +85,12 @@ class PdfFile(val bytes: ByteArray) {
     fun gen(num: Int) = gens[num] ?: 0
 
     /** The object numbered [num], null when there is none. */
+    @Synchronized
     fun obj(num: Int): Any? {
         if (cache.containsKey(num)) return cache[num]
         cache[num] = null
         val value = offsets[num]?.let { offset ->
-            runCatching { lexer(offset).indirect().second }.getOrNull()
+            runCatching { lexer(offset).indirect().takeIf { it.first.num == num }?.second }.getOrNull()
         } ?: compressed[num]?.let { (stream, _) ->
             objectStreams.getOrPut(stream) { runCatching { readObjectStream(stream) }.getOrDefault(emptyMap()) }[num]
         }
@@ -158,10 +166,11 @@ class PdfFile(val bytes: ByteArray) {
         val stream = lexer(offset).indirect().second as? PdfStream ?: throw PdfSyntaxException("xref stream expected")
         val data = PdfFilters.decode(stream) ?: throw PdfSyntaxException("xref stream filter")
         val widths = (stream.dict["W"] as? List<*>)?.map { (it as? Number)?.toInt() ?: 0 } ?: throw PdfSyntaxException("no W")
-        if (widths.size < 3) throw PdfSyntaxException("bad W")
+        if (widths.size < 3 || widths.any { it !in 0..8 }) throw PdfSyntaxException("bad W")
         val size = (stream.dict["Size"] as? Number)?.toInt() ?: 0
         val index = (stream.dict["Index"] as? List<*>)?.map { (it as? Number)?.toInt() ?: 0 } ?: listOf(0, size)
         val entry = widths.sum()
+        if (entry == 0) throw PdfSyntaxException("bad W")
         var at = 0
         fun field(width: Int): Long {
             var v = 0L
@@ -170,6 +179,7 @@ class PdfFile(val bytes: ByteArray) {
         }
         for (pair in index.chunked(2)) {
             if (pair.size < 2) break
+            if (pair[1] > data.size / entry) throw PdfSyntaxException("xref stream too short")
             for (i in 0 until pair[1]) {
                 if (at + entry > data.size) return stream.dict
                 val kind = if (widths[0] == 0) 1L else field(widths[0])
@@ -201,15 +211,23 @@ class PdfFile(val bytes: ByteArray) {
         }
     }
 
-    /** Every `n g obj` in the file, the later of two winning, and the trailer from the last `trailer` or xref stream. */
+    /**
+     * Every `n g obj` in the file that parses, the later of two winning, skipping stream bodies; and the trailer from
+     * the last `trailer` or xref stream.
+     */
     @Suppress("UNCHECKED_CAST")
     private fun rebuild(): Map<String, Any?> {
         val text = String(bytes, Charsets.ISO_8859_1)
         val header = Regex("""(?<![0-9])(\d+)[ \t\r\n\f]+(\d+)[ \t\r\n\f]+obj\b""")
+        var after = 0
         for (match in header.findAll(text)) {
+            if (match.range.first < after) continue
             val num = match.groupValues[1].toIntOrNull() ?: continue
+            val scan = PdfLexer(bytes, match.range.first)
+            val parsed = runCatching { scan.indirect() }.getOrNull() ?: continue
+            if (parsed.second is PdfStream) after = scan.pos
             offsets[num] = match.range.first
-            gens[num] = match.groupValues[2].toIntOrNull() ?: 0
+            gens[num] = parsed.first.gen
         }
         var trailer: Map<String, Any?>? = null
         val word = lastIndexOf(bytes, "trailer".toByteArray(Charsets.ISO_8859_1))
@@ -233,24 +251,27 @@ class PdfFile(val bytes: ByteArray) {
         return trailer
     }
 
-    private fun readPages(): List<PdfPage> {
+    private fun readPages(trailer: Map<String, Any?>): List<PdfPage> {
         val root = dict(trailer["Root"]) ?: return emptyList()
         val out = ArrayList<PdfPage>()
         val seen = HashSet<Int>()
-        fun walk(ref: Any?, inherited: Map<String, Any?>) {
-            if (ref !is PdfRef || !seen.add(ref.num)) return
-            val node = dict(ref) ?: return
+        val stack = ArrayDeque<Triple<Any?, Map<String, Any?>, Int>>()
+        stack.addLast(Triple(root["Pages"], emptyMap(), 0))
+        while (stack.isNotEmpty()) {
+            val (ref, inherited, depth) = stack.removeLast()
+            if (ref !is PdfRef || !seen.add(ref.num)) continue
+            val node = dict(ref) ?: continue
             val kids = resolve(node["Kids"]) as? List<*>
             val type = (node["Type"] as? PdfName)?.name
             if (type == "Page" || (type != "Pages" && kids == null)) {
                 out.add(PdfPage(ref, node, inherited))
-                return
+                continue
             }
+            if (depth >= MAX_TREE_DEPTH) throw PdfSyntaxException("page tree too deep")
             val passed = HashMap(inherited)
             for (key in inheritable) node[key]?.let { passed[key] = it }
-            kids?.forEach { walk(it, passed) }
+            kids?.asReversed()?.forEach { stack.addLast(Triple(it, passed, depth + 1)) }
         }
-        walk(root["Pages"], emptyMap())
         return out
     }
 

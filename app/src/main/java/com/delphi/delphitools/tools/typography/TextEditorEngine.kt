@@ -325,7 +325,7 @@ object TextDoc {
                 val weight = if (run.bold || bold) "\\b" else "\\b0"
                 val slant = if (!run.code && (run.italic || italic)) "\\i" else "\\i0"
                 val body = "{$font$weight$slant\\cf${if (run.link != null) 3 else 1} ${escape(run.text)}}"
-                append(if (run.link != null) "{\\field{\\*\\fldinst{HYPERLINK \"${escape(run.link)}\"}}{\\fldrslt$body}}" else body)
+                append(if (run.link != null) "{\\field{\\*\\fldinst{HYPERLINK \"${escape(run.link.replace("\"", "%22"))}\"}}{\\fldrslt$body}}" else body)
             }
         }
 

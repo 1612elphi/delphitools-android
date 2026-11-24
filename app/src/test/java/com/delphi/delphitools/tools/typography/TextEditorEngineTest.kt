@@ -47,6 +47,7 @@ class TextEditorEngineTest {
         assertTrue(rtf.contains("caf\\u233?"))
         assertTrue(rtf.contains("HYPERLINK \"https://x\""))
         assertTrue(rtf.contains("\\fs48"))
+        assertTrue(TextDoc.rtf(TextDoc.parseMarkdown("[l](https://x\"y)")).contains("HYPERLINK \"https://x%22y\""))
     }
 
     @Test

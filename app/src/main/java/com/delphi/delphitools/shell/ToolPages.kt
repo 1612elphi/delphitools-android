@@ -1,15 +1,22 @@
 package com.delphi.delphitools.shell
 
 import androidx.compose.runtime.Composable
+import com.delphi.delphitools.tools.audiovideo.AudioExtractor
+import com.delphi.delphitools.tools.audiovideo.FrameExtractor
 import com.delphi.delphitools.tools.audiovideo.SubtitleConverter
 import com.delphi.delphitools.tools.audiovideo.TimecodeCalc
+import com.delphi.delphitools.tools.audiovideo.VideoMuter
+import com.delphi.delphitools.tools.audiovideo.VideoTrimmer
 import com.delphi.delphitools.tools.colour.ColourAtlas
 import com.delphi.delphitools.tools.colour.ColourBlindnessSimulator
 import com.delphi.delphitools.tools.colour.ColourConverter
 import com.delphi.delphitools.tools.colour.ContrastChecker
+import com.delphi.delphitools.tools.colour.GradientGenerator
 import com.delphi.delphitools.tools.colour.HarmonyGenerator
 import com.delphi.delphitools.tools.colour.PaletteCollection
+import com.delphi.delphitools.tools.colour.PaletteExtractor
 import com.delphi.delphitools.tools.colour.PaletteGenerator
+import com.delphi.delphitools.tools.colour.PixelPicker
 import com.delphi.delphitools.tools.colour.TailwindShades
 import com.delphi.delphitools.tools.devtools.BaseConverter
 import com.delphi.delphitools.tools.devtools.CipherDecoder
@@ -33,6 +40,7 @@ import com.delphi.delphitools.tools.images.PasteImage
 import com.delphi.delphitools.tools.images.PlaceholderGenerator
 import com.delphi.delphitools.tools.images.SvgOptimiser
 import com.delphi.delphitools.tools.print.PaperSizes
+import com.delphi.delphitools.tools.socialmedia.MatteGenerator
 import com.delphi.delphitools.tools.socialmedia.SocialCropper
 import com.delphi.delphitools.tools.socialmedia.Watermarker
 import com.delphi.delphitools.tools.turbonerd.BrailleConverter
@@ -94,4 +102,12 @@ internal val toolPages: Map<String, @Composable () -> Unit> = mapOf(
     "favicon-genny" to { FaviconGenerator() },
     "watermarker" to { Watermarker() },
     "social-cropper" to { SocialCropper() },
+    "video-muter" to { VideoMuter() },
+    "audio-extractor" to { AudioExtractor() },
+    "video-trimmer" to { VideoTrimmer() },
+    "frame-extractor" to { FrameExtractor() },
+    "pixel-picker" to { PixelPicker() },
+    "palette-extractor" to { PaletteExtractor() },
+    "gradient-genny" to { GradientGenerator() },
+    "matte-generator" to { MatteGenerator() },
 )

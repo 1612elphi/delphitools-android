@@ -8,7 +8,7 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 
 | id | tool | iOS controller | iOS lines | status |
 |---|---|---|---:|---|
-| `matte-generator` | Matte Generator | `MatteGeneratorViewController` | 600 | todo |
+| `matte-generator` | Matte Generator | `MatteGeneratorViewController` | 600 | review |
 | `scroll-generator` | Seamless Scroll Generator | `ScrollGeneratorViewController` | 579 | todo |
 | `social-cropper` | Social Media Cropper | `SocialCropperViewController` | 589 | review |
 | `watermarker` | Watermarker | `WatermarkerViewController` | 528 | review |
@@ -22,12 +22,12 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | `colour-camera` | Colour Camera | `ColourCameraViewController` | 949 | todo |
 | `colour-converter` | Colour Converter | `ColourConverterViewController` | 734 | review |
 | `contrast-checker` | Contrast Checker | `ContrastCheckerViewController` | 708 | review |
-| `gradient-genny` | Gradient Generator | `GradientGeneratorViewController` | 1724 | todo |
+| `gradient-genny` | Gradient Generator | `GradientGeneratorViewController` | 1724 | review |
 | `harmony-genny` | Harmony Generator | `HarmonyGeneratorViewController` | 351 | done |
 | `palette-collection` | Palette Collection | `PaletteCollectionViewController` | 829 | review |
-| `palette-extractor` | Palette Extractor | `PaletteExtractorViewController` | 1010 | todo |
+| `palette-extractor` | Palette Extractor | `PaletteExtractorViewController` | 1010 | review |
 | `palette-genny` | Palette Generator | `PaletteGeneratorViewController` | 719 | review |
-| `pixel-picker` | Pixel Picker | `PixelPickerViewController` | 709 | todo |
+| `pixel-picker` | Pixel Picker | `PixelPickerViewController` | 709 | review |
 | `tailwind-shades` | Tailwind Shade Generator | `TailwindShadesViewController` | 383 | done |
 
 ## Images
@@ -58,18 +58,18 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | id | tool | iOS controller | iOS lines | status |
 |---|---|---|---:|---|
 | `audio-atlas` | Audio Atlas | `AudioAtlasViewController` | 667 | todo |
-| `audio-extractor` | Audio Extractor | `AudioExtractorViewController` | 156 | todo |
+| `audio-extractor` | Audio Extractor | `AudioExtractorViewController` | 156 | review |
 | `audio-normaliser` | Audio Normaliser | `AudioNormaliserViewController` | 244 | todo |
 | `audio-trimmer` | Audio Trimmer | `AudioTrimmerViewController` | 362 | todo |
 | `auto-subtitle` | Auto Subtitle | `AutoSubtitleViewController` | 644 | todo |
-| `frame-extractor` | Frame Extractor | `FrameExtractorViewController` | 401 | todo |
+| `frame-extractor` | Frame Extractor | `FrameExtractorViewController` | 401 | review |
 | `subtitle-converter` | Subtitle Converter | `SubtitleConverterViewController` | 191 | done |
 | `subtitle-studio` | Subtitle Studio | `SubtitleStudioViewController` | 758 | todo |
 | `timecode-calc` | Timecode Calculator | `TimecodeCalcViewController` | 253 | done |
 | `video-atlas` | Video Atlas | `VideoAtlasViewController` | 280 | todo |
-| `video-muter` | Video Muter | `VideoMuterViewController` | 210 | todo |
+| `video-muter` | Video Muter | `VideoMuterViewController` | 210 | review |
 | `video-to-gif` | Video to GIF | `VideoToGIFViewController` | 321 | todo |
-| `video-trimmer` | Video Trimmer | `VideoTrimmerViewController` | 257 | todo |
+| `video-trimmer` | Video Trimmer | `VideoTrimmerViewController` | 257 | review |
 | `voice-recorder` | Voice Recorder | `VoiceRecorderViewController` | 570 | todo |
 | `waveform-genny` | Waveform Generator | `WaveformGeneratorViewController` | 263 | todo |
 

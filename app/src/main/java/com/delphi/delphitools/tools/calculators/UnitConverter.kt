@@ -175,7 +175,7 @@ class UnitConverterModel : ViewModel() {
 
     fun nudge(direction: Int) {
         val floor = if (category == "Temperature") from.value(0.0) else 0.0
-        set(PxToRemEngine.format(UnitConverterEngine.nudge(input.toDoubleOrNull() ?: 0.0, direction, floor)))
+        set(PxToRemEngine.format(UnitConverterEngine.nudge(input.toDoubleOrNull()?.takeIf { it.isFinite() } ?: 0.0, direction, floor)))
     }
 
     fun choose(category: String) {

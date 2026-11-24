@@ -88,6 +88,7 @@ class GraphCalcEngineTest {
         assertEquals(-2.0, p.number("−2")!!, 0.0)
         assertNull(p.number("2x"))
         assertNull(p.number(""))
+        assertNull(p.number("1e999"))
         assertTrue(p.isValid(MathExpression("1/(x-1)")))
         assertTrue(p.isValid(MathExpression("x^2")))
         assertFalse(p.isValid(MathExpression("x^")))

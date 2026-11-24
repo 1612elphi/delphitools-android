@@ -480,7 +480,7 @@ object GraphPlot {
     fun number(text: String): Double? {
         val trimmed = text.trim().replace('−', '-')
         val comma = trimmed.replace(',', '.')
-        if (decimalNumber.matches(comma)) return comma.toDouble()
+        if (decimalNumber.matches(comma)) return comma.toDouble().takeIf { it.isFinite() }
         if (trimmed.isEmpty() || MathTokeniser.hasVariable(trimmed)) return null
         return MathExpression(trimmed).evaluate(0.0).takeIf { it.isFinite() }
     }

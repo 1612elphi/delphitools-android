@@ -20,6 +20,8 @@ class PxToRemEngineTest {
         assertEquals(1.5, PxToRemEngine.parse("1,5")!!, 0.0)
         assertNull(PxToRemEngine.parse("x"))
         assertNull(PxToRemEngine.parse(""))
+        assertNull(PxToRemEngine.parse("1e999"))
+        assertNull(PxToRemEngine.parse("-1e999"))
     }
 
     @Test

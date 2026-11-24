@@ -506,7 +506,8 @@ object DocConvertEngine {
         out
     }
 
-    fun html(blocks: List<DocBlock>, standalone: Boolean): String {
+    /** [css] is a `<style>` element for the head of a standalone page. */
+    fun html(blocks: List<DocBlock>, standalone: Boolean, css: String = ""): String {
         val body = blocks.joinToString("\n") { block ->
             when (block) {
                 is DocBlock.Heading -> "<h${block.level}>${inlineHtml(block.runs)}</h${block.level}>"
@@ -520,7 +521,7 @@ object DocConvertEngine {
             }
         }
         if (!standalone) return body
-        return "<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"><title>Document</title></head>\n<body>\n$body\n</body>\n</html>"
+        return "<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"><title>Document</title>$css</head>\n<body>\n$body\n</body>\n</html>"
     }
 
     private fun inlineHtml(runs: List<DocInline>) = runs.joinToString("") { run ->

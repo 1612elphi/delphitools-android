@@ -141,11 +141,7 @@ import com.delphi.delphitools.canon.rememberCanonTextFilePicker
 import com.delphi.delphitools.colour.rgbOf
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
-import com.delphi.delphitools.tools.typography.TextDoc.Block
-import com.delphi.delphitools.tools.typography.TextDoc.Inline
 import com.delphi.delphitools.tools.typography.TextDoc.Style
-import com.delphi.delphitools.tools.typography.TextDoc.mark
-import com.delphi.delphitools.tools.typography.TextDoc.words
 import com.delphi.delphitools.tools.typography.TextEditorEngine.Look
 import com.delphi.delphitools.tools.typography.TextEditorEngine.Span
 import com.delphi.delphitools.ui.theme.CanonText
@@ -338,9 +334,9 @@ fun TextEditor(model: TextEditorModel = viewModel()) {
                                         runCatching {
                                             when (ext) {
                                                 "md" -> text.toByteArray()
-                                                "html" -> TextDoc.html(TextDoc.parseMarkdown(text), standalone = true, style = style).toByteArray()
-                                                "rtf" -> TextDoc.rtf(TextDoc.parseMarkdown(text), style).toByteArray(Charsets.US_ASCII)
-                                                else -> pdf(TextDoc.parseMarkdown(text), style)
+                                                "html" -> TextDoc.html(DocConvertEngine.parseMarkdown(text), standalone = true, style = style).toByteArray()
+                                                "rtf" -> TextDoc.rtf(DocConvertEngine.parseMarkdown(text), style).toByteArray(Charsets.US_ASCII)
+                                                else -> pdf(DocConvertEngine.parseMarkdown(text), style)
                                             }
                                         }.getOrNull()
                                     } ?: return@launch
@@ -588,7 +584,7 @@ private fun Manuscript(
                             val ink = if (lit) c.primary else c.mutedForeground
                             val label = buildAnnotatedString {
                                 withStyle(markStyle.toSpanStyle().copy(color = ink)) { append(span.block.mark) }
-                                val words = span.block.words
+                                val words = TextEditorEngine.words(span.block.text)
                                 if (words > 0) {
                                     withStyle(countStyle.toSpanStyle().copy(color = ink.copy(alpha = if (lit) 0.8f else 0.7f))) {
                                         append("\n" + number.format(words))
@@ -632,7 +628,7 @@ private fun paragraph(text: String, caret: Int): IntRange {
 
 /** ManuscriptPreview: the blocks set in the preview style, scrolled to the block being written. */
 @Composable
-private fun ManuscriptPreview(blocks: List<Block>, style: Style, anchor: Int?) {
+private fun ManuscriptPreview(blocks: List<DocBlock>, style: Style, anchor: Int?) {
     val list = rememberLazyListState()
     val screen = LocalConfiguration.current.screenHeightDp
     val height = min(640, max(280, (screen * 0.55f).roundToInt())).dp
@@ -653,10 +649,10 @@ private fun ManuscriptPreview(blocks: List<Block>, style: Style, anchor: Int?) {
 }
 
 @Composable
-private fun PreviewBlock(block: Block, style: Style, body: Float) {
+private fun PreviewBlock(block: DocBlock, style: Style, body: Float) {
     val ink = style.text.colour
     val family = style.fontFamily()
-    fun runs(runs: List<Inline>, size: Float, bold: Boolean, italic: Boolean) = buildAnnotatedString {
+    fun runs(runs: List<DocInline>, size: Float, bold: Boolean, italic: Boolean) = buildAnnotatedString {
         for (run in runs) {
             val span = if (run.code) SpanStyle(fontFamily = FontFamily.Monospace, fontSize = (size * 0.9f).sp)
             else SpanStyle(
@@ -668,33 +664,33 @@ private fun PreviewBlock(block: Block, style: Style, body: Float) {
     }
     fun text(size: Float) = TextStyle(fontFamily = family, fontSize = size.sp, color = ink, lineHeight = (size * 1.2f * style.lineHeight.toFloat()).sp)
     when (block) {
-        is Block.Heading -> {
+        is DocBlock.Heading -> {
             val size = body * TextDoc.headingSizes[block.level.coerceIn(1, 6) - 1].toFloat()
             Text(runs(block.runs, size, bold = true, italic = false), Modifier.padding(top = body.dp, bottom = (body * 0.8f).dp), style = text(size))
         }
-        is Block.Paragraph -> Text(runs(block.runs, body, bold = false, italic = false), Modifier.padding(bottom = (body * 0.8f).dp), style = text(body))
-        is Block.Quote -> Text(runs(block.runs, body, bold = false, italic = true), Modifier.padding(start = (body * 2).dp, bottom = (body * 0.8f).dp), style = text(body))
-        is Block.Bullets -> {
+        is DocBlock.Paragraph -> Text(runs(block.runs, body, bold = false, italic = false), Modifier.padding(bottom = (body * 0.8f).dp), style = text(body))
+        is DocBlock.Quote -> Text(runs(block.runs, body, bold = false, italic = true), Modifier.padding(start = (body * 2).dp, bottom = (body * 0.8f).dp), style = text(body))
+        is DocBlock.Bullets -> {
             val joined = buildAnnotatedString {
                 block.items.forEachIndexed { offset, item ->
                     withStyle(ParagraphStyle(textIndent = TextIndent(body.sp, (body * 2).sp))) {
-                        append(runs(listOf(Inline(if (block.ordered) "${offset + 1}. " else "•  ")) + item, body, bold = false, italic = false))
+                        append(runs(listOf(DocInline(if (block.ordered) "${offset + 1}. " else "•  ")) + item, body, bold = false, italic = false))
                     }
                 }
             }
             Text(joined, Modifier.padding(bottom = (body * 0.8f).dp), style = text(body))
         }
-        is Block.Code -> Text(
+        is DocBlock.Code -> Text(
             block.body,
             Modifier.padding(start = body.dp, bottom = (body * 0.8f).dp),
             style = text(body).copy(fontFamily = FontFamily.Monospace, fontSize = (body * 0.9f).sp),
         )
-        Block.Rule -> Text("─".repeat(5), Modifier.padding(bottom = (body * 0.8f).dp), style = text(body).copy(color = ink.copy(alpha = 0.5f)))
+        DocBlock.Rule -> Text("─".repeat(5), Modifier.padding(bottom = (body * 0.8f).dp), style = text(body).copy(color = ink.copy(alpha = 0.5f)))
     }
 }
 
 /** DocConvert.pdfData: A4 with 48 pt margins, an 11 pt body, paginated by line. */
-private fun pdf(blocks: List<Block>, style: Style, body: Float = 11f): ByteArray {
+private fun pdf(blocks: List<DocBlock>, style: Style, body: Float = 11f): ByteArray {
     val pageWidth = 595
     val pageHeight = 842
     val margin = 48f
@@ -716,7 +712,7 @@ private fun pdf(blocks: List<Block>, style: Style, body: Float = 11f): ByteArray
         y = margin
     }
 
-    fun spanned(runs: List<Inline>, italic: Boolean): CharSequence {
+    fun spanned(runs: List<DocInline>, italic: Boolean): CharSequence {
         val out = SpannableStringBuilder()
         for (run in runs) {
             val start = out.length
@@ -774,17 +770,17 @@ private fun pdf(blocks: List<Block>, style: Style, body: Float = 11f): ByteArray
     newPage(1)
     for (block in blocks) {
         when (block) {
-            is Block.Heading -> {
+            is DocBlock.Heading -> {
                 val size = body * TextDoc.headingSizes[block.level.coerceIn(1, 6) - 1].toFloat()
                 place(spanned(block.runs, false), size, bold = true, before = body)
             }
-            is Block.Paragraph -> place(spanned(block.runs, false), body)
-            is Block.Quote -> place(spanned(block.runs, true), body, left = body * 2)
-            is Block.Bullets -> block.items.forEachIndexed { offset, item ->
-                place(spanned(listOf(Inline(if (block.ordered) "${offset + 1}. " else "•  ")) + item, false), body, after = body * 0.3f, left = body, rest = body * 2)
+            is DocBlock.Paragraph -> place(spanned(block.runs, false), body)
+            is DocBlock.Quote -> place(spanned(block.runs, true), body, left = body * 2)
+            is DocBlock.Bullets -> block.items.forEachIndexed { offset, item ->
+                place(spanned(listOf(DocInline(if (block.ordered) "${offset + 1}. " else "•  ")) + item, false), body, after = body * 0.3f, left = body, rest = body * 2)
             }
-            is Block.Code -> place(block.body, body * 0.9f, typeface = Typeface.MONOSPACE, left = body)
-            Block.Rule -> place("─".repeat(5), body, colour = (ink and 0x00FFFFFF) or (0x80 shl 24))
+            is DocBlock.Code -> place(block.body, body * 0.9f, typeface = Typeface.MONOSPACE, left = body)
+            DocBlock.Rule -> place("─".repeat(5), body, colour = (ink and 0x00FFFFFF) or (0x80 shl 24))
         }
     }
     page?.let(document::finishPage)

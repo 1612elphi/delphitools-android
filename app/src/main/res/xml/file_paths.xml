@@ -3,4 +3,5 @@
     <cache-path name="stickers" path="stickers/" />
     <cache-path name="exports" path="exports/" />
     <cache-path name="clipboard" path="clipboard/" />
+    <cache-path name="media" path="media/" />
 </paths>

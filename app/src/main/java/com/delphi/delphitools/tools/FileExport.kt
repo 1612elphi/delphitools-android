@@ -40,6 +40,18 @@ object FileExport {
         return Intent.createChooser(send, null)
     }
 
+    /** A share-sheet intent for several [files], each under a cache path in `res/xml/file_paths.xml`. */
+    fun chooser(context: Context, files: List<File>, mimeType: String): Intent {
+        if (files.size == 1) return chooser(context, files[0], mimeType)
+        val uris = files.map { FileProvider.getUriForFile(context, "${context.packageName}.files", it) }
+        val send = Intent(Intent.ACTION_SEND_MULTIPLE)
+            .setType(mimeType)
+            .putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        send.clipData = ClipData.newRawUri(files[0].name, uris[0]).apply { uris.drop(1).forEach { addItem(ClipData.Item(it)) } }
+        return Intent.createChooser(send, null)
+    }
+
     /** dt-ios FileExportService.share(text:): the share sheet on plain text. */
     fun shareText(context: Context, text: String) {
         context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text), null))

@@ -40,12 +40,30 @@ class ColourCameraDevice private constructor(
     /** Zoom stops offered as lenses, 1 among them. */
     val zooms: List<Float>,
 ) {
-    private var thread: HandlerThread? = null
-    private var camera: CameraDevice? = null
-    private var session: CameraCaptureSession? = null
-    private var reader: ImageReader? = null
-    private var request: CaptureRequest.Builder? = null
+    /** One open: its camera thread, surfaces and, once the camera callbacks arrive, the device and session. */
+    private class Run(val thread: HandlerThread, val handler: Handler, val preview: Surface, val reader: ImageReader) {
+        @Volatile
+        var closed = false
+        var pending = true
+        var camera: CameraDevice? = null
+        var session: CameraCaptureSession? = null
+        var request: CaptureRequest.Builder? = null
+
+        // the surfaces and thread outlive the device until it reports closed
+        fun finish() {
+            handler.post {
+                reader.close()
+                preview.release()
+                thread.quitSafely()
+            }
+        }
+    }
+
+    private var run: Run? = null
     private var zoom = 1f
+
+    /** True from [open] until [close]. */
+    val isOpen get() = run != null
 
     /** The clockwise turn that makes sensor images upright at a display rotation in degrees. */
     fun rotation(displayDegrees: Int) = (sensorOrientation - displayDegrees + 360) % 360
@@ -58,68 +76,92 @@ class ColourCameraDevice private constructor(
     fun open(texture: SurfaceTexture, displayDegrees: Int, onFrame: (YuvFrame) -> Unit) {
         close()
         val thread = HandlerThread("colour-camera").also { it.start() }
-        this.thread = thread
         val handler = Handler(thread.looper)
         val executor = Executor { handler.post(it) }
         val rotation = rotation(displayDegrees)
         texture.setDefaultBufferSize(previewSize.width, previewSize.height)
         val preview = Surface(texture)
         var last = 0L
-        val reader = ImageReader.newInstance(frameSize.width, frameSize.height, ImageFormat.YUV_420_888, 2).also { this.reader = it }
+        val reader = ImageReader.newInstance(frameSize.width, frameSize.height, ImageFormat.YUV_420_888, 2)
+        val run = Run(thread, handler, preview, reader).also { this.run = it }
         reader.setOnImageAvailableListener({ r ->
             val image = r.acquireLatestImage() ?: return@setOnImageAvailableListener
             image.use {
                 val now = SystemClock.uptimeMillis()
-                if (now - last < FRAME_INTERVAL_MS) return@use
+                if (run.closed || now - last < FRAME_INTERVAL_MS) return@use
                 last = now
                 val (y, u, v) = it.planes
                 fun copy(plane: android.media.Image.Plane) = ByteArray(plane.buffer.remaining()).also { bytes -> plane.buffer.get(bytes) }
                 onFrame(YuvFrame(it.width, it.height, copy(y), y.rowStride, copy(u), copy(v), u.rowStride, u.pixelStride, rotation))
             }
         }, handler)
-        manager.openCamera(id, executor, object : CameraDevice.StateCallback() {
-            override fun onOpened(device: CameraDevice) {
-                camera = device
-                val builder = device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
-                    addTarget(preview)
-                    addTarget(reader.surface)
-                    set(CaptureRequest.CONTROL_ZOOM_RATIO, zoom)
-                }
-                request = builder
-                val outputs = listOf(OutputConfiguration(preview), OutputConfiguration(reader.surface))
-                device.createCaptureSession(SessionConfiguration(SessionConfiguration.SESSION_REGULAR, outputs, executor, object : CameraCaptureSession.StateCallback() {
-                    override fun onConfigured(configured: CameraCaptureSession) {
-                        session = configured
-                        runCatching { configured.setRepeatingRequest(builder.build(), null, handler) }
+        val opened = runCatching {
+            manager.openCamera(id, executor, object : CameraDevice.StateCallback() {
+                override fun onOpened(device: CameraDevice) {
+                    synchronized(run) {
+                        run.pending = false
+                        if (run.closed) return device.close()
+                        run.camera = device
                     }
+                    val builder = device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
+                        addTarget(preview)
+                        addTarget(reader.surface)
+                        set(CaptureRequest.CONTROL_ZOOM_RATIO, zoom)
+                    }
+                    run.request = builder
+                    val outputs = listOf(OutputConfiguration(preview), OutputConfiguration(reader.surface))
+                    device.createCaptureSession(SessionConfiguration(SessionConfiguration.SESSION_REGULAR, outputs, executor, object : CameraCaptureSession.StateCallback() {
+                        override fun onConfigured(configured: CameraCaptureSession) {
+                            synchronized(run) {
+                                if (run.closed) return configured.close()
+                                run.session = configured
+                            }
+                            runCatching { configured.setRepeatingRequest(builder.build(), null, handler) }
+                        }
 
-                    override fun onConfigureFailed(failed: CameraCaptureSession) = failed.close()
-                }))
-            }
+                        override fun onConfigureFailed(failed: CameraCaptureSession) = failed.close()
+                    }))
+                }
 
-            override fun onDisconnected(device: CameraDevice) = device.close()
+                override fun onDisconnected(device: CameraDevice) = gone(device)
 
-            override fun onError(device: CameraDevice, error: Int) = device.close()
-        })
+                override fun onError(device: CameraDevice, error: Int) = gone(device)
+
+                override fun onClosed(device: CameraDevice) = synchronized(run) {
+                    run.camera = null
+                    if (run.closed) run.finish()
+                }
+
+                private fun gone(device: CameraDevice) {
+                    synchronized(run) { run.pending = false }
+                    device.close()
+                }
+            })
+        }
+        if (opened.isFailure) {
+            synchronized(run) { run.pending = false }
+            close()
+        }
     }
 
     fun setZoom(ratio: Float) {
         zoom = ratio
-        val builder = request ?: return
+        val run = run ?: return
+        val builder = run.request ?: return
         builder.set(CaptureRequest.CONTROL_ZOOM_RATIO, ratio)
-        runCatching { session?.setRepeatingRequest(builder.build(), null, thread?.let { Handler(it.looper) }) }
+        runCatching { run.session?.setRepeatingRequest(builder.build(), null, run.handler) }
     }
 
     fun close() {
-        runCatching { session?.close() }
-        runCatching { camera?.close() }
-        reader?.close()
-        thread?.quitSafely()
-        session = null
-        camera = null
-        reader = null
-        request = null
-        thread = null
+        val run = run ?: return
+        this.run = null
+        val (camera, pending) = synchronized(run) {
+            run.closed = true
+            runCatching { run.session?.close() }
+            run.camera to run.pending
+        }
+        // a pending open still calls back on the thread: onOpened closes the device, onClosed finishes
+        if (camera != null) runCatching { camera.close() } else if (!pending) run.finish()
     }
 
     companion object {

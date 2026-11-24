@@ -1,11 +1,12 @@
 package com.delphi.delphitools.tools.images
 
+import com.delphi.delphitools.colour.fromLinear
+import com.delphi.delphitools.colour.toLinear
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.ln1p
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
@@ -371,10 +372,7 @@ class ImageColourScan(
         val WHITE = 0.3127 to 0.3290
 
         /** Gamma-encoded sRGB to linear, by byte. */
-        val srgbEotf = DoubleArray(256) {
-            val v = it / 255.0
-            if (v <= 0.04045) v / 12.92 else ((v + 0.055) / 1.055).pow(2.4)
-        }
+        val srgbEotf = DoubleArray(256) { toLinear(it / 255.0) }
 
         /** Identity: the image is sRGB. */
         val identity = doubleArrayOf(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)
@@ -475,10 +473,7 @@ class ImageColourScan(
                 0.0557 * bx - 0.2040 + 1.0570 * bz,
             ).map { max(0.0, it) }
             val top = max(linear.max(), 1e-6)
-            return linear.map { value ->
-                val share = value / top
-                if (share <= 0.0031308) share * 12.92 else 1.055 * share.pow(1 / 2.4) - 0.055
-            }.toDoubleArray()
+            return linear.map { fromLinear(it / top) }.toDoubleArray()
         }
 
         /** ImageColourScopes.peak: end bins hold clipping. */

@@ -48,7 +48,9 @@ import com.delphi.delphitools.tools.devtools.TailwindCheatsheet
 import com.delphi.delphitools.tools.devtools.TextDiff
 import com.delphi.delphitools.tools.devtools.TextScratchpad
 import com.delphi.delphitools.tools.devtools.UuidGenerator
+import com.delphi.delphitools.tools.images.ArtworkEnhancer
 import com.delphi.delphitools.tools.images.Base64ImageEncoder
+import com.delphi.delphitools.tools.images.DocumentScanner
 import com.delphi.delphitools.tools.images.FaviconGenerator
 import com.delphi.delphitools.tools.images.ImageAtlas
 import com.delphi.delphitools.tools.images.ImageClipper
@@ -182,4 +184,6 @@ internal val toolPages: Map<String, @Composable () -> Unit> = mapOf(
     "pdf-page-numberer" to { PdfPageNumberer() },
     "imposer" to { Imposer() },
     "zine-imposer" to { ZineImposer() },
+    "artwork-enhancer" to { ArtworkEnhancer() },
+    "document-scanner" to { DocumentScanner() },
 )

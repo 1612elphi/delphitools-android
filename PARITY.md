@@ -34,10 +34,10 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 
 | id | tool | iOS controller | iOS lines | status |
 |---|---|---|---:|---|
-| `artwork-enhancer` | Artwork Enhancer | `ArtworkEnhancerViewController` | 381 | todo |
+| `artwork-enhancer` | Artwork Enhancer | `ArtworkEnhancerViewController` | 381 | review |
 | `background-remover` | Background Remover | `BackgroundRemoverViewController` | 348 | todo |
 | `base64-image-encoder` | Base64 Image Encoder | `Base` | 991 | review |
-| `document-scanner` | Document Scanner | `DocumentScannerViewController` | 654 | todo |
+| `document-scanner` | Document Scanner | `DocumentScannerViewController` | 654 | review |
 | `favicon-genny` | Favicon Generator | `FaviconGeneratorViewController` | 665 | review |
 | `image-atlas` | Image Atlas | `ImageAtlasViewController` | 769 | review |
 | `image-clipper` | Image Clipper | `ImageClipperViewController` | 412 | review |

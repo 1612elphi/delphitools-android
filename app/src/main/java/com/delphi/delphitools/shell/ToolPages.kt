@@ -2,11 +2,15 @@ package com.delphi.delphitools.shell
 
 import androidx.compose.runtime.Composable
 import com.delphi.delphitools.tools.audiovideo.AudioExtractor
+import com.delphi.delphitools.tools.audiovideo.AudioNormaliser
+import com.delphi.delphitools.tools.audiovideo.AudioTrimmer
 import com.delphi.delphitools.tools.audiovideo.FrameExtractor
 import com.delphi.delphitools.tools.audiovideo.SubtitleConverter
 import com.delphi.delphitools.tools.audiovideo.TimecodeCalc
 import com.delphi.delphitools.tools.audiovideo.VideoMuter
+import com.delphi.delphitools.tools.audiovideo.VideoToGif
 import com.delphi.delphitools.tools.audiovideo.VideoTrimmer
+import com.delphi.delphitools.tools.audiovideo.WaveformGenerator
 import com.delphi.delphitools.tools.calculators.AlgebraCalc
 import com.delphi.delphitools.tools.calculators.SciCalc
 import com.delphi.delphitools.tools.calculators.TimeCalc
@@ -134,4 +138,8 @@ internal val toolPages: Map<String, @Composable () -> Unit> = mapOf(
     "tailwind-cheatsheet" to { TailwindCheatsheet() },
     "code-genny" to { BarcodeGenerator() },
     "qr-genny" to { QrGenerator() },
+    "waveform-genny" to { WaveformGenerator() },
+    "audio-trimmer" to { AudioTrimmer() },
+    "audio-normaliser" to { AudioNormaliser() },
+    "video-to-gif" to { VideoToGif() },
 )

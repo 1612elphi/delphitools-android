@@ -59,8 +59,8 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 |---|---|---|---:|---|
 | `audio-atlas` | Audio Atlas | `AudioAtlasViewController` | 667 | todo |
 | `audio-extractor` | Audio Extractor | `AudioExtractorViewController` | 156 | review |
-| `audio-normaliser` | Audio Normaliser | `AudioNormaliserViewController` | 244 | todo |
-| `audio-trimmer` | Audio Trimmer | `AudioTrimmerViewController` | 362 | todo |
+| `audio-normaliser` | Audio Normaliser | `AudioNormaliserViewController` | 244 | review |
+| `audio-trimmer` | Audio Trimmer | `AudioTrimmerViewController` | 362 | review |
 | `auto-subtitle` | Auto Subtitle | `AutoSubtitleViewController` | 644 | todo |
 | `frame-extractor` | Frame Extractor | `FrameExtractorViewController` | 401 | review |
 | `subtitle-converter` | Subtitle Converter | `SubtitleConverterViewController` | 191 | done |
@@ -68,10 +68,10 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | `timecode-calc` | Timecode Calculator | `TimecodeCalcViewController` | 253 | done |
 | `video-atlas` | Video Atlas | `VideoAtlasViewController` | 280 | todo |
 | `video-muter` | Video Muter | `VideoMuterViewController` | 210 | review |
-| `video-to-gif` | Video to GIF | `VideoToGIFViewController` | 321 | todo |
+| `video-to-gif` | Video to GIF | `VideoToGIFViewController` | 321 | review |
 | `video-trimmer` | Video Trimmer | `VideoTrimmerViewController` | 257 | review |
 | `voice-recorder` | Voice Recorder | `VoiceRecorderViewController` | 570 | todo |
-| `waveform-genny` | Waveform Generator | `WaveformGeneratorViewController` | 263 | todo |
+| `waveform-genny` | Waveform Generator | `WaveformGeneratorViewController` | 263 | review |
 
 ## Typography
 

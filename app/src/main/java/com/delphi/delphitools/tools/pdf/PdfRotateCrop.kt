@@ -30,12 +30,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.delphi.delphitools.canon.CanonButton
-import com.delphi.delphitools.canon.CanonCanvasBoxing
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonDecimalField
 import com.delphi.delphitools.canon.CanonDropZone
@@ -298,12 +296,7 @@ fun PdfRotateCrop(model: PdfRotateCropModel = viewModel()) {
             PdfDocuments.open(source.file) { PdfDocuments.thumbnail(it, page, 1400, rotation)?.asImageBitmap() }
         }
     }
-    val cropCanvas = CanonSection.canvas(
-        CanonCanvasSize.Aspect(maxOf(0.2, pageSize.width / maxOf(pageSize.height, 1.0)).toFloat()),
-        background = c.muted,
-        maxHeight = 640.dp,
-        boxing = CanonCanvasBoxing.UnlessWide,
-    ) {
+    val cropCanvas = pageCanvas(pageSize, c.muted) {
         if (ready) {
             ImageCropCanvas(
                 picture,

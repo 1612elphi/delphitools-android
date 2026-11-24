@@ -262,12 +262,7 @@ fun PdfCompressor(model: PdfCompressorModel = viewModel()) {
     }
 
     val pageSize = sizes.getOrNull(page) ?: PdfSize(210.0, 297.0)
-    val compare = CanonSection.canvas(
-        CanonCanvasSize.Aspect(maxOf(0.2, pageSize.width / maxOf(pageSize.height, 1.0)).toFloat()),
-        background = c.muted,
-        maxHeight = 640.dp,
-        boxing = CanonCanvasBoxing.UnlessWide,
-    ) {
+    val compare = pageCanvas(pageSize, c.muted) {
         CanonImageCompare(comparison.first, comparison.second, Modifier.fillMaxSize())
     }
 

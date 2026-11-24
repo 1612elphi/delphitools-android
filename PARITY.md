@@ -9,7 +9,7 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | id | tool | iOS controller | iOS lines | status |
 |---|---|---|---:|---|
 | `matte-generator` | Matte Generator | `MatteGeneratorViewController` | 600 | review |
-| `scroll-generator` | Seamless Scroll Generator | `ScrollGeneratorViewController` | 579 | todo |
+| `scroll-generator` | Seamless Scroll Generator | `ScrollGeneratorViewController` | 579 | review |
 | `social-cropper` | Social Media Cropper | `SocialCropperViewController` | 589 | review |
 | `watermarker` | Watermarker | `WatermarkerViewController` | 528 | review |
 
@@ -46,7 +46,7 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | `image-deskewer` | Image De-skewer | `ImageDeskewerViewController` | 778 | todo |
 | `image-masker` | Image Masker | `ImageMaskerViewController` | 843 | todo |
 | `image-splitter` | Image Splitter | `ImageSplitterViewController` | 380 | done |
-| `image-stitcher` | Image Stitcher | `ImageStitcherViewController` | 1385 | todo |
+| `image-stitcher` | Image Stitcher | `ImageStitcherViewController` | 1385 | review |
 | `image-tracer` | Image Tracer | `ImageTracerViewController` | 500 | todo |
 | `metadata-stripper` | Metadata Stripper | `MetadataStripperViewController` | 486 | review |
 | `paste-image` | Paste Image | `PasteImageViewController` | 325 | done |
@@ -81,10 +81,10 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | `font-explorer` | Font File Explorer | `FontExplorerViewController` | 364 | review |
 | `font-installer` | Font Installer | `FontInstallerViewController` | 721 | todo |
 | `glyph-browser` | Glyph Browser | `GlyphBrowserViewController` | 389 | review |
-| `large-type` | Large Type | `LargeTypeViewController` | 921 | todo |
+| `large-type` | Large Type | `LargeTypeViewController` | 921 | review |
 | `line-height-calc` | Line Height Calculator | `LineHeightCalcViewController` | 447 | done |
 | `px-to-rem` | PX to REM | `PxToRemViewController` | 318 | done |
-| `text-editor` | Text Editor | `TextEditorViewController` | 604 | todo |
+| `text-editor` | Text Editor | `TextEditorViewController` | 604 | review |
 | `typo-calc` | Typography Calculator | `TypoCalcViewController` | 527 | review |
 | `word-counter` | Word Counter | `WordCounterViewController` | 398 | done |
 

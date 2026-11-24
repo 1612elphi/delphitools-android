@@ -54,6 +54,7 @@ import com.delphi.delphitools.tools.images.ImageClipper
 import com.delphi.delphitools.tools.images.ImageCompressor
 import com.delphi.delphitools.tools.images.ImageConverter
 import com.delphi.delphitools.tools.images.ImageSplitter
+import com.delphi.delphitools.tools.images.ImageStitcher
 import com.delphi.delphitools.tools.images.MetadataStripper
 import com.delphi.delphitools.tools.images.PasteImage
 import com.delphi.delphitools.tools.images.PlaceholderGenerator
@@ -64,6 +65,7 @@ import com.delphi.delphitools.tools.pdf.PdfOrganiser
 import com.delphi.delphitools.tools.pdf.PdfRotateCrop
 import com.delphi.delphitools.tools.print.PaperSizes
 import com.delphi.delphitools.tools.socialmedia.MatteGenerator
+import com.delphi.delphitools.tools.socialmedia.ScrollGenerator
 import com.delphi.delphitools.tools.socialmedia.SocialCropper
 import com.delphi.delphitools.tools.socialmedia.Watermarker
 import com.delphi.delphitools.tools.turbonerd.BrailleConverter
@@ -74,8 +76,10 @@ import com.delphi.delphitools.tools.turbonerd.ShavianTransliterator
 import com.delphi.delphitools.tools.typography.DocConverter
 import com.delphi.delphitools.tools.typography.FontExplorer
 import com.delphi.delphitools.tools.typography.GlyphBrowser
+import com.delphi.delphitools.tools.typography.LargeType
 import com.delphi.delphitools.tools.typography.LineHeightCalc
 import com.delphi.delphitools.tools.typography.PxToRem
+import com.delphi.delphitools.tools.typography.TextEditor
 import com.delphi.delphitools.tools.typography.TypoCalc
 import com.delphi.delphitools.tools.typography.WordCounter
 
@@ -158,4 +162,8 @@ internal val toolPages: Map<String, @Composable () -> Unit> = mapOf(
     "request-builder" to { RequestBuilder() },
     "doc-converter" to { DocConverter() },
     "graph-calc" to { GraphCalc() },
+    "scroll-generator" to { ScrollGenerator() },
+    "large-type" to { LargeType() },
+    "text-editor" to { TextEditor() },
+    "image-stitcher" to { ImageStitcher() },
 )

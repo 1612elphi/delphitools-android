@@ -289,7 +289,7 @@ object AVEditMedia {
      * Decodes the first audio track to 16-bit interleaved PCM: [chunk] gets each buffer with its sample rate,
      * channel count and start time. Returns the track's duration in microseconds.
      */
-    private suspend fun decode(
+    internal suspend fun decode(
         context: Context,
         uri: Uri,
         chunk: (pcm: ShortArray, rate: Int, channels: Int, ptsUs: Long) -> Unit,

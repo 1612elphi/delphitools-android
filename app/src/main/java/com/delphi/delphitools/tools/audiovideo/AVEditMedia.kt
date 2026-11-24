@@ -2,6 +2,11 @@ package com.delphi.delphitools.tools.audiovideo
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.Typeface
 import android.media.AudioFormat
 import android.media.MediaCodec
 import android.media.MediaExtractor
@@ -23,6 +28,7 @@ import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 /** What a video tool shows of its source before any work. */
@@ -117,6 +123,74 @@ object AVEditMedia {
         val us = AVEditEngine.micros(seconds)
         val option = if (exact) MediaMetadataRetriever.OPTION_CLOSEST else MediaMetadataRetriever.OPTION_CLOSEST_SYNC
         return if (height > 0) retriever.getScaledFrameAtTime(us, option, height * 4, height) else retriever.getFrameAtTime(us, option)
+    }
+
+    private fun writePng(image: Bitmap, output: File) {
+        output.outputStream().use { check(image.compress(Bitmap.CompressFormat.PNG, 100, it)) }
+    }
+
+    /** The exact frame at [seconds] as a full-size PNG at [output]; returns a thumbnail of it. */
+    suspend fun still(context: Context, uri: Uri, seconds: Double, output: File): ImageBitmap = withContext(Dispatchers.IO) {
+        val retriever = MediaMetadataRetriever()
+        try {
+            retriever.setDataSource(context, uri)
+            val image = checkNotNull(frame(retriever, seconds, 0, exact = true))
+            output.parentFile?.mkdirs()
+            writePng(image, output)
+            val scale = min(216f / image.width, 132f / image.height).coerceAtMost(1f)
+            val thumbnail = Bitmap.createScaledBitmap(image, max(1, (image.width * scale).roundToInt()), max(1, (image.height * scale).roundToInt()), true)
+            if (thumbnail !== image) image.recycle()
+            thumbnail.asImageBitmap()
+        } finally {
+            retriever.release()
+        }
+    }
+
+    /** dt-ios AVEditFrames.contactSheet: [count] frames 320 px wide, four to a row, each over its timestamp. */
+    suspend fun contactSheet(context: Context, uri: Uri, duration: Double, count: Int, output: File, progress: AVEditProgress) = withContext(Dispatchers.IO) {
+        val (columns, rows) = AVEditEngine.sheetGrid(count)
+        val width = AVEditEngine.SHEET_THUMB_WIDTH
+        val seconds = AVEditEngine.sheetTimes(duration, count)
+        val retriever = MediaMetadataRetriever()
+        val thumbs = mutableListOf<Bitmap>()
+        try {
+            retriever.setDataSource(context, uri)
+            for ((index, time) in seconds.withIndex()) {
+                ensureActive()
+                val us = AVEditEngine.micros(time)
+                // a failed frame retries once
+                val thumb = retriever.getScaledFrameAtTime(us, MediaMetadataRetriever.OPTION_CLOSEST, width, width * 8)
+                    ?: retriever.getScaledFrameAtTime(us, MediaMetadataRetriever.OPTION_CLOSEST, width, width * 8)
+                thumbs += checkNotNull(thumb)
+                progress((index + 1).toDouble() / count)
+            }
+            val first = thumbs.first()
+            val height = (width.toFloat() * first.height / first.width).roundToInt()
+            val sheet = Bitmap.createBitmap(columns * width, rows * height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(sheet)
+            canvas.drawColor(Color.BLACK)
+            val label = AVEditEngine.SHEET_LABEL_HEIGHT.toFloat()
+            val band = Paint().apply { color = Color.argb(153, 0, 0, 0) }
+            val text = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.WHITE
+                textSize = 13f
+                typeface = Typeface.MONOSPACE
+            }
+            val image = Paint(Paint.FILTER_BITMAP_FLAG)
+            for ((index, thumb) in thumbs.withIndex()) {
+                val left = (index % columns * width).toFloat()
+                val top = (index / columns * height).toFloat()
+                canvas.drawBitmap(thumb, null, RectF(left, top, left + width, top + height), image)
+                canvas.drawRect(left, top + height - label, left + width, top + height, band)
+                val baseline = top + height - label / 2 - (text.descent() + text.ascent()) / 2
+                canvas.drawText(AVEditEngine.timestamp(seconds[index]), left + 8, baseline, text)
+            }
+            writePng(sheet, output)
+            sheet.recycle()
+        } finally {
+            thumbs.forEach(Bitmap::recycle)
+            retriever.release()
+        }
     }
 
     /**

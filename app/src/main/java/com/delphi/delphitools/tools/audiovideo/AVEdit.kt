@@ -103,12 +103,17 @@ import kotlin.math.roundToInt
 
 private val cleanup = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-private fun discard(dir: File?) {
+internal fun avEditDiscard(dir: File?) {
     if (dir != null) cleanup.launch { dir.deleteRecursively() }
 }
 
-/** The cache folder a video tool writes its results under, emptied of an earlier run's leftovers. */
-internal fun avEditRoot(context: Context, tool: String): File = File(File(context.cacheDir, "media"), tool).also(::discard)
+/** A fresh cache folder a video tool writes its results under; an earlier run's folders go. */
+internal fun avEditRoot(context: Context, tool: String): File {
+    val base = File(File(context.cacheDir, "media"), tool)
+    val session = File(base, UUID.randomUUID().toString())
+    cleanup.launch { base.listFiles()?.filter { it != session }?.forEach { it.deleteRecursively() } }
+    return session
+}
 
 /** dt-ios AVEditVideo: the source's facts, thumbnails and, when asked for, the peaks of its first audio track. */
 class AVEditSource(private val context: Context, private val scope: CoroutineScope) {
@@ -188,13 +193,13 @@ class AVEditJob(private val scope: CoroutineScope, private val root: File) {
                 }
                 true
             } catch (e: CancellationException) {
-                withContext(NonCancellable) { discard(dir) }
+                withContext(NonCancellable) { avEditDiscard(dir) }
                 throw e
             } catch (_: Exception) {
                 false
             }
-            if (!ok) discard(dir)
-            if (this@AVEditJob.run != run) return@launch discard(dir)
+            if (!ok) avEditDiscard(dir)
+            if (this@AVEditJob.run != run) return@launch avEditDiscard(dir)
             output = if (ok) file else null
             failed = !ok
             busy = false
@@ -205,7 +210,7 @@ class AVEditJob(private val scope: CoroutineScope, private val root: File) {
         run++
         task?.cancel()
         task = null
-        discard(output?.parentFile)
+        avEditDiscard(output?.parentFile)
         busy = false
         failed = false
         progress = 0f

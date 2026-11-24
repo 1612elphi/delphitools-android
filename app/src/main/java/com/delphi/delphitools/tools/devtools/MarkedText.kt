@@ -23,6 +23,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -54,6 +56,8 @@ data class TextMarks(
     val spans: List<TextMark> = emptyList(),
     val rails: List<TextRail> = emptyList(),
     val carets: List<TextCaret> = emptyList(),
+    /** A wavy underline: a parse error. */
+    val squiggles: List<TextMark> = emptyList(),
     val gutter: List<AnnotatedString> = emptyList(),
 )
 
@@ -79,6 +83,7 @@ fun MarkedText(
     wraps: Boolean = true,
     maxHeight: Dp? = null,
     lineSpacing: Dp = 0.dp,
+    background: Color? = null,
     padding: PaddingValues = PaddingValues(horizontal = CanonMetrics.panelPadding, vertical = 12.dp),
     gutterColumns: Int = 0,
     gutterStyle: TextStyle = style,
@@ -119,7 +124,7 @@ fun MarkedText(
 
     BoxWithConstraints(
         modifier
-            .background(c.card)
+            .background(background ?: c.card)
             .then(if (maxHeight != null) Modifier.heightIn(max = maxHeight) else Modifier)
             .verticalScroll(vertical),
     ) {
@@ -208,6 +213,23 @@ private fun DrawScope.drawSpans(result: TextLayoutResult, marks: TextMarks, text
             drawRect(rail.colour, Offset(piece.left, y), Size(right - piece.left, RAIL_THICKNESS.dp.toPx()))
             if (index == 0) drawRect(rail.colour, Offset(piece.left, y - 4.dp.toPx()), Size(tick, 4.dp.toPx()))
             if (index == shown.size - 1) drawRect(rail.colour, Offset(right - tick, y - 4.dp.toPx()), Size(tick, 4.dp.toPx()))
+        }
+    }
+    marks.squiggles.forEach { mark ->
+        pieces(result, mark.range, text).forEach { piece ->
+            val y = result.getLineBaseline(piece.line) + descent * 0.7f
+            val right = piece.left + maxOf(piece.right - piece.left, 6.dp.toPx())
+            val wave = Path().apply {
+                moveTo(piece.left, y)
+                var x = piece.left
+                var up = true
+                while (x < right) {
+                    x = minOf(x + 2.5.dp.toPx(), right)
+                    lineTo(x, y + (if (up) -2f else 1.5f).dp.toPx())
+                    up = !up
+                }
+            }
+            drawPath(wave, mark.colour, style = Stroke(1.5.dp.toPx()))
         }
     }
     marks.carets.forEach { caret ->

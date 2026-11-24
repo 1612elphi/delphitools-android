@@ -21,14 +21,6 @@ class AtlasTags(val title: String? = null, val artist: String? = null, val album
 
 class AtlasProbeResult(val sections: List<AVEditProbeSection>, val tags: AtlasTags, val duration: Double)
 
-private fun MediaFormat.int(key: String): Int? = if (containsKey(key)) runCatching { getInteger(key) }.getOrNull() else null
-
-private fun MediaFormat.long(key: String): Long? = if (containsKey(key)) runCatching { getLong(key) }.getOrNull() else null
-
-private fun MediaFormat.fps(): Double? =
-    if (!containsKey(MediaFormat.KEY_FRAME_RATE)) null
-    else runCatching { getInteger(MediaFormat.KEY_FRAME_RATE).toDouble() }.getOrElse { runCatching { getFloat(MediaFormat.KEY_FRAME_RATE).toDouble() }.getOrNull() }
-
 /**
  * dt-ios AVInfoProbe for audio-atlas and video-atlas: container and per-track facts from MediaExtractor and MediaMetadataRetriever.
  * What those do not report (encoder software, bit depth of compressed video, data rate of most tracks) is absent, not guessed.

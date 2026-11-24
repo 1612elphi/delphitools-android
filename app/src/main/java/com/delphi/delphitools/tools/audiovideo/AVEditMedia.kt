@@ -51,11 +51,11 @@ data class AVEditProbeSection(val title: String, val tiles: List<CanonTile>)
 
 typealias AVEditProgress = (Double) -> Unit
 
-private fun MediaFormat.long(key: String): Long? = if (containsKey(key)) getLong(key) else null
+internal fun MediaFormat.long(key: String): Long? = if (containsKey(key)) runCatching { getLong(key) }.getOrNull() else null
 
-private fun MediaFormat.int(key: String): Int? = if (containsKey(key)) runCatching { getInteger(key) }.getOrNull() else null
+internal fun MediaFormat.int(key: String): Int? = if (containsKey(key)) runCatching { getInteger(key) }.getOrNull() else null
 
-private fun MediaFormat.fps(): Double? =
+internal fun MediaFormat.fps(): Double? =
     if (!containsKey(MediaFormat.KEY_FRAME_RATE)) null
     else runCatching { getInteger(MediaFormat.KEY_FRAME_RATE).toDouble() }.getOrElse { runCatching { getFloat(MediaFormat.KEY_FRAME_RATE).toDouble() }.getOrNull() }
 

@@ -115,6 +115,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -172,6 +173,7 @@ class VoiceRecorderModel(application: Application) : AndroidViewModel(applicatio
     private var player: MediaPlayer? = null
     private var scan: Job? = null
     private val writing = mutableSetOf<String>()
+    private val durations = ConcurrentHashMap<Pair<String, Long>, Double>()
     private val folder = File(application.filesDir, FOLDER)
 
     val playbackTime get() = player?.currentPosition?.div(1000.0) ?: 0.0
@@ -197,7 +199,10 @@ class VoiceRecorderModel(application: Application) : AndroidViewModel(applicatio
             takes = withContext(Dispatchers.IO) {
                 (folder.listFiles() ?: emptyArray())
                     .filter { it.extension.lowercase() in setOf("m4a", "wav") }
-                    .map { VoiceTake(it, it.lastModified(), duration(it)) }
+                    .map {
+                        val modified = it.lastModified()
+                        VoiceTake(it, modified, durations.getOrPut(it.path to modified) { duration(it) })
+                    }
                     .sortedByDescending { it.date }
             }
         }

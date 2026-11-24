@@ -7,6 +7,10 @@ import com.delphi.delphitools.tools.audiovideo.SubtitleConverter
 import com.delphi.delphitools.tools.audiovideo.TimecodeCalc
 import com.delphi.delphitools.tools.audiovideo.VideoMuter
 import com.delphi.delphitools.tools.audiovideo.VideoTrimmer
+import com.delphi.delphitools.tools.calculators.AlgebraCalc
+import com.delphi.delphitools.tools.calculators.SciCalc
+import com.delphi.delphitools.tools.calculators.TimeCalc
+import com.delphi.delphitools.tools.calculators.UnitConverter
 import com.delphi.delphitools.tools.colour.ColourAtlas
 import com.delphi.delphitools.tools.colour.ColourBlindnessSimulator
 import com.delphi.delphitools.tools.colour.ColourConverter
@@ -39,6 +43,10 @@ import com.delphi.delphitools.tools.images.MetadataStripper
 import com.delphi.delphitools.tools.images.PasteImage
 import com.delphi.delphitools.tools.images.PlaceholderGenerator
 import com.delphi.delphitools.tools.images.SvgOptimiser
+import com.delphi.delphitools.tools.pdf.ImageToPdf
+import com.delphi.delphitools.tools.pdf.PdfCompressor
+import com.delphi.delphitools.tools.pdf.PdfOrganiser
+import com.delphi.delphitools.tools.pdf.PdfRotateCrop
 import com.delphi.delphitools.tools.print.PaperSizes
 import com.delphi.delphitools.tools.socialmedia.MatteGenerator
 import com.delphi.delphitools.tools.socialmedia.SocialCropper
@@ -110,4 +118,12 @@ internal val toolPages: Map<String, @Composable () -> Unit> = mapOf(
     "palette-extractor" to { PaletteExtractor() },
     "gradient-genny" to { GradientGenerator() },
     "matte-generator" to { MatteGenerator() },
+    "image-to-pdf" to { ImageToPdf() },
+    "pdf-organiser" to { PdfOrganiser() },
+    "pdf-rotate-crop" to { PdfRotateCrop() },
+    "pdf-compressor" to { PdfCompressor() },
+    "algebra-calc" to { AlgebraCalc() },
+    "unit-converter" to { UnitConverter() },
+    "time-calc" to { TimeCalc() },
+    "sci-calc" to { SciCalc() },
 )

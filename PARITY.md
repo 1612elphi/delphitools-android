@@ -92,12 +92,12 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 
 | id | tool | iOS controller | iOS lines | status |
 |---|---|---|---:|---|
-| `image-to-pdf` | Images to PDF | `ImageToPDFViewController` | 468 | todo |
-| `pdf-compressor` | PDF Compressor | `PDFCompressorViewController` | 180 | todo |
-| `pdf-organiser` | PDF Organiser | `PDFOrganiserViewController` | 391 | todo |
+| `image-to-pdf` | Images to PDF | `ImageToPDFViewController` | 468 | review |
+| `pdf-compressor` | PDF Compressor | `PDFCompressorViewController` | 180 | review |
+| `pdf-organiser` | PDF Organiser | `PDFOrganiserViewController` | 391 | review |
 | `pdf-page-numberer` | PDF Page Numbers | `PDFPageNumbererViewController` | 620 | todo |
 | `pdf-preflight` | PDF Preflight | `PDFPreflightViewController` | 402 | todo |
-| `pdf-rotate-crop` | PDF Rotate & Crop | `PDFRotateCropViewController` | 487 | todo |
+| `pdf-rotate-crop` | PDF Rotate & Crop | `PDFRotateCropViewController` | 487 | review |
 
 ## Print
 
@@ -133,11 +133,11 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 
 | id | tool | iOS controller | iOS lines | status |
 |---|---|---|---:|---|
-| `algebra-calc` | Algebra Calculator | `AlgebraCalcViewController` | 495 | todo |
+| `algebra-calc` | Algebra Calculator | `AlgebraCalcViewController` | 495 | review |
 | `graph-calc` | Graph Calculator | `GraphCalcViewController` | 2073 | todo |
-| `sci-calc` | Scientific Calculator | `ScientificCalculatorViewController` | 1548 | todo |
-| `time-calc` | Time Calculator | `TimeCalcViewController` | 1465 | todo |
-| `unit-converter` | Unit Converter | `UnitConverterViewController` | 1342 | todo |
+| `sci-calc` | Scientific Calculator | `ScientificCalculatorViewController` | 1548 | review |
+| `time-calc` | Time Calculator | `TimeCalcViewController` | 1465 | review |
+| `unit-converter` | Unit Converter | `UnitConverterViewController` | 1342 | review |
 
 ## TurboNerd
 

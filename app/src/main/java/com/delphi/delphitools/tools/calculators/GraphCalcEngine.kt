@@ -446,9 +446,9 @@ object GraphPlot {
     }
 
     /** Multiples of [step] from [min] to [max], as whole counts of [step]. */
-    fun ticks(min: Double, max: Double, step: Double): IntRange {
-        if (step <= 0 || !min.isFinite() || !max.isFinite() || (max - min) / step >= 4000) return IntRange.EMPTY
-        return ceil(min / step).toInt()..floor(max / step).toInt()
+    fun ticks(min: Double, max: Double, step: Double): LongRange {
+        if (step <= 0 || !min.isFinite() || !max.isFinite() || (max - min) / step >= 4000) return LongRange.EMPTY
+        return ceil(min / step).toLong()..floor(max / step).toLong()
     }
 
     private fun minus(text: String) = text.replace('-', '−')
@@ -456,7 +456,7 @@ object GraphPlot {
     private fun plain(value: BigDecimal): String = value.stripTrailingZeros().toPlainString().let { if (it == "-0") "0" else it }
 
     /** A tick at [count] steps, to the step's decimals, with a true minus sign. */
-    fun tickLabel(count: Int, step: Double): String {
+    fun tickLabel(count: Long, step: Double): String {
         val decimals = if (step < 1) ceil(-log10(step) - 1e-9).toInt() else 0
         return minus(plain(BigDecimal(count * step).setScale(decimals, RoundingMode.HALF_EVEN)))
     }

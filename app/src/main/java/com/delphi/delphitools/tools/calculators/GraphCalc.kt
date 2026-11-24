@@ -898,8 +898,8 @@ private fun DrawScope.drawGrid(
             val fine = step / divisions
             val showsMinor = fine / (if (vertical) perX else perY) >= SPACING_MINOR
             for (count in GraphPlot.ticks(seen.first, seen.second, fine)) {
-                if (!showsMinor && count % divisions != 0) continue
-                val path = if (count % divisions == 0) major else minor
+                if (!showsMinor && count % divisions != 0L) continue
+                val path = if (count % divisions == 0L) major else minor
                 val value = count * fine
                 if (vertical) {
                     val x = screenX(value, plane, plot)
@@ -929,14 +929,14 @@ private fun DrawScope.drawGrid(
     val inner = Rect(plot.left + 4.dp.toPx(), plot.top + 3.dp.toPx(), plot.right - 4.dp.toPx(), plot.bottom - 3.dp.toPx())
     val rowY = (originY + 4.dp.toPx()).coerceIn(inner.top, maxOf(inner.top, inner.bottom - height))
     for (count in GraphPlot.ticks(plane.xMin, plane.xMax, stepX)) {
-        if (count == 0) continue
+        if (count == 0L) continue
         val label = measurer.measure(GraphPlot.tickLabel(count, stepX), style)
         val x = screenX(count * stepX, plane, plot)
         val left = (x - label.size.width / 2).coerceIn(inner.left, maxOf(inner.left, inner.right - label.size.width))
         drawText(label, topLeft = Offset(left, rowY))
     }
     for (count in GraphPlot.ticks(plane.yMin, plane.yMax, stepY)) {
-        if (count == 0) continue
+        if (count == 0L) continue
         val y = screenY(count * stepY, plane, plot)
         if (y - height / 2 <= inner.top || y + height / 2 >= inner.bottom) continue
         val label = measurer.measure(GraphPlot.tickLabel(count, stepY), style)

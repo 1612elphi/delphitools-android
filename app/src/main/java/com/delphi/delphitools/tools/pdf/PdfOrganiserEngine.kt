@@ -9,8 +9,8 @@ object PdfOrganiserEngine {
 
     /**
      * Writes a PDF of [refs] in order to [out]. Each page takes its inherited attributes along and everything it
-     * references; links to pages left out become null. [info] copies that file's document info; [transform] sees every
-     * stream before it is written. [step] runs before each page and may throw to stop.
+     * references; links to pages left out become null. [info] copies that file's document info; [transform] gets every
+     * stream, as read and as copied, before it is written. [step] runs before each page and may throw to stop.
      * ponytail: outlines, named destinations, forms (AcroForm) and the structure tree stay behind; copy the catalog
      * entries when someone needs them in a merge
      */
@@ -18,7 +18,7 @@ object PdfOrganiserEngine {
         refs: List<PageRef>,
         out: OutputStream,
         info: PdfFile? = null,
-        transform: ((PdfStream) -> PdfStream)? = null,
+        transform: ((file: PdfFile, original: PdfStream, copied: PdfStream) -> PdfStream)? = null,
         step: (Int) -> Unit = {},
     ) {
         require(refs.isNotEmpty())
@@ -53,7 +53,7 @@ object PdfOrganiserEngine {
             is PdfStream -> {
                 @Suppress("UNCHECKED_CAST")
                 val stream = PdfStream(copy(file, value.dict.filterKeys { it != "Length" }) as PdfDict, value.data)
-                transform?.invoke(stream) ?: stream
+                transform?.invoke(file, value, stream) ?: stream
             }
             else -> value
         }

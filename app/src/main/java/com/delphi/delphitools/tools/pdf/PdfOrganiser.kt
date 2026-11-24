@@ -171,7 +171,7 @@ class PdfOrganiserModel(application: Application) : AndroidViewModel(application
     private val refs get() = entries.map { PdfOrganiserEngine.PageRef(it.source.pdf, it.page, it.rotation) }
 
     fun exportMerged() {
-        if (entries.isEmpty()) return
+        if (entries.isEmpty() || splitting) return
         val refs = refs
         job.start("$baseName-merged.pdf") { output, progress ->
             val context = coroutineContext
@@ -256,7 +256,7 @@ fun PdfOrganiser(model: PdfOrganiserModel = viewModel()) {
     val merge = CanonSection.of {
         CanonRows {
             CanonHeading("Merge")
-            PdfJobPanel(model.job, "Export Merged", Icons.Outlined.Share, "Merge failed", enabled = model.entries.isNotEmpty(), onStart = model::exportMerged)
+            PdfJobPanel(model.job, "Export Merged", Icons.Outlined.Share, "Merge failed", enabled = model.entries.isNotEmpty() && !model.splitting, onStart = model::exportMerged)
         }
     }
 

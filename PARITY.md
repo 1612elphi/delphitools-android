@@ -39,15 +39,15 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | `base64-image-encoder` | Base64 Image Encoder | `Base` | 991 | review |
 | `document-scanner` | Document Scanner | `DocumentScannerViewController` | 654 | todo |
 | `favicon-genny` | Favicon Generator | `FaviconGeneratorViewController` | 665 | review |
-| `image-atlas` | Image Atlas | `ImageAtlasViewController` | 769 | todo |
+| `image-atlas` | Image Atlas | `ImageAtlasViewController` | 769 | review |
 | `image-clipper` | Image Clipper | `ImageClipperViewController` | 412 | review |
 | `image-compressor` | Image Compressor | `ImageCompressorViewController` | 199 | done |
 | `image-converter` | Image Converter | `ImageConverterViewController` | 754 | review |
-| `image-deskewer` | Image De-skewer | `ImageDeskewerViewController` | 778 | todo |
-| `image-masker` | Image Masker | `ImageMaskerViewController` | 843 | todo |
+| `image-deskewer` | Image De-skewer | `ImageDeskewerViewController` | 778 | review |
+| `image-masker` | Image Masker | `ImageMaskerViewController` | 843 | review |
 | `image-splitter` | Image Splitter | `ImageSplitterViewController` | 380 | done |
 | `image-stitcher` | Image Stitcher | `ImageStitcherViewController` | 1385 | review |
-| `image-tracer` | Image Tracer | `ImageTracerViewController` | 500 | todo |
+| `image-tracer` | Image Tracer | `ImageTracerViewController` | 500 | review |
 | `metadata-stripper` | Metadata Stripper | `MetadataStripperViewController` | 486 | review |
 | `paste-image` | Paste Image | `PasteImageViewController` | 325 | done |
 | `placeholder-genny` | Placeholder Generator | `PlaceholderGeneratorViewController` | 382 | done |

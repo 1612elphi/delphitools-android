@@ -50,11 +50,15 @@ import com.delphi.delphitools.tools.devtools.TextScratchpad
 import com.delphi.delphitools.tools.devtools.UuidGenerator
 import com.delphi.delphitools.tools.images.Base64ImageEncoder
 import com.delphi.delphitools.tools.images.FaviconGenerator
+import com.delphi.delphitools.tools.images.ImageAtlas
 import com.delphi.delphitools.tools.images.ImageClipper
 import com.delphi.delphitools.tools.images.ImageCompressor
 import com.delphi.delphitools.tools.images.ImageConverter
+import com.delphi.delphitools.tools.images.ImageDeskewer
+import com.delphi.delphitools.tools.images.ImageMasker
 import com.delphi.delphitools.tools.images.ImageSplitter
 import com.delphi.delphitools.tools.images.ImageStitcher
+import com.delphi.delphitools.tools.images.ImageTracer
 import com.delphi.delphitools.tools.images.MetadataStripper
 import com.delphi.delphitools.tools.images.PasteImage
 import com.delphi.delphitools.tools.images.PlaceholderGenerator
@@ -166,4 +170,8 @@ internal val toolPages: Map<String, @Composable () -> Unit> = mapOf(
     "large-type" to { LargeType() },
     "text-editor" to { TextEditor() },
     "image-stitcher" to { ImageStitcher() },
+    "image-atlas" to { ImageAtlas() },
+    "image-tracer" to { ImageTracer() },
+    "image-deskewer" to { ImageDeskewer() },
+    "image-masker" to { ImageMasker() },
 )

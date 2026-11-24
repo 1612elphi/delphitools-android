@@ -59,6 +59,21 @@ class AudioAtlasEngineTest {
     }
 
     @Test
+    fun fivePointOneSkipsLfeAndWeightsSurrounds() {
+        val rate = 48000
+        fun lufs(channel: Int): Double {
+            val scanner = AudioScanner(rate, 6, 0, rate * 2L, 1, open = true, measureLoudness = true)
+            scanner.feed(FloatArray(rate * 2 * 6) { if (it % 6 == channel) sin(2 * PI * 997 * (it / 6) / rate).toFloat() else 0f }, rate * 2, 0)
+            return scanner.finish().lufs!!
+        }
+        assertEquals(-3.01, lufs(0), 0.1)
+        assertEquals(-3.01 + 10 * kotlin.math.log10(1.41), lufs(4), 0.1)
+        assertNull(AudioScanner(rate, 6, 0, rate * 2L, 1, open = true, measureLoudness = true).apply {
+            feed(FloatArray(rate * 2 * 6) { if (it % 6 == 3) 1f else 0f }, rate * 2, 0)
+        }.finish().lufs)
+    }
+
+    @Test
     fun silenceIsMinusInfinity() {
         val scanner = AudioScanner(100, 1, 0, 100, 1, open = true, measureLoudness = true)
         scanner.feed(FloatArray(100), 100, 0)

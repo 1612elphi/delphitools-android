@@ -67,6 +67,7 @@ import com.delphi.delphitools.canon.CanonSwitch
 import com.delphi.delphitools.canon.CanonTile
 import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.CanonTone
+import com.delphi.delphitools.tools.images.ImageCompressEngine
 import com.delphi.delphitools.tools.images.ImageFiles
 import com.delphi.delphitools.tools.pdf.PaperChoice
 import com.delphi.delphitools.tools.pdf.PaperSizePicker
@@ -194,13 +195,7 @@ class ZineImposerModel(application: Application) : AndroidViewModel(application)
                 uris.mapNotNull { uri ->
                     val decoded = ImageFiles.decode(ImageDecoder.createSource(resolver, uri), MAX_EDGE) ?: return@mapNotNull null
                     val image = decoded.image
-                    val scale = minOf(1f, THUMBNAIL_EDGE.toFloat() / maxOf(image.width, image.height, 1))
-                    val thumbnail = if (scale < 1f) {
-                        Bitmap.createScaledBitmap(image, maxOf(1, (image.width * scale).roundToInt()), maxOf(1, (image.height * scale).roundToInt()), true)
-                    } else {
-                        image
-                    }
-                    ZineImage(image, thumbnail.asImageBitmap())
+                    ZineImage(image, ImageCompressEngine.preview(image, THUMBNAIL_EDGE).asImageBitmap())
                 }
             }
             val slots = ZineImposerEngine.fillOrder(images.map { it != null }, start)

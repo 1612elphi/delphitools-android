@@ -239,11 +239,13 @@ class PaletteExtractorModel(application: Application) : AndroidViewModel(applica
                 val full = withContext(Dispatchers.IO) { ImageFiles.decode(ImageDecoder.createSource(resolver, uri), EXPORT_PIXELS) }?.image
                     ?: return@withContext null
                 val (width, height) = full.width to full.height
-                val pixels = full.argb()
-                full.recycle()
-                if (!PalettePainter.paint(pixels, width, colours) { !isActive }) return@withContext null
-                ensureActive()
-                ImageFiles.png(Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888))
+                ImageFiles.unlessOutOfMemory {
+                    val pixels = full.argb()
+                    full.recycle()
+                    if (!PalettePainter.paint(pixels, width, colours) { !isActive }) return@withContext null
+                    ensureActive()
+                    ImageFiles.png(Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888))
+                }
             }
             export = null
             exporting = false

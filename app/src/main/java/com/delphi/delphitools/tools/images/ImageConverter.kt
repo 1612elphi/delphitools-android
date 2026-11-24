@@ -164,7 +164,7 @@ class ImageConverterModel(application: Application) : AndroidViewModel(applicati
         val resolver = app.contentResolver
         loading = viewModelScope.launch {
             val decoded = withContext(Dispatchers.IO) {
-                ImageFiles.decode(ImageDecoder.createSource(resolver, uri), ImageConvert.LONGEST_SIDE)?.let { it to ImageCompressEngine.preview(it.image, PREVIEW_PIXELS) }
+                ImageFiles.decode(ImageDecoder.createSource(resolver, uri), ImageConvert.LONGEST_SIDE)?.let { decoded -> ImageFiles.unlessOutOfMemory { decoded to ImageCompressEngine.preview(decoded.image, PREVIEW_PIXELS) } }
             } ?: return@launch
             val (bytes, name) = withContext(Dispatchers.IO) {
                 val bytes = runCatching {
@@ -278,7 +278,7 @@ class ImageConverterModel(application: Application) : AndroidViewModel(applicati
         task = viewModelScope.launch {
             delay(delayMs)
             isConverting = true
-            val data = withContext(encoder) { ImageConvertEngine.encode(image, format, width, height, quality, flatten, scratch) }
+            val data = withContext(encoder) { ImageFiles.unlessOutOfMemory { ImageConvertEngine.encode(image, format, width, height, quality, flatten, scratch) } }
             val preview = withContext(Dispatchers.Default) { data?.let { ImageCompressEngine.thumbnail(it, PREVIEW_PIXELS) } }
             isConverting = false
             converted = data

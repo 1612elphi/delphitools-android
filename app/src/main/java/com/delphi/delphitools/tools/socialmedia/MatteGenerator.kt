@@ -188,7 +188,7 @@ class MatteGeneratorModel(application: Application) : AndroidViewModel(applicati
         loading = viewModelScope.launch {
             val loaded = withContext(Dispatchers.IO) {
                 val decoded = ImageFiles.decode(ImageDecoder.createSource(resolver, uri), IMAGE_PIXELS) ?: return@withContext null
-                val preview = ImageCompressEngine.preview(decoded.image, PREVIEW_PIXELS)
+                val preview = ImageFiles.unlessOutOfMemory { ImageCompressEngine.preview(decoded.image, PREVIEW_PIXELS) } ?: return@withContext null
                 val dominant = MatteEngine.average(preview.argb()) ?: MatteSpec().dominant
                 val stem = resolver.canonDisplayName(uri)?.substringBeforeLast('.')?.ifEmpty { null } ?: "image"
                 MatteSource(decoded.image, preview.asImageBitmap(), decoded.width, decoded.height, stem) to dominant

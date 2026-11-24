@@ -250,7 +250,7 @@ class WatermarkerModel(application: Application) : AndroidViewModel(application)
         val settings = WatermarkSettings(kind, text, fontSize, colour.toArgb(), stamp, opacity, position, tiling)
         task = viewModelScope.launch {
             delay(delayMs)
-            val made = withContext(renderer) { renderWatermark(source, settings) }
+            val made = withContext(renderer) { ImageFiles.unlessOutOfMemory { renderWatermark(source, settings) } } ?: return@launch
             resultImage = made
             result = made.asImageBitmap()
         }

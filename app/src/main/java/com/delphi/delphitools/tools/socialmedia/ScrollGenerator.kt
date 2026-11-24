@@ -192,7 +192,7 @@ class ScrollGeneratorModel(application: Application) : AndroidViewModel(applicat
                 val longest = ScrollGeneratorEngine.longestSide(bounds.outWidth, bounds.outHeight)
                 val decoded = runCatching { ImageFiles.decode(ImageDecoder.createSource(resolver, uri), longest) }.getOrNull()
                     ?: return@withContext null
-                val preview = ImageCompressEngine.preview(decoded.image, PREVIEW_PIXELS)
+                val preview = ImageFiles.unlessOutOfMemory { ImageCompressEngine.preview(decoded.image, PREVIEW_PIXELS) } ?: return@withContext null
                 ScrollSource(decoded.image, preview, resolver.canonDisplayName(uri) ?: "", decoded.width, decoded.height)
             }
             source = loaded

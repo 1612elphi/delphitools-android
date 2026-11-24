@@ -154,7 +154,7 @@ class MetadataStripperModel(application: Application) : AndroidViewModel(applica
                 val data = runCatching { app.contentResolver.openInputStream(uri)?.use { it.readBytes() } }.getOrNull()
                     ?: return@withContext null
                 val read = MetadataFiles.read(data)
-                val result = MetadataFiles.strip(data, read.scan, app.cacheDir)
+                val result = ImageFiles.unlessOutOfMemory { MetadataFiles.strip(data, read.scan, app.cacheDir) }
                 Stripped(read, result, result?.let { MetadataFiles.read(it.data) }, data.size.toLong())
             }
             isWorking = false

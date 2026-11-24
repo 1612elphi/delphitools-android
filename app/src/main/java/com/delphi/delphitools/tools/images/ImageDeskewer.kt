@@ -176,7 +176,8 @@ class ImageDeskewerModel(application: Application) : AndroidViewModel(applicatio
                 val name = resolver.canonDisplayName(uri) ?: ""
                 val decoded = runCatching { ImageFiles.decode(ImageDecoder.createSource(resolver, uri), DESKEW_SOURCE_PIXELS) }.getOrNull()
                     ?: return@withContext null
-                Triple(name, decoded, ImageCompressEngine.preview(decoded.image, DESKEW_CANVAS_PIXELS))
+                val canvas = ImageFiles.unlessOutOfMemory { ImageCompressEngine.preview(decoded.image, DESKEW_CANVAS_PIXELS) } ?: return@withContext null
+                Triple(name, decoded, canvas)
             }
             if (loaded == null) {
                 unreadable = true

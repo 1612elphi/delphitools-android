@@ -121,8 +121,10 @@ class ArtworkEnhancerModel(application: Application) : AndroidViewModel(applicat
                 val decoded = runCatching { ImageFiles.decode(ImageDecoder.createSource(resolver, uri), ARTWORK_PIXELS) }.getOrNull()
                     ?: return@withContext null
                 val image = decoded.image
-                val argb = image.argb()
-                Triple(resolver.canonDisplayName(uri)?.substringBeforeLast('.'), image, argb to detail(argb, image.width, image.height))
+                ImageFiles.unlessOutOfMemory {
+                    val argb = image.argb()
+                    Triple(resolver.canonDisplayName(uri)?.substringBeforeLast('.'), image, argb to detail(argb, image.width, image.height))
+                }
             } ?: return@launch
             val (fileName, image, prepared) = loaded
             name = fileName?.ifEmpty { null } ?: "artwork"
@@ -173,9 +175,11 @@ class ArtworkEnhancerModel(application: Application) : AndroidViewModel(applicat
         processing = viewModelScope.launch {
             delay(delayMs)
             val (image, crop) = withContext(Dispatchers.Default) {
-                val out = ArtworkEnhanceEngine.enhance(pixels, width, alpha, scale, seed)
-                bitmap(out, width, height) to detail(out, width, height)
-            }
+                ImageFiles.unlessOutOfMemory {
+                    val out = ArtworkEnhanceEngine.enhance(pixels, width, alpha, scale, seed)
+                    bitmap(out, width, height) to detail(out, width, height)
+                }
+            } ?: return@launch
             resultBitmap = image
             result = image.asImageBitmap()
             resultDetail = crop

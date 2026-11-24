@@ -77,7 +77,7 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 
 | id | tool | iOS controller | iOS lines | status |
 |---|---|---|---:|---|
-| `doc-converter` | Document Converter | `DocConverterViewController` | 1136 | todo |
+| `doc-converter` | Document Converter | `DocConverterViewController` | 1136 | review |
 | `font-explorer` | Font File Explorer | `FontExplorerViewController` | 364 | review |
 | `font-installer` | Font Installer | `FontInstallerViewController` | 721 | todo |
 | `glyph-browser` | Glyph Browser | `GlyphBrowserViewController` | 389 | review |
@@ -123,10 +123,10 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | `password-genny` | Password Generator | `PasswordGeneratorViewController` | 652 | review |
 | `qr-genny` | QR Generator | `QRGeneratorViewController` | 996 | review |
 | `regex-tester` | Regex Tester | `RegexTesterViewController` | 517 | review |
-| `request-builder` | Request Builder | `RequestBuilderViewController` | 626 | todo |
+| `request-builder` | Request Builder | `RequestBuilderViewController` | 626 | review |
 | `tailwind-cheatsheet` | Tailwind Cheat Sheet | `TailwindCheatsheetViewController` | 723 | review |
 | `text-diff` | Text Diff | `TextDiffViewController` | 607 | review |
-| `markdown-writer` | Text Scratchpad | `TextScratchpadViewController` | 549 | todo |
+| `markdown-writer` | Text Scratchpad | `TextScratchpadViewController` | 549 | review |
 | `uuid-genny` | UUID Generator | `UUIDGeneratorViewController` | 475 | done |
 
 ## Calculators
@@ -134,7 +134,7 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | id | tool | iOS controller | iOS lines | status |
 |---|---|---|---:|---|
 | `algebra-calc` | Algebra Calculator | `AlgebraCalcViewController` | 495 | review |
-| `graph-calc` | Graph Calculator | `GraphCalcViewController` | 2073 | todo |
+| `graph-calc` | Graph Calculator | `GraphCalcViewController` | 2073 | review |
 | `sci-calc` | Scientific Calculator | `ScientificCalculatorViewController` | 1548 | review |
 | `time-calc` | Time Calculator | `TimeCalcViewController` | 1465 | review |
 | `unit-converter` | Unit Converter | `UnitConverterViewController` | 1342 | review |

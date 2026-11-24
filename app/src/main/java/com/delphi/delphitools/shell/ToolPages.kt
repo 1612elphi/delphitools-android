@@ -16,6 +16,7 @@ import com.delphi.delphitools.tools.audiovideo.VideoTrimmer
 import com.delphi.delphitools.tools.audiovideo.VoiceRecorder
 import com.delphi.delphitools.tools.audiovideo.WaveformGenerator
 import com.delphi.delphitools.tools.calculators.AlgebraCalc
+import com.delphi.delphitools.tools.calculators.GraphCalc
 import com.delphi.delphitools.tools.calculators.SciCalc
 import com.delphi.delphitools.tools.calculators.TimeCalc
 import com.delphi.delphitools.tools.calculators.UnitConverter
@@ -42,8 +43,10 @@ import com.delphi.delphitools.tools.devtools.MetaTagGenerator
 import com.delphi.delphitools.tools.devtools.PasswordGenerator
 import com.delphi.delphitools.tools.devtools.QrGenerator
 import com.delphi.delphitools.tools.devtools.RegexTester
+import com.delphi.delphitools.tools.devtools.RequestBuilder
 import com.delphi.delphitools.tools.devtools.TailwindCheatsheet
 import com.delphi.delphitools.tools.devtools.TextDiff
+import com.delphi.delphitools.tools.devtools.TextScratchpad
 import com.delphi.delphitools.tools.devtools.UuidGenerator
 import com.delphi.delphitools.tools.images.Base64ImageEncoder
 import com.delphi.delphitools.tools.images.FaviconGenerator
@@ -68,6 +71,7 @@ import com.delphi.delphitools.tools.turbonerd.IPATranscriber
 import com.delphi.delphitools.tools.turbonerd.MorseCode
 import com.delphi.delphitools.tools.turbonerd.NATOPhonetic
 import com.delphi.delphitools.tools.turbonerd.ShavianTransliterator
+import com.delphi.delphitools.tools.typography.DocConverter
 import com.delphi.delphitools.tools.typography.FontExplorer
 import com.delphi.delphitools.tools.typography.GlyphBrowser
 import com.delphi.delphitools.tools.typography.LineHeightCalc
@@ -150,4 +154,8 @@ internal val toolPages: Map<String, @Composable () -> Unit> = mapOf(
     "audio-atlas" to { AudioAtlas() },
     "voice-recorder" to { VoiceRecorder() },
     "subtitle-studio" to { SubtitleStudio() },
+    "markdown-writer" to { TextScratchpad() },
+    "request-builder" to { RequestBuilder() },
+    "doc-converter" to { DocConverter() },
+    "graph-calc" to { GraphCalc() },
 )

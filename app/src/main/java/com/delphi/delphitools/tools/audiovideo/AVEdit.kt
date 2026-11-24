@@ -397,7 +397,7 @@ internal fun AVEditFileRow(name: String, detail: String, warning: String?, onCle
 }
 
 @Composable
-internal fun AVEditPlayerView(playback: AVEditPlayback, aspect: Float, modifier: Modifier = Modifier) {
+internal fun AVEditPlayerView(playback: AVEditPlayback, aspect: Float, modifier: Modifier = Modifier, onTexture: ((TextureView?) -> Unit)? = null) {
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         AndroidView(
             factory = { context ->
@@ -407,9 +407,11 @@ internal fun AVEditPlayerView(playback: AVEditPlayback, aspect: Float, modifier:
 
                         override fun onSurfaceTextureAvailable(texture: SurfaceTexture, width: Int, height: Int) {
                             surface = Surface(texture).also(playback::attach)
+                            onTexture?.invoke(this@apply)
                         }
 
                         override fun onSurfaceTextureDestroyed(texture: SurfaceTexture): Boolean {
+                            onTexture?.invoke(null)
                             playback.attach(null)
                             surface?.release()
                             surface = null

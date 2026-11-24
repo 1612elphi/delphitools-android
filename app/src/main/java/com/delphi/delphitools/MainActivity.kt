@@ -12,14 +12,17 @@ import com.delphi.delphitools.ui.theme.DelphitoolsTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val debuggable = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
         // debug builds: `am start --ez favour true` shows the favour banner on every launch
-        if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0 && intent.getBooleanExtra("favour", false)) {
+        if (debuggable && intent.getBooleanExtra("favour", false)) {
             ShellStores.of(this).forcesFavour = true
         }
+        // debug builds: `am start --es tool <id>` opens on that tool
+        val startTool = if (debuggable) intent.getStringExtra("tool") else null
         enableEdgeToEdge()
         setContent {
             DelphitoolsTheme {
-                Shell()
+                Shell(startTool)
             }
         }
     }

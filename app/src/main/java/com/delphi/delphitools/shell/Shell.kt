@@ -133,12 +133,12 @@ private val stripButtonGap = 8.dp
 
 /** The app frame: the page inset in the strip, the tab naming it, and the fan behind the tab. */
 @Composable
-fun Shell() {
-    CompositionLocalProvider(LocalShellStores provides rememberShellStores()) { ShellFrame() }
+fun Shell(startTool: String? = null) {
+    CompositionLocalProvider(LocalShellStores provides rememberShellStores()) { ShellFrame(startTool) }
 }
 
 @Composable
-private fun ShellFrame() {
+private fun ShellFrame(startTool: String?) {
     val c = LocalDelphiColours.current
     val stores = LocalShellStores.current
     var settingsOpen by rememberSaveable { mutableStateOf(false) }
@@ -148,7 +148,7 @@ private fun ShellFrame() {
     val context = LocalContext.current
     var whatsNewDue by remember { mutableStateOf(false) }
     LaunchedEffect(splashing) { if (!splashing && WhatsNew.shouldShow(context)) whatsNewDue = true }
-    var toolId by rememberSaveable { mutableStateOf<String?>(null) }
+    var toolId by rememberSaveable { mutableStateOf(startTool) }
     val tool = toolId?.let(::toolWithId)
     var fanOpen by remember { mutableStateOf(false) }
     val lattice = rememberLazyGridState()

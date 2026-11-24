@@ -66,8 +66,12 @@ import com.delphi.delphitools.tools.images.SvgOptimiser
 import com.delphi.delphitools.tools.pdf.ImageToPdf
 import com.delphi.delphitools.tools.pdf.PdfCompressor
 import com.delphi.delphitools.tools.pdf.PdfOrganiser
+import com.delphi.delphitools.tools.pdf.PdfPageNumberer
+import com.delphi.delphitools.tools.pdf.PdfPreflight
 import com.delphi.delphitools.tools.pdf.PdfRotateCrop
+import com.delphi.delphitools.tools.print.Imposer
 import com.delphi.delphitools.tools.print.PaperSizes
+import com.delphi.delphitools.tools.print.ZineImposer
 import com.delphi.delphitools.tools.socialmedia.MatteGenerator
 import com.delphi.delphitools.tools.socialmedia.ScrollGenerator
 import com.delphi.delphitools.tools.socialmedia.SocialCropper
@@ -174,4 +178,8 @@ internal val toolPages: Map<String, @Composable () -> Unit> = mapOf(
     "image-tracer" to { ImageTracer() },
     "image-deskewer" to { ImageDeskewer() },
     "image-masker" to { ImageMasker() },
+    "pdf-preflight" to { PdfPreflight() },
+    "pdf-page-numberer" to { PdfPageNumberer() },
+    "imposer" to { Imposer() },
+    "zine-imposer" to { ZineImposer() },
 )

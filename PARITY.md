@@ -95,8 +95,8 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | `image-to-pdf` | Images to PDF | `ImageToPDFViewController` | 468 | review |
 | `pdf-compressor` | PDF Compressor | `PDFCompressorViewController` | 180 | review |
 | `pdf-organiser` | PDF Organiser | `PDFOrganiserViewController` | 391 | review |
-| `pdf-page-numberer` | PDF Page Numbers | `PDFPageNumbererViewController` | 620 | todo |
-| `pdf-preflight` | PDF Preflight | `PDFPreflightViewController` | 402 | todo |
+| `pdf-page-numberer` | PDF Page Numbers | `PDFPageNumbererViewController` | 620 | review |
+| `pdf-preflight` | PDF Preflight | `PDFPreflightViewController` | 402 | review |
 | `pdf-rotate-crop` | PDF Rotate & Crop | `PDFRotateCropViewController` | 487 | review |
 
 ## Print
@@ -104,8 +104,8 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | id | tool | iOS controller | iOS lines | status |
 |---|---|---|---:|---|
 | `paper-sizes` | Paper Sizes | `PaperSizesViewController` | 354 | done |
-| `imposer` | Print Imposer | `ImposerViewController` | 567 | todo |
-| `zine-imposer` | Zine Imposer | `ZineImposerViewController` | 938 | todo |
+| `imposer` | Print Imposer | `ImposerViewController` | 567 | review |
+| `zine-imposer` | Zine Imposer | `ZineImposerViewController` | 938 | review |
 
 ## DevTools
 

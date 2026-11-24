@@ -221,7 +221,8 @@ object AVEditAudioEngine {
         for (frame in 0 until count) {
             var scale = gain
             if (frame < fadeInEnd) scale *= (written + frame).toFloat() / inFrames
-            if (frame >= fadeOutStart) scale *= (total - 1 - written - frame).toFloat() / outFrames
+            // a file can decode past its expected length
+            if (outFrames > 0 && frame >= fadeOutStart) scale *= max(0f, (total - 1 - written - frame).toFloat() / outFrames)
             if (scale == 1f) continue
             for (channel in 0 until channels) {
                 val index = frame * channels + channel

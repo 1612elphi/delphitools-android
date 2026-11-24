@@ -154,4 +154,14 @@ class AVEditAudioEngineTest {
         assertEquals(3 to 2, AVEditAudioEngine.merge(6, 3f))
         assertEquals(800 to 1, AVEditAudioEngine.merge(800, 1000f))
     }
+
+    @Test
+    fun shapeAppliesGainPastTheExpectedLength() {
+        val pcm = ShortArray(8) { 1000 }
+        AVEditAudioEngine.shape(pcm, 1, written = 4, total = 6, gain = 2f, inFrames = 0, outFrames = 0)
+        assertTrue(pcm.all { it.toInt() == 2000 })
+        val faded = ShortArray(8) { 1000 }
+        AVEditAudioEngine.shape(faded, 1, written = 4, total = 6, gain = 1f, inFrames = 0, outFrames = 2)
+        assertEquals(0, faded[7].toInt())
+    }
 }

@@ -195,7 +195,8 @@ class AVEditJob(private val scope: CoroutineScope, private val root: File) {
             } catch (e: CancellationException) {
                 withContext(NonCancellable) { avEditDiscard(dir) }
                 throw e
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                android.util.Log.w("AVEdit", "export failed: $filename", e)
                 false
             }
             if (!ok) avEditDiscard(dir)

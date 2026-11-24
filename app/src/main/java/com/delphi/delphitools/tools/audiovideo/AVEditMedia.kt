@@ -146,8 +146,8 @@ object AVEditMedia {
         }
     }
 
-    /** dt-ios AVEditFrames.contactSheet: [count] frames 320 px wide, four to a row, each over its timestamp. */
-    suspend fun contactSheet(context: Context, uri: Uri, duration: Double, count: Int, output: File, progress: AVEditProgress) = withContext(Dispatchers.IO) {
+    /** dt-ios AVEditFrames.contactSheet: [count] frames 320 px wide, four to a row, each over its timestamp; written and returned. */
+    suspend fun contactSheet(context: Context, uri: Uri, duration: Double, count: Int, output: File, progress: AVEditProgress): Bitmap = withContext(Dispatchers.IO) {
         val (columns, rows) = AVEditEngine.sheetGrid(count)
         val width = AVEditEngine.SHEET_THUMB_WIDTH
         val seconds = AVEditEngine.sheetTimes(duration, count)
@@ -186,7 +186,7 @@ object AVEditMedia {
                 canvas.drawText(AVEditEngine.timestamp(seconds[index]), left + 8, baseline, text)
             }
             writePng(sheet, output)
-            sheet.recycle()
+            sheet
         } finally {
             thumbs.forEach(Bitmap::recycle)
             retriever.release()

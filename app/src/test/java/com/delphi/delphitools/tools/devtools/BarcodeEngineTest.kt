@@ -24,6 +24,24 @@ class BarcodeEngineTest {
     }
 
     @Test
+    fun ean13Modules() {
+        fun modules(code: String) = Ean13.bars(code)!!.joinToString("") { if (it) "1" else "0" }
+        // from the published l, g and r tables; 1253670000002 puts 5, 6 and 7 in g positions
+        assertEquals("10100011010100111010111101111010001001011001101010100001010000101000010111010010000101100110101", modules("4006381333931"))
+        assertEquals("10100010110100111011001100100110111101001110101010110011011011001000010101110010011101000100101", modules("5901234123457"))
+        assertEquals("10100100110110001010000101011110010001010011101010111001011100101110010111001011100101101100101", modules("1253670000002"))
+    }
+
+    @Test
+    fun ean13Tables() {
+        for (digit in 0..9) {
+            val r = Ean13.rPatterns[digit]
+            assertEquals(r.reversed(), Ean13.gPatterns[digit])
+            assertEquals(r.map { if (it == '1') '0' else '1' }.joinToString(""), Ean13.lPatterns[digit])
+        }
+    }
+
+    @Test
     fun code128() {
         val code = BarcodeEngine.modules("Hello World", BarcodeKind.Code128) as BarcodeModules.Code
         val bars = code.rows.single()

@@ -184,7 +184,7 @@ private object AtlasFiles {
         val small = ImageCompressEngine.preview(image, ATLAS_SCAN_PIXELS)
         val scan = scan(small, atlas.hasAlpha)
         val tiny = ImageCompressEngine.preview(small, ATLAS_PALETTE_PIXELS)
-        val argb = IntArray(tiny.width * tiny.height).also { tiny.getPixels(it, 0, tiny.width, 0, 0, tiny.width, tiny.height) }
+        val argb = tiny.argb()
         val palette = PaletteExtractorEngine.cluster(PaletteExtractorEngine.oklabPixels(argb), 6)
             .sortedByDescending { it.count }
             .map { it.colour }

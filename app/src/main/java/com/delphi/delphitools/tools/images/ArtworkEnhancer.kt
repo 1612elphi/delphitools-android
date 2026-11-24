@@ -80,8 +80,6 @@ private const val DETAIL_SIDE = 64
 private const val DETAIL_FACTOR = 8
 private const val OPACITY_SETTLE_MS = 120L
 
-private fun Bitmap.argb(): IntArray = IntArray(width * height).also { getPixels(it, 0, width, 0, 0, width, height) }
-
 private fun bitmap(pixels: IntArray, width: Int, height: Int): Bitmap = Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888)
 
 private fun detail(pixels: IntArray, width: Int, height: Int): ImageBitmap {

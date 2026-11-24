@@ -76,6 +76,7 @@ import com.delphi.delphitools.canon.canonDisplayName
 import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.tools.images.ImageCompressEngine
 import com.delphi.delphitools.tools.images.ImageFiles
+import com.delphi.delphitools.tools.images.argb
 import com.delphi.delphitools.tools.socialmedia.ScrollGeneratorEngine.Geometry
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiMono
@@ -111,7 +112,7 @@ private fun backdrop(image: Bitmap, area: android.graphics.Rect, boxWidth: Int, 
     val small = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
     val cover = MatteSpec.cover(area.width().toDouble(), area.height().toDouble(), width.toDouble(), height.toDouble(), MatteSpec.OVERSCAN)
     android.graphics.Canvas(small).drawBitmap(image, area, RectF(cover.x.toFloat(), cover.y.toFloat(), (cover.x + cover.width).toFloat(), (cover.y + cover.height).toFloat()), filtered)
-    val pixels = IntArray(width * height).also { small.getPixels(it, 0, width, 0, 0, width, height) }
+    val pixels = small.argb()
     return Bitmap.createBitmap(MatteEngine.blur(pixels, width, height, blur * scale), width, height, Bitmap.Config.ARGB_8888)
 }
 

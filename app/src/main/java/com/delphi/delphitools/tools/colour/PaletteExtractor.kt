@@ -92,6 +92,7 @@ import com.delphi.delphitools.colour.takesBlackInk
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.tools.colour.PaletteExtractorEngine.Strategy
 import com.delphi.delphitools.tools.images.ImageFiles
+import com.delphi.delphitools.tools.images.argb
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiMono
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -112,8 +113,6 @@ private const val PAINT_PIXELS = 720
 private const val EXPORT_PIXELS = 4096
 
 private class Pixels(val argb: IntArray, val width: Int, val height: Int)
-
-private fun Bitmap.argb() = IntArray(width * height).also { getPixels(it, 0, width, 0, 0, width, height) }
 
 private fun Bitmap.fitted(edge: Int): Bitmap {
     val scale = edge.toFloat() / maxOf(width, height)

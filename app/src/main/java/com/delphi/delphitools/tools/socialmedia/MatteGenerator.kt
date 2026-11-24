@@ -88,6 +88,7 @@ import com.delphi.delphitools.colour.rgbOf
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.tools.images.ImageCompressEngine
 import com.delphi.delphitools.tools.images.ImageFiles
+import com.delphi.delphitools.tools.images.argb
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.Dispatchers
@@ -111,8 +112,6 @@ private const val PREVIEW_PIXELS = 1600
 private const val BLUR_SIGMA = 8.0
 
 private class MatteSource(val image: Bitmap, val preview: ImageBitmap, val width: Int, val height: Int, val stem: String)
-
-private fun Bitmap.argb() = IntArray(width * height).also { getPixels(it, 0, width, 0, 0, width, height) }
 
 private val filtered = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
 

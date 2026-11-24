@@ -96,7 +96,9 @@ import com.delphi.delphitools.canon.CanonTile
 import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.LocalCanonCanvas
+import com.delphi.delphitools.canon.canonDisplayName
 import com.delphi.delphitools.canon.canonMathInks
+import com.delphi.delphitools.canon.decodeTextFile
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.ui.theme.DelphiFont
 import com.delphi.delphitools.ui.theme.DelphiMono
@@ -106,6 +108,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import kotlin.math.pow
 
 private const val EDITABLE_LIMIT = 1_000_000
@@ -116,6 +120,17 @@ private const val PREVIEW_LIMIT = 100_000
 
 // ponytail: the parsed tree is several times the file size; a streaming parser lifts this cap
 private const val MAX_FILE_BYTES = 32L shl 20
+
+private fun InputStream.readAtMost(limit: Long): ByteArray {
+    val out = ByteArrayOutputStream()
+    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+    while (out.size() < limit) {
+        val read = read(buffer, 0, minOf(buffer.size.toLong(), limit - out.size()).toInt())
+        if (read < 0) break
+        out.write(buffer, 0, read)
+    }
+    return out.toByteArray()
+}
 
 // one node of a minified line stays far under the layout limit
 private const val PIECE = 1000
@@ -221,16 +236,15 @@ class JsonFormatterModel(application: Application) : AndroidViewModel(applicatio
                 runCatching {
                     val size = resolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { if (it.moveToFirst()) it.getLong(0) else null }
                     if (size != null && size > MAX_FILE_BYTES) return@runCatching null
-                    val bytes = resolver.openInputStream(uri)?.use { it.readBytes() } ?: return@runCatching null
-                    if (bytes.size > MAX_FILE_BYTES) null else String(bytes, Charsets.UTF_8).removePrefix("﻿")
+                    // providers often report no size, so stop reading one byte past the limit
+                    val bytes = resolver.openInputStream(uri)?.use { it.readAtMost(MAX_FILE_BYTES + 1) } ?: return@runCatching null
+                    if (bytes.size > MAX_FILE_BYTES) null else decodeTextFile(bytes)
                 }.getOrNull()
             } ?: return@launch
-            val name = withContext(Dispatchers.IO) {
-                runCatching { resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { if (it.moveToFirst()) it.getString(0) else null } }.getOrNull()
-            }
+            val name = withContext(Dispatchers.IO) { resolver.canonDisplayName(uri) }
             collapsed = emptySet()
             setSource(read, keepFile = true)
-            fileName = name ?: uri.lastPathSegment
+            fileName = name
         }
     }
 

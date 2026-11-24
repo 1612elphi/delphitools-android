@@ -298,7 +298,7 @@ class AudioAtlasModel(application: Application) : AndroidViewModel(application) 
             }
             duration = scan.duration
             sampleRate = scan.sampleRate
-            detail = AudioAtlasEngine.detail(scan)
+            detail = AVEditAudioEngine.audioDetail(scan)
             viewStart = 0.0
             viewEnd = scan.duration
             overview = scan.peaks

@@ -5,7 +5,6 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.Locale
 import kotlin.math.PI
-import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.log10
@@ -14,7 +13,6 @@ import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
-import kotlin.math.sqrt
 import kotlin.math.tan
 
 /** dt-ios AVInfoAudioDSP.Scan: peaks, levels and loudness of a decoded file. */
@@ -85,75 +83,20 @@ internal class KWeighting(rate: Double) {
 /**
  * dt-ios AVInfoAudioDSP.scan, fed chunk by chunk: 16-bit interleaved PCM in, an [AudioScan] out.
  * [spanFrames] is the expected length, which places frames in [buckets]; frames past it go in the last bucket.
+ * The measuring is [AudioScanner]'s over the whole file.
  */
-class AudioMeter(
-    private val rate: Int,
-    private val channels: Int,
-    spanFrames: Long,
-    private val buckets: Int,
-    private val loudness: Boolean,
-) {
-    private val span = max(1L, spanFrames)
-    private val low = FloatArray(buckets) { Float.POSITIVE_INFINITY }
-    private val high = FloatArray(buckets) { Float.NEGATIVE_INFINITY }
-    private var peak = 0f
-    private var squareSum = 0.0
+class AudioMeter(rate: Int, private val channels: Int, spanFrames: Long, buckets: Int, loudness: Boolean) {
+    private val scanner = AudioScanner(rate, channels, 0, max(1L, spanFrames), buckets, open = true, measureLoudness = loudness)
     var frames = 0L
         private set
-    private val filters = if (loudness) List(channels) { KWeighting(rate.toDouble()) } else emptyList()
-    private val subBlockFrames = (0.1 * rate).roundToInt()
-    private val subBlockSums = ArrayList<Double>()
-    private var subBlockEnergy = 0.0
-    private var subBlockFilled = 0
 
     fun feed(pcm: ShortArray) {
         val count = pcm.size / channels
-        for (frame in 0 until count) {
-            val bucket = min(buckets - 1L, (frames + frame) * buckets / span).toInt()
-            var energy = 0.0
-            for (channel in 0 until channels) {
-                val sample = pcm[frame * channels + channel] / 32768f
-                if (sample < low[bucket]) low[bucket] = sample
-                if (sample > high[bucket]) high[bucket] = sample
-                val magnitude = abs(sample)
-                if (magnitude > peak) peak = magnitude
-                squareSum += sample.toDouble() * sample
-                if (loudness) {
-                    val weighted = filters[channel].process(sample.toDouble())
-                    energy += weighted * weighted
-                }
-            }
-            if (loudness && subBlockFrames > 0) {
-                subBlockEnergy += energy
-                if (++subBlockFilled == subBlockFrames) {
-                    subBlockSums += subBlockEnergy
-                    subBlockEnergy = 0.0
-                    subBlockFilled = 0
-                }
-            }
-        }
+        scanner.feed(FloatArray(count * channels) { pcm[it] / 32768f }, count, frames)
         frames += count
     }
 
-    fun finish(): AudioScan {
-        for (bucket in 0 until buckets) {
-            if (low[bucket] == Float.POSITIVE_INFINITY) {
-                low[bucket] = 0f
-                high[bucket] = 0f
-            }
-        }
-        val samples = frames.toDouble() * channels
-        val rms = if (samples > 0) sqrt(squareSum / samples) else 0.0
-        return AudioScan(
-            AVEditPeaks(low, high),
-            if (peak == 0f) Double.NEGATIVE_INFINITY else 20 * log10(peak.toDouble()),
-            if (rms == 0.0) Double.NEGATIVE_INFINITY else 20 * log10(rms),
-            if (loudness) AVEditAudioEngine.gatedLoudness(subBlockSums, subBlockFrames) else null,
-            rate,
-            channels,
-            if (rate > 0) frames.toDouble() / rate else 0.0,
-        )
-    }
+    fun finish(): AudioScan = scanner.finish()
 }
 
 /**

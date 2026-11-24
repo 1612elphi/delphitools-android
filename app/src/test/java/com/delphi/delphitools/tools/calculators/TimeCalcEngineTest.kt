@@ -64,4 +64,11 @@ class TimeCalcEngineTest {
         assertEquals(-19_800_000L, TimeCalcMath.instant(0, "Asia/Kolkata", "UTC"))
         assertEquals("1.5", TimeCalcMath.cleaned(" 1,5 "))
     }
+
+    @Test
+    fun instantAfterSourceDstChange() {
+        // new york moves to edt at 07:00z; berlin is still on cet
+        val wall = Instant.parse("2026-03-08T05:00:00Z").toEpochMilli()
+        assertEquals(Instant.parse("2026-03-08T10:00:00Z").toEpochMilli(), TimeCalcMath.instant(wall, "America/New_York", "Europe/Berlin"))
+    }
 }

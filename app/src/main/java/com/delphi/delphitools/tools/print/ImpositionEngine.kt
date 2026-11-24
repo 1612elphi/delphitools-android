@@ -1,5 +1,7 @@
 package com.delphi.delphitools.tools.print
 
+import com.delphi.delphitools.tools.pdf.PdfPagesEngine.MM_TO_POINTS
+
 /** A page placed on one side of a sheet. Millimetres, top-left origin; [pageNumber] is 1-based, 0 blank. */
 data class ImpositionPlacement(
     val pageNumber: Int,
@@ -85,8 +87,6 @@ data class ImpositionConfig(
 
 /** dt-ios ImpositionEngine. */
 object ImpositionEngine {
-    const val MM_TO_POINTS = 72.0 / 25.4
-
     private fun padToMultiple(n: Int, multiple: Int): Int {
         val rem = n % multiple
         return if (rem == 0) n else n + (multiple - rem)

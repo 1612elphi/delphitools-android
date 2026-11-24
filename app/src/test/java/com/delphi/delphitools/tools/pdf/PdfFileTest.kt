@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -22,6 +23,48 @@ class PdfFileTest {
     }
 
     private val expected = listOf(PdfSize(595.0, 842.0), PdfSize(792.0, 612.0), PdfSize(200.0, 300.0))
+
+    private val catalog = "<< /Type /Catalog /Pages 2 0 R >>"
+    private val tree = "<< /Type /Pages /Kids [3 0 R] /Count 1 >>"
+    private val page = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 200] >>"
+
+    /** [objects] numbered from 1, then a classic table whose entry for object n points at the offset of [xref]`[n - 1]`, 0 for free. */
+    private fun raw(objects: List<String>, xref: List<Int> = objects.indices.map { it + 1 }, root: Int = 1): ByteArray {
+        val text = StringBuilder("%PDF-1.4\n")
+        val at = objects.mapIndexed { index, body ->
+            text.length.also { text.append("${index + 1} 0 obj\n$body\nendobj\n") }
+        }
+        val start = text.length
+        text.append("xref\n0 ${xref.size + 1}\n0000000000 65535 f\r\n")
+        for (target in xref) {
+            text.append(if (target == 0) "0000000000 65535 f\r\n" else String.format("%010d 00000 n\r\n", at[target - 1]))
+        }
+        text.append("trailer\n<< /Size ${xref.size + 1} /Root $root 0 R >>\nstartxref\n$start\n%%EOF\n")
+        return text.toString().toByteArray(Charsets.ISO_8859_1)
+    }
+
+    private fun refuses(bytes: ByteArray) {
+        try {
+            PdfFile(bytes)
+            fail("parsed")
+        } catch (_: PdfSyntaxException) {
+        }
+    }
+
+    @Test
+    fun rejectsAnObjectAtAnotherNumbersOffset() {
+        // every entry shifted by one object: 1 points at 2, 2 at 3, 3 at 1
+        val file = PdfFile(raw(listOf(catalog, tree, page), xref = listOf(2, 3, 1)))
+        assertTrue(file.rebuilt)
+        assertEquals(listOf(PdfSize(100.0, 200.0)), sizes(file))
+    }
+
+    @Test
+    fun rebuildsWhenTheChainHasNoPages() {
+        val file = PdfFile(raw(listOf(catalog, tree, page), xref = listOf(1, 2, 0)))
+        assertTrue(file.rebuilt)
+        assertEquals(1, file.pages.size)
+    }
 
     @Test
     fun readsClassicTable() {
@@ -97,5 +140,51 @@ class PdfFileTest {
         val built = PdfFile(copy.toByteArray())
         assertEquals(0, built.rotation(built.pages[0]))
         assertEquals(PdfBox(0.0, 0.0, 300.0, 100.0), built.mediaBox(built.pages[0]))
+    }
+
+    private fun chain(depth: Int) = raw(
+        listOf("<< /Type /Catalog /Pages 2 0 R >>") +
+            (1..depth).map { "<< /Type /Pages /Kids [${it + 2} 0 R] /Count 1 >>" } +
+            "<< /Type /Page >>",
+    )
+
+    @Test
+    fun walksADeepPageTreeOnASmallStack() {
+        val bytes = chain(3000)
+        var pages = -1
+        var error: Throwable? = null
+        // 256 KB, a worker thread's stack on a small device
+        val thread = Thread(null, { runCatching { pages = PdfFile(bytes).pages.size }.onFailure { error = it } }, "walk", 256L * 1024)
+        thread.start()
+        thread.join()
+        assertEquals(null, error)
+        assertEquals(1, pages)
+    }
+
+    @Test
+    fun refusesAPageTreeDeeperThanTheLimit() = refuses(chain(20000))
+
+    @Test(timeout = 5000)
+    fun rejectsAnXrefStreamWithZeroWidthEntries() {
+        val text = StringBuilder("%PDF-1.5\n")
+        val objects = listOf(catalog, tree, page)
+        objects.forEachIndexed { index, body -> text.append("${index + 1} 0 obj\n$body\nendobj\n") }
+        val start = text.length
+        text.append("4 0 obj\n<< /Type /XRef /W [0 0 0] /Size 2147483647 /Root 1 0 R /Length 0 >>\nstream\n\nendstream\nendobj\n")
+        text.append("startxref\n$start\n%%EOF\n")
+        val file = PdfFile(text.toString().toByteArray(Charsets.ISO_8859_1))
+        assertTrue(file.rebuilt)
+        assertEquals(listOf(PdfSize(100.0, 200.0)), sizes(file))
+    }
+
+    @Test
+    fun rebuildSkipsHeadersInsideStreams() {
+        val fake = "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 5 5] >>\nendobj"
+        val bytes = raw(listOf(catalog, tree, page, "<< /Length ${fake.length} >>\nstream\n$fake\nendstream"))
+        val at = lastIndexOf(bytes, "startxref".toByteArray()) + 10
+        bytes[at] = '9'.code.toByte()
+        val file = PdfFile(bytes)
+        assertTrue(file.rebuilt)
+        assertEquals(listOf(PdfSize(100.0, 200.0)), sizes(file))
     }
 }

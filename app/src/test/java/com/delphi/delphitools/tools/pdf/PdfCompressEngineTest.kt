@@ -32,6 +32,17 @@ class PdfCompressEngineTest {
     }
 
     @Test
+    fun skipsImagesTooLargeOrShorterThanTheirSize() {
+        val file = PdfFile(imagePdf())
+        val image = (1 until file.size).mapNotNull { file.obj(it) as? PdfStream }.first { PdfCompressEngine.samples(file, it) != null }
+        // 65536 x 65536 x 3 is 0 in Int arithmetic
+        val huge = PdfStream(LinkedHashMap(image.dict).apply { put("Width", 65536); put("Height", 65536) }, image.data)
+        assertNull(PdfCompressEngine.samples(file, huge))
+        val tall = PdfStream(LinkedHashMap(image.dict).apply { put("Height", 4000) }, PdfFilters.deflate(ByteArray(40 * 8000 * 3)))
+        assertNull(PdfCompressEngine.samples(file, tall))
+    }
+
+    @Test
     fun recompressesSmallerImagesOnly() {
         val file = PdfFile(imagePdf())
         val fakeJpeg = PdfPicture(20, 10, ByteArray(10), dct = true)

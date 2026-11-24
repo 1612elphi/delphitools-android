@@ -3,6 +3,7 @@ package com.delphi.delphitools.tools.pdf
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 
 class PdfSyntaxTest {
@@ -49,5 +50,37 @@ class PdfSyntaxTest {
         val (ref, value) = PdfLexer(text.toByteArray(), 0).indirect()
         assertEquals(PdfRef(1), ref)
         assertEquals("hello", String((value as PdfStream).data))
+    }
+
+    @Test
+    fun readsStreamsWithAnOverflowingLength() {
+        for (length in listOf("2147483647", "4294967301")) {
+            val text = "1 0 obj\n<< /Length $length >>\nstream\nhello\nendstream\nendobj\n"
+            val (_, value) = PdfLexer(text.toByteArray(), 0).indirect()
+            assertEquals("hello", String((value as PdfStream).data))
+        }
+    }
+
+    @Test
+    fun capsInflatedSize() {
+        val packed = PdfFilters.deflate(ByteArray(4 shl 20))
+        assertEquals(4 shl 20, PdfFilters.inflate(packed).size)
+        try {
+            PdfFilters.inflate(packed, limit = 1L shl 20)
+            fail("inflated past the limit")
+        } catch (_: PdfSyntaxException) {
+        }
+    }
+
+    @Test
+    fun acceptsOnlyPlainFiniteNumbers() {
+        assertEquals(listOf(0.5, -0.5, 4.0, 3, -2.0), parse("[.5 -.5 4. +3 --2]"))
+        for (word in listOf("NaN", "Infinity", "-Infinity", "0x1p3", "1e5", "1e400", "9".repeat(400) + ".5")) {
+            try {
+                parse("[0 0 $word 792]")
+                fail("parsed $word")
+            } catch (_: PdfSyntaxException) {
+            }
+        }
     }
 }

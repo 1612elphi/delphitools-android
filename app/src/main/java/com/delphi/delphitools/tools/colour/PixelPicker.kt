@@ -163,7 +163,7 @@ class PixelPickerModel(application: Application) : AndroidViewModel(application)
         loading = viewModelScope.launch {
             val loaded = withContext(Dispatchers.IO) {
                 val decoded = ImageFiles.decode(ImageDecoder.createSource(resolver, uri), SAMPLE_PIXELS) ?: return@withContext null
-                decoded to ImageCompressEngine.preview(decoded.image, SHOWN_PIXELS).asImageBitmap()
+                ImageFiles.unlessOutOfMemory { decoded to ImageCompressEngine.preview(decoded.image, SHOWN_PIXELS).asImageBitmap() }
             } ?: return@launch
             val (decoded, preview) = loaded
             image = decoded.image

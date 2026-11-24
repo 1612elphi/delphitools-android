@@ -202,7 +202,7 @@ class ImageMaskerModel(application: Application) : AndroidViewModel(application)
             val loaded = withContext(Dispatchers.IO) {
                 val decoded = runCatching { ImageFiles.decode(ImageDecoder.createSource(resolver, uri), MASK_MAX_PIXELS) }.getOrNull()
                     ?: return@withContext null
-                MaskSource(decoded.image, ImageCompressEngine.preview(decoded.image, MASK_PREVIEW_PIXELS), name, decoded.width, decoded.height)
+                ImageFiles.unlessOutOfMemory { MaskSource(decoded.image, ImageCompressEngine.preview(decoded.image, MASK_PREVIEW_PIXELS), name, decoded.width, decoded.height) }
             }
             failedName = if (loaded == null) name else null
             if (loaded == null) return@launch

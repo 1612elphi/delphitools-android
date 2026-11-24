@@ -1,6 +1,7 @@
 package com.delphi.delphitools.tools.print
 
 import com.delphi.delphitools.tools.pdf.PdfName
+import com.delphi.delphitools.tools.pdf.PdfPagesEngine
 import com.delphi.delphitools.tools.pdf.PdfPicture
 import com.delphi.delphitools.tools.pdf.PdfRef
 import com.delphi.delphitools.tools.pdf.PdfSerialiser
@@ -148,8 +149,8 @@ object ZineImposerEngine {
 
     /** One page per printed side, front then back; slots by 0-based page. */
     fun write(layout: ZineFoldLayout, slots: List<Slot?>, sheetWidthMm: Double, sheetHeightMm: Double, out: OutputStream) {
-        val w = sheetWidthMm / 25.4 * 72
-        val h = sheetHeightMm / 25.4 * 72
+        val w = sheetWidthMm * PdfPagesEngine.MM_TO_POINTS
+        val h = sheetHeightMm * PdfPagesEngine.MM_TO_POINTS
         val cellW = w / layout.cols
         val cellH = h / layout.rows
         val writer = PdfWriter(out)

@@ -80,4 +80,24 @@ class PdfStampEngineTest {
         assertTrue(PdfFilters.decode(out.resolve((out.resolve(out.pages[0].dict["Contents"]) as List<*>).last()) as PdfStream)!!
             .toString(Charsets.ISO_8859_1).contains("(1 / 3) Tj"))
     }
+
+    @Test
+    fun closesSavesTheContentLeftOpen() {
+        val content = "q 2 0 0 2 0 0 cm q (Q) Tj Q BI /W 1 /H 1 ID Q\u0000 EI q <51> Tj"
+        val out = java.io.ByteArrayOutputStream()
+        val writer = PdfWriter(out)
+        val root = writer.reserve()
+        val tree = writer.reserve()
+        val stream = writer.add(PdfStream(linkedMapOf(), content.toByteArray(Charsets.ISO_8859_1)))
+        val page = writer.add(linkedMapOf("Type" to PdfName("Page"), "Parent" to PdfRef(tree), "MediaBox" to listOf(0, 0, 100, 100), "Contents" to stream))
+        writer.write(tree, linkedMapOf("Type" to PdfName("Pages"), "Kids" to listOf(page), "Count" to 1))
+        writer.write(root, linkedMapOf("Type" to PdfName("Catalog"), "Pages" to PdfRef(tree)))
+        writer.finish(PdfRef(root))
+        val file = PdfFile(out.toByteArray())
+        val stamped = PdfFile(PdfStampEngine.stamp(file, PdfStampEngine.Options(stampOn = true, stampText = "DRAFT")))
+        val contents = stamped.resolve(stamped.pages[0].dict["Contents"]) as List<*>
+        val stamp = PdfFilters.decode(stamped.resolve(contents.last()) as PdfStream)!!.toString(Charsets.ISO_8859_1)
+        // the save before the content and the two the content left open
+        assertTrue(stamp, stamp.startsWith("\nQ\nQ\nQ\nq "))
+    }
 }

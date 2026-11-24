@@ -56,15 +56,17 @@ class PdfJob(private val scope: CoroutineScope, private val context: Context) {
     var output by mutableStateOf<File?>(null)
         private set
     private var task: Job? = null
+    private var run = 0
 
     /** [work] writes the file it is given and reports progress from 0 to 1 from any thread. */
     fun start(name: String, work: suspend (File, (Float) -> Unit) -> Unit) {
         reset()
         busy = true
+        val current = run
         val file = File(PdfDocuments.outputFolder(context), FileExport.safeFilename(name))
         task = scope.launch {
             val done = try {
-                withContext(Dispatchers.Default) { work(file) { share -> scope.launch { progress = share } } }
+                withContext(Dispatchers.Default) { work(file) { share -> scope.launch { if (run == current) progress = share } } }
                 true
             } catch (e: CancellationException) {
                 PdfDocuments.discard(file)
@@ -72,6 +74,8 @@ class PdfJob(private val scope: CoroutineScope, private val context: Context) {
             } catch (_: Exception) {
                 false
             } catch (_: OutOfMemoryError) {
+                false
+            } catch (_: StackOverflowError) {
                 false
             }
             busy = false
@@ -81,6 +85,7 @@ class PdfJob(private val scope: CoroutineScope, private val context: Context) {
     }
 
     fun reset() {
+        run++
         task?.cancel()
         task = null
         PdfDocuments.discard(output)

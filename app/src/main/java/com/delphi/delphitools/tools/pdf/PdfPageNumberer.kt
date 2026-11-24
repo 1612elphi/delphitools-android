@@ -80,7 +80,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.delphi.delphitools.canon.CanonButton
-import com.delphi.delphitools.canon.CanonCanvasBoxing
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonDropZone
 import com.delphi.delphitools.canon.CanonGrid
@@ -413,12 +412,7 @@ fun PdfPageNumberer(model: PdfPageNumbererModel = viewModel()) {
 
     val anchor = if (options.numbersOn) options.numberAnchor else null
     val pageSize = sizes.getOrNull(page) ?: PdfSize(210.0, 297.0)
-    val preview = CanonSection.canvas(
-        CanonCanvasSize.Aspect(maxOf(0.2, pageSize.width / maxOf(pageSize.height, 1.0)).toFloat()),
-        background = c.muted,
-        maxHeight = 640.dp,
-        boxing = CanonCanvasBoxing.UnlessWide,
-    ) {
+    val preview = pageCanvas(pageSize, c.muted) {
         NumberPreview(model.preview, anchor) { picked -> model.update { it.copy(numberAnchor = picked) } }
     }
 

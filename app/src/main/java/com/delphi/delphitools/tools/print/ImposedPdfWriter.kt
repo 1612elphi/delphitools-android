@@ -5,6 +5,7 @@ import com.delphi.delphitools.tools.pdf.PdfDict
 import com.delphi.delphitools.tools.pdf.PdfFile
 import com.delphi.delphitools.tools.pdf.PdfFilters
 import com.delphi.delphitools.tools.pdf.PdfName
+import com.delphi.delphitools.tools.pdf.PdfPagesEngine
 import com.delphi.delphitools.tools.pdf.PdfRect
 import com.delphi.delphitools.tools.pdf.PdfRef
 import com.delphi.delphitools.tools.pdf.PdfSerialiser
@@ -107,7 +108,7 @@ object ImposedPdfWriter {
 
     /** Writes front then back of every sheet; [progress] after each sheet, from any thread. */
     fun write(file: PdfFile, result: ImpositionResult, config: ImpositionConfig, out: OutputStream, progress: (Double) -> Unit = {}) {
-        val k = ImpositionEngine.MM_TO_POINTS
+        val k = PdfPagesEngine.MM_TO_POINTS
         val sheetW = config.sheetW * k
         val sheetH = config.sheetH * k
         val writer = PdfWriter(out)

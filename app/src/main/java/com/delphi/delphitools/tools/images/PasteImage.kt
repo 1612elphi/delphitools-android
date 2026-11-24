@@ -177,7 +177,7 @@ class PasteImageModel(application: Application) : AndroidViewModel(application) 
         val crop = crop
         exporting = true
         viewModelScope.launch {
-            val data = withContext(Dispatchers.Default) { cropped(pasted, crop)?.let(ImageFiles::png) }
+            val data = withContext(Dispatchers.Default) { ImageFiles.unlessOutOfMemory { cropped(pasted, crop)?.let(ImageFiles::png) } }
             if (data != null) use(data)
             exporting = false
         }

@@ -156,8 +156,10 @@ class SocialCropperModel(application: Application) : AndroidViewModel(applicatio
         val rect = crop.rect
         if (rect.width <= 0f || rect.height <= 0f) return null
         return withContext(Dispatchers.Default) {
-            val cut = Bitmap.createBitmap(image, rect.left.roundToInt(), rect.top.roundToInt(), rect.width.roundToInt(), rect.height.roundToInt())
-            ImageFiles.png(cut)
+            ImageFiles.unlessOutOfMemory {
+                val cut = Bitmap.createBitmap(image, rect.left.roundToInt(), rect.top.roundToInt(), rect.width.roundToInt(), rect.height.roundToInt())
+                ImageFiles.png(cut)
+            }
         }
     }
 

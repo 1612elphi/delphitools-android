@@ -91,9 +91,9 @@ fun fromHsb(h: Double, s: Double, b: Double): Rgb {
     return Rgb(b * (1 - s + s * pure.r), b * (1 - s + s * pure.g), b * (1 - s + s * pure.b))
 }
 
-private fun toLinear(v: Double) = if (v <= 0.04045) v / 12.92 else ((v + 0.055) / 1.055).pow(2.4)
+fun toLinear(v: Double) = if (v <= 0.04045) v / 12.92 else ((v + 0.055) / 1.055).pow(2.4)
 
-private fun fromLinear(v: Double): Double {
+fun fromLinear(v: Double): Double {
     val c = max(0.0, v)
     return if (c <= 0.0031308) 12.92 * c else 1.055 * c.pow(1 / 2.4) - 0.055
 }

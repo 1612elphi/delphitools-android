@@ -42,6 +42,7 @@ import com.delphi.delphitools.canon.CanonStatusRow
 import com.delphi.delphitools.canon.CanonSwitch
 import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.LocalCanonCanvas
+import com.delphi.delphitools.tools.images.ImageCompressEngine
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
@@ -155,26 +156,40 @@ private fun rasterise(file: File, mode: PdfCompressEngine.Mode.Rasterise, out: j
     if (written != true) error("rasterise")
 }
 
-/** An image's samples as a JPEG, cut to screen size when [downsample] and larger. */
+/** An image's samples as a JPEG, cut to screen size when [downsample] and larger; null keeps the image as it is. */
 private fun encode(samples: PdfCompressEngine.ImageSamples, downsample: Boolean): PdfPicture? {
-    val decoded = samples.jpeg?.let { BitmapFactory.decodeByteArray(it, 0, it.size) } ?: samples.rgb?.let { rgb ->
-        val pixels = IntArray(samples.width * samples.height) { i ->
-            val r = rgb[i * 3].toInt() and 0xff
-            val g = rgb[i * 3 + 1].toInt() and 0xff
-            val b = rgb[i * 3 + 2].toInt() and 0xff
-            (0xff shl 24) or (r shl 16) or (g shl 8) or b
-        }
-        Bitmap.createBitmap(pixels, samples.width, samples.height, Bitmap.Config.ARGB_8888)
-    } ?: return null
-    val long = maxOf(decoded.width, decoded.height)
-    val bitmap = if (downsample && long > SCREEN_EDGE) {
-        val scale = SCREEN_EDGE.toDouble() / long
-        Bitmap.createScaledBitmap(decoded, maxOf(1, (decoded.width * scale).roundToInt()), maxOf(1, (decoded.height * scale).roundToInt()), true)
-    } else {
-        decoded
+    var decoded: Bitmap? = null
+    var bitmap: Bitmap? = null
+    try {
+        decoded = samples.jpeg?.let { jpeg ->
+            val options = BitmapFactory.Options()
+            if (downsample) {
+                val long = maxOf(samples.width, samples.height)
+                while (long / (options.inSampleSize * 2) >= SCREEN_EDGE) options.inSampleSize *= 2
+            }
+            BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size, options)
+        } ?: samples.rgb?.let { rgb ->
+            val out = Bitmap.createBitmap(samples.width, samples.height, Bitmap.Config.ARGB_8888)
+            val row = IntArray(samples.width)
+            for (y in 0 until samples.height) {
+                val start = y * samples.width * 3
+                for (x in row.indices) {
+                    val i = start + x * 3
+                    row[x] = (0xff shl 24) or ((rgb[i].toInt() and 0xff) shl 16) or ((rgb[i + 1].toInt() and 0xff) shl 8) or (rgb[i + 2].toInt() and 0xff)
+                }
+                out.setPixels(row, 0, samples.width, 0, y, samples.width, 1)
+            }
+            out
+        } ?: return null
+        bitmap = if (downsample) ImageCompressEngine.preview(decoded, SCREEN_EDGE) else decoded
+        bitmap.setHasAlpha(false)
+        return PdfDocuments.picture(bitmap, RECOMPRESS_QUALITY)
+    } catch (_: OutOfMemoryError) {
+        return null
+    } finally {
+        bitmap?.recycle()
+        decoded?.recycle()
     }
-    bitmap.setHasAlpha(false)
-    return PdfDocuments.picture(bitmap, RECOMPRESS_QUALITY)
 }
 
 @Composable
@@ -262,12 +277,7 @@ fun PdfCompressor(model: PdfCompressorModel = viewModel()) {
     }
 
     val pageSize = sizes.getOrNull(page) ?: PdfSize(210.0, 297.0)
-    val compare = CanonSection.canvas(
-        CanonCanvasSize.Aspect(maxOf(0.2, pageSize.width / maxOf(pageSize.height, 1.0)).toFloat()),
-        background = c.muted,
-        maxHeight = 640.dp,
-        boxing = CanonCanvasBoxing.UnlessWide,
-    ) {
+    val compare = pageCanvas(pageSize, c.muted) {
         CanonImageCompare(comparison.first, comparison.second, Modifier.fillMaxSize())
     }
 

@@ -123,7 +123,7 @@ class ImageSplitterModel(application: Application) : AndroidViewModel(applicatio
             source = withContext(Dispatchers.IO) {
                 val decoded = runCatching { ImageFiles.decode(ImageDecoder.createSource(resolver, uri), MAX_PIXELS) }.getOrNull()
                     ?: return@withContext null
-                val preview = ImageCompressEngine.preview(decoded.image, PREVIEW_PIXELS).asImageBitmap()
+                val preview = ImageFiles.unlessOutOfMemory { ImageCompressEngine.preview(decoded.image, PREVIEW_PIXELS).asImageBitmap() } ?: return@withContext null
                 SplitSource(decoded.image, preview, resolver.canonDisplayName(uri) ?: "")
             }
         }
@@ -170,7 +170,7 @@ class ImageSplitterModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch {
             val files = withContext(Dispatchers.Default) {
                 cells.map { cell ->
-                    val data = crop(source, cell, grid)?.let(ImageFiles::png) ?: return@withContext null
+                    val data = ImageFiles.unlessOutOfMemory { crop(source, cell, grid)?.let(ImageFiles::png) } ?: return@withContext null
                     "${source.stem}-${cell.label}.png" to data
                 }
             }

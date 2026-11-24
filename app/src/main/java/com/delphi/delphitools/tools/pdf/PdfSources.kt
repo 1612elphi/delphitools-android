@@ -10,6 +10,7 @@ import android.os.ParcelFileDescriptor
 import android.text.format.Formatter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
@@ -26,9 +27,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import com.delphi.delphitools.canon.CanonButton
+import com.delphi.delphitools.canon.CanonCanvasBoxing
+import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonGrid
 import com.delphi.delphitools.canon.CanonRow
+import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.canonDisplayName
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -36,6 +41,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
@@ -57,18 +65,23 @@ object PdfDocuments {
 
     private fun folder(context: Context, name: String) = File(context.cacheDir, name).apply { mkdirs() }
 
-    /** A private copy of [uri], so the file outlives the picker's grant. */
-    suspend fun copy(context: Context, uri: Uri, extension: String = "pdf"): Pair<File, String>? = withContext(Dispatchers.IO) {
-        val resolver = context.contentResolver
-        val name = resolver.canonDisplayName(uri) ?: "document.$extension"
-        val file = File(folder(context, "pdf-sources"), "${UUID.randomUUID()}.$extension")
-        runCatching {
-            resolver.openInputStream(uri)!!.use { input -> file.outputStream().use { input.copyTo(it) } }
-            file to name
-        }.getOrElse {
-            file.delete()
-            null
+    /** A private copy of [uri], so the file outlives the picker's grant; deleted again when the caller is cancelled. */
+    suspend fun copy(context: Context, uri: Uri, extension: String = "pdf"): Pair<File, String>? {
+        val copied = withContext(NonCancellable + Dispatchers.IO) {
+            val resolver = context.contentResolver
+            val name = resolver.canonDisplayName(uri) ?: "document.$extension"
+            val file = File(folder(context, "pdf-sources"), "${UUID.randomUUID()}.$extension")
+            runCatching {
+                resolver.openInputStream(uri)!!.use { input -> file.outputStream().use { input.copyTo(it) } }
+                file to name
+            }.getOrElse {
+                file.delete()
+                null
+            }
         }
+        if (!currentCoroutineContext().isActive) copied?.first?.delete()
+        currentCoroutineContext().ensureActive()
+        return copied
     }
 
     /** A fresh folder for files a tool writes, under a path the share sheet can read. */
@@ -83,14 +96,34 @@ object PdfDocuments {
         ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY).use { fd -> PdfRenderer(fd).use(body) }
     }.getOrNull()
 
-    /** Null when PdfRenderer cannot open it: damaged, password protected, or no pages. */
-    suspend fun source(file: File, name: String): PdfSource? = withContext(Dispatchers.IO) {
-        open(file) { renderer ->
+    /** [body] with one renderer for [file], closed afterwards even on cancellation; null when it cannot be opened. */
+    suspend fun <T> session(file: File, body: suspend (PdfRenderer) -> T): T? {
+        val fd = withContext(Dispatchers.IO) {
+            runCatching { ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY) }.getOrNull()
+        } ?: return null
+        val renderer = withContext(Dispatchers.IO) { runCatching { PdfRenderer(fd) }.getOrNull() }
+        try {
+            return body(renderer ?: return null)
+        } finally {
+            withContext(NonCancellable + Dispatchers.IO) {
+                renderer?.close()
+                fd.close()
+            }
+        }
+    }
+
+    /** Page sizes as viewed; null when PdfRenderer cannot read them or there are none. */
+    suspend fun measure(renderer: PdfRenderer): List<PdfSize>? = withContext(Dispatchers.IO) {
+        runCatching {
             (0 until renderer.pageCount).map { index ->
                 renderer.openPage(index).use { PdfSize(it.width.toDouble(), it.height.toDouble()) }
             }
-        }?.takeIf { it.isNotEmpty() }?.let { PdfSource(file, name, file.length(), it) }
+        }.getOrNull()?.takeIf { it.isNotEmpty() }
     }
+
+    /** Null when PdfRenderer cannot open it: damaged, password protected, or no pages. */
+    suspend fun source(file: File, name: String): PdfSource? =
+        session(file) { measure(it) }?.let { PdfSource(file, name, file.length(), it) }
 
     /** One page on white at [scale] pixels per point, the crop box as viewed, turned [turn] more degrees clockwise. */
     fun render(renderer: PdfRenderer, index: Int, scale: Double, turn: Int = 0): Bitmap? = runCatching {
@@ -100,7 +133,11 @@ object PdfDocuments {
             val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
             bitmap.eraseColor(Color.WHITE)
             page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-            if (turn % 360 == 0) bitmap else Bitmap.createBitmap(bitmap, 0, 0, w, h, Matrix().apply { setRotate(turn.toFloat()) }, true)
+            if (turn % 360 == 0) {
+                bitmap
+            } else {
+                Bitmap.createBitmap(bitmap, 0, 0, w, h, Matrix().apply { setRotate(turn.toFloat()) }, true).also { bitmap.recycle() }
+            }
         }
     }.getOrNull()
 
@@ -115,25 +152,17 @@ object PdfDocuments {
      * ponytail: 240 px long edge for every page held, about 160 MB for 500 pages; render only visible cells if that bites
      */
     suspend fun streamThumbnails(file: File, maxEdge: Int = 240, onBatch: (Map<Int, ImageBitmap>) -> Unit) {
-        val fd = withContext(Dispatchers.IO) {
-            runCatching { ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY) }.getOrNull()
-        } ?: return
-        val renderer = withContext(Dispatchers.IO) { runCatching { PdfRenderer(fd) }.getOrNull() }
-        try {
-            renderer ?: return
-            for (first in 0 until renderer.pageCount step 4) {
-                val batch = withContext(Dispatchers.IO) {
-                    (first until minOf(first + 4, renderer.pageCount)).mapNotNull { index ->
-                        thumbnail(renderer, index, maxEdge)?.let { index to it.asImageBitmap() }
-                    }.toMap()
-                }
-                onBatch(batch)
+        session(file) { streamThumbnails(it, maxEdge, onBatch) }
+    }
+
+    suspend fun streamThumbnails(renderer: PdfRenderer, maxEdge: Int = 240, onBatch: (Map<Int, ImageBitmap>) -> Unit) {
+        for (first in 0 until renderer.pageCount step 4) {
+            val batch = withContext(Dispatchers.IO) {
+                (first until minOf(first + 4, renderer.pageCount)).mapNotNull { index ->
+                    thumbnail(renderer, index, maxEdge)?.let { index to it.asImageBitmap() }
+                }.toMap()
             }
-        } finally {
-            withContext(NonCancellable + Dispatchers.IO) {
-                renderer?.close()
-                fd.close()
-            }
+            onBatch(batch)
         }
     }
 
@@ -190,15 +219,20 @@ class PdfSourceLoader(private val scope: CoroutineScope, private val context: Co
                 return@launch
             }
             name = shown
-            val loaded = PdfDocuments.source(file, shown)
-            if (loaded == null) {
-                file.delete()
-                failed = true
-                return@launch
+            var kept = false
+            try {
+                PdfDocuments.session(file) { renderer ->
+                    val sizes = PdfDocuments.measure(renderer) ?: return@session
+                    val loaded = PdfSource(file, shown, file.length(), sizes)
+                    source = loaded
+                    kept = true
+                    onLoad?.invoke(loaded)
+                    PdfDocuments.streamThumbnails(renderer) { thumbnails.putAll(it) }
+                }
+            } finally {
+                if (!kept) file.delete()
             }
-            source = loaded
-            onLoad?.invoke(loaded)
-            PdfDocuments.streamThumbnails(file) { thumbnails.putAll(it) }
+            if (!kept) failed = true
         }
     }
 
@@ -212,6 +246,15 @@ class PdfSourceLoader(private val scope: CoroutineScope, private val context: Co
         thumbnails.clear()
     }
 }
+
+/** A canvas section with [size]'s aspect, for a page preview. */
+fun pageCanvas(size: PdfSize, background: androidx.compose.ui.graphics.Color,content: @Composable BoxScope.() -> Unit) = CanonSection.canvas(
+    CanonCanvasSize.Aspect(maxOf(0.2, size.width / maxOf(size.height, 1.0)).toFloat()),
+    background = background,
+    maxHeight = 640.dp,
+    boxing = CanonCanvasBoxing.UnlessWide,
+    content = content,
+)
 
 /** dt-ios PDFPager: previous, "page / count", next. */
 @Composable

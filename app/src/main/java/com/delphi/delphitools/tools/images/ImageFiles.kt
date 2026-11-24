@@ -18,8 +18,18 @@ import kotlin.math.roundToInt
 /** dt-core SplitSource: an image decoded upright, no side over the decode limit, and the file's own upright size. */
 class DecodedImage(val image: Bitmap, val width: Int, val height: Int)
 
+/** Every pixel, row by row. */
+fun Bitmap.argb(): IntArray = IntArray(width * height).also { getPixels(it, 0, width, 0, 0, width, height) }
+
 /** Decoding, PNG encoding and handing images out, for the image tools. */
 object ImageFiles {
+    /** [body], or null when it runs out of memory. */
+    inline fun <T> unlessOutOfMemory(body: () -> T): T? = try {
+        body()
+    } catch (_: OutOfMemoryError) {
+        null
+    }
+
     // ImageDecoder reports and applies the EXIF orientation
     fun decode(source: ImageDecoder.Source, maxPixels: Int): DecodedImage? = runCatching {
         var width = 0

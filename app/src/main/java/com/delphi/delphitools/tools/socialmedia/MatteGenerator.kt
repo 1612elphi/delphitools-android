@@ -88,6 +88,7 @@ import com.delphi.delphitools.colour.rgbOf
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.tools.images.ImageCompressEngine
 import com.delphi.delphitools.tools.images.ImageFiles
+import com.delphi.delphitools.tools.images.argb
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.Dispatchers
@@ -112,20 +113,19 @@ private const val BLUR_SIGMA = 8.0
 
 private class MatteSource(val image: Bitmap, val preview: ImageBitmap, val width: Int, val height: Int, val stem: String)
 
-private fun Bitmap.argb() = IntArray(width * height).also { getPixels(it, 0, width, 0, 0, width, height) }
-
 private val filtered = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
 
 private fun MatteRect.rectF() = RectF(x.toFloat(), y.toFloat(), (x + width).toFloat(), (y + height).toFloat())
 
-/** MatteSpec.backdrop: the photo covering the box, blurred, at a reduced size the caller scales up. */
-private fun backdrop(photo: Bitmap, boxWidth: Int, boxHeight: Int, blur: Double): Bitmap {
+/** MatteSpec.backdrop over [area] of [image] (all of it when null): covering the box, blurred, at a reduced size the caller scales up. */
+internal fun backdrop(image: Bitmap, area: android.graphics.Rect?, boxWidth: Int, boxHeight: Int, blur: Double): Bitmap {
     val scale = min(1.0, BLUR_SIGMA / max(blur, 1e-9))
     val width = max(1, (boxWidth * scale).roundToInt())
     val height = max(1, (boxHeight * scale).roundToInt())
     val small = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    val cover = MatteSpec.cover(photo.width.toDouble(), photo.height.toDouble(), width.toDouble(), height.toDouble(), MatteSpec.OVERSCAN)
-    android.graphics.Canvas(small).drawBitmap(photo, null, cover.rectF(), filtered)
+    val (areaWidth, areaHeight) = if (area == null) image.width to image.height else area.width() to area.height()
+    val cover = MatteSpec.cover(areaWidth.toDouble(), areaHeight.toDouble(), width.toDouble(), height.toDouble(), MatteSpec.OVERSCAN)
+    android.graphics.Canvas(small).drawBitmap(image, area, cover.rectF(), filtered)
     return Bitmap.createBitmap(MatteEngine.blur(small.argb(), width, height, blur * scale), width, height, Bitmap.Config.ARGB_8888)
 }
 
@@ -142,7 +142,7 @@ private fun render(spec: MatteSpec, photo: Bitmap): Bitmap {
                 shader = LinearGradient(0f, 0f, w.toFloat(), h.toFloat(), spec.dominant.argb, spec.dominant.shifted(MatteSpec.FALLOFF).argb, Shader.TileMode.CLAMP)
             },
         )
-        MatteSpec.Style.Blurred -> canvas.drawBitmap(backdrop(photo, w, h, MatteSpec.BLUR), null, RectF(0f, 0f, w.toFloat(), h.toFloat()), filtered)
+        MatteSpec.Style.Blurred -> canvas.drawBitmap(backdrop(photo, null, w, h, MatteSpec.BLUR), null, RectF(0f, 0f, w.toFloat(), h.toFloat()), filtered)
     }
     val fit = MatteSpec.fit(photo.width.toDouble(), photo.height.toDouble(), w.toDouble(), h.toDouble(), spec.padding.toDouble())
     canvas.drawBitmap(photo, null, fit.rectF(), filtered)
@@ -189,7 +189,7 @@ class MatteGeneratorModel(application: Application) : AndroidViewModel(applicati
         loading = viewModelScope.launch {
             val loaded = withContext(Dispatchers.IO) {
                 val decoded = ImageFiles.decode(ImageDecoder.createSource(resolver, uri), IMAGE_PIXELS) ?: return@withContext null
-                val preview = ImageCompressEngine.preview(decoded.image, PREVIEW_PIXELS)
+                val preview = ImageFiles.unlessOutOfMemory { ImageCompressEngine.preview(decoded.image, PREVIEW_PIXELS) } ?: return@withContext null
                 val dominant = MatteEngine.average(preview.argb()) ?: MatteSpec().dominant
                 val stem = resolver.canonDisplayName(uri)?.substringBeforeLast('.')?.ifEmpty { null } ?: "image"
                 MatteSource(decoded.image, preview.asImageBitmap(), decoded.width, decoded.height, stem) to dominant
@@ -360,7 +360,7 @@ private fun MattePicture(model: MatteGeneratorModel) {
                 if (!blurred || photo == null || box.width < 1 || box.height < 1) return@LaunchedEffect
                 val blur = MatteSpec.BLUR * box.width / spec.width
                 shownBackdrop = withContext(Dispatchers.Default) {
-                    backdrop(photo.asAndroidBitmap(), box.width, box.height, blur).asImageBitmap()
+                    backdrop(photo.asAndroidBitmap(), null, box.width, box.height, blur).asImageBitmap()
                 }
             }
 

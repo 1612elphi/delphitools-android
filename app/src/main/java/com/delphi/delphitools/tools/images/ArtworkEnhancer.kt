@@ -80,8 +80,6 @@ private const val DETAIL_SIDE = 64
 private const val DETAIL_FACTOR = 8
 private const val OPACITY_SETTLE_MS = 120L
 
-private fun Bitmap.argb(): IntArray = IntArray(width * height).also { getPixels(it, 0, width, 0, 0, width, height) }
-
 private fun bitmap(pixels: IntArray, width: Int, height: Int): Bitmap = Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888)
 
 private fun detail(pixels: IntArray, width: Int, height: Int): ImageBitmap {
@@ -123,8 +121,10 @@ class ArtworkEnhancerModel(application: Application) : AndroidViewModel(applicat
                 val decoded = runCatching { ImageFiles.decode(ImageDecoder.createSource(resolver, uri), ARTWORK_PIXELS) }.getOrNull()
                     ?: return@withContext null
                 val image = decoded.image
-                val argb = image.argb()
-                Triple(resolver.canonDisplayName(uri)?.substringBeforeLast('.'), image, argb to detail(argb, image.width, image.height))
+                ImageFiles.unlessOutOfMemory {
+                    val argb = image.argb()
+                    Triple(resolver.canonDisplayName(uri)?.substringBeforeLast('.'), image, argb to detail(argb, image.width, image.height))
+                }
             } ?: return@launch
             val (fileName, image, prepared) = loaded
             name = fileName?.ifEmpty { null } ?: "artwork"
@@ -175,9 +175,11 @@ class ArtworkEnhancerModel(application: Application) : AndroidViewModel(applicat
         processing = viewModelScope.launch {
             delay(delayMs)
             val (image, crop) = withContext(Dispatchers.Default) {
-                val out = ArtworkEnhanceEngine.enhance(pixels, width, alpha, scale, seed)
-                bitmap(out, width, height) to detail(out, width, height)
-            }
+                ImageFiles.unlessOutOfMemory {
+                    val out = ArtworkEnhanceEngine.enhance(pixels, width, alpha, scale, seed)
+                    bitmap(out, width, height) to detail(out, width, height)
+                }
+            } ?: return@launch
             resultBitmap = image
             result = image.asImageBitmap()
             resultDetail = crop

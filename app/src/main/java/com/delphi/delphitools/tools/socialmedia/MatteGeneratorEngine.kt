@@ -1,7 +1,8 @@
 package com.delphi.delphitools.tools.socialmedia
 
+import com.delphi.delphitools.colour.fromLinear
+import com.delphi.delphitools.colour.toLinear
 import kotlin.math.floor
-import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
@@ -61,9 +62,9 @@ data class MatteSpec(
 
 /** The backdrop blur and the dominant colour, on ARGB pixels. */
 object MatteEngine {
-    private val toLinear = DoubleArray(256) { (it / 255.0).let { v -> if (v <= 0.04045) v / 12.92 else ((v + 0.055) / 1.055).pow(2.4) } }
+    private val linearByte = DoubleArray(256) { toLinear(it / 255.0) }
 
-    private fun encode(v: Double) = (if (v <= 0.0031308) 12.92 * v else 1.055 * v.pow(1 / 2.4) - 0.055).coerceIn(0.0, 1.0)
+    private fun encode(v: Double) = fromLinear(v).coerceIn(0.0, 1.0)
 
     /** The mean colour, averaged in linear light as Core Image's area average does. */
     fun average(pixels: IntArray): MatteRgb? {
@@ -72,9 +73,9 @@ object MatteEngine {
         var g = 0.0
         var b = 0.0
         for (p in pixels) {
-            r += toLinear[p shr 16 and 0xFF]
-            g += toLinear[p shr 8 and 0xFF]
-            b += toLinear[p and 0xFF]
+            r += linearByte[p shr 16 and 0xFF]
+            g += linearByte[p shr 8 and 0xFF]
+            b += linearByte[p and 0xFF]
         }
         fun byte(sum: Double) = (encode(sum / pixels.size) * 255).roundToInt()
         return MatteRgb(byte(r), byte(g), byte(b))

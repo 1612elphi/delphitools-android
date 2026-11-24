@@ -85,15 +85,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
 private const val PREVIEW_PIXELS = 2400
 private val pictureHeight = 200.dp
-
-// the backdrop blurs at a size where sigma is this many px, then scales up
-private const val BLUR_SIGMA = 8.0
 
 private val filtered = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
 
@@ -102,18 +98,6 @@ private class ScrollSource(val image: Bitmap, val preview: Bitmap, val name: Str
 }
 
 internal class ScrollContent(val geometry: Geometry, val slides: List<ImageBitmap>)
-
-/** MatteSpec.backdrop over `area` of `image`: covering the box, blurred, at a reduced size the caller scales up. */
-private fun backdrop(image: Bitmap, area: android.graphics.Rect, boxWidth: Int, boxHeight: Int, blur: Double): Bitmap {
-    val scale = min(1.0, BLUR_SIGMA / max(blur, 1e-9))
-    val width = max(1, (boxWidth * scale).roundToInt())
-    val height = max(1, (boxHeight * scale).roundToInt())
-    val small = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    val cover = MatteSpec.cover(area.width().toDouble(), area.height().toDouble(), width.toDouble(), height.toDouble(), MatteSpec.OVERSCAN)
-    android.graphics.Canvas(small).drawBitmap(image, area, RectF(cover.x.toFloat(), cover.y.toFloat(), (cover.x + cover.width).toFloat(), (cover.y + cover.height).toFloat()), filtered)
-    val pixels = IntArray(width * height).also { small.getPixels(it, 0, width, 0, 0, width, height) }
-    return Bitmap.createBitmap(MatteEngine.blur(pixels, width, height, blur * scale), width, height, Bitmap.Config.ARGB_8888)
-}
 
 /** ScrollEngine.Renderer: slides from `image`, which may be a smaller copy; `fill` is a solid ARGB colour, or null to blur. */
 private class ScrollRenderer(private val image: Bitmap, geometry: Geometry, private val fill: Int?) {
@@ -191,7 +175,7 @@ class ScrollGeneratorModel(application: Application) : AndroidViewModel(applicat
                 val longest = ScrollGeneratorEngine.longestSide(bounds.outWidth, bounds.outHeight)
                 val decoded = runCatching { ImageFiles.decode(ImageDecoder.createSource(resolver, uri), longest) }.getOrNull()
                     ?: return@withContext null
-                val preview = ImageCompressEngine.preview(decoded.image, PREVIEW_PIXELS)
+                val preview = ImageFiles.unlessOutOfMemory { ImageCompressEngine.preview(decoded.image, PREVIEW_PIXELS) } ?: return@withContext null
                 ScrollSource(decoded.image, preview, resolver.canonDisplayName(uri) ?: "", decoded.width, decoded.height)
             }
             source = loaded

@@ -109,7 +109,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
 import java.io.ByteArrayInputStream
 import java.nio.ByteBuffer
 import java.util.Locale
@@ -184,7 +183,7 @@ private object AtlasFiles {
         val small = ImageCompressEngine.preview(image, ATLAS_SCAN_PIXELS)
         val scan = scan(small, atlas.hasAlpha)
         val tiny = ImageCompressEngine.preview(small, ATLAS_PALETTE_PIXELS)
-        val argb = IntArray(tiny.width * tiny.height).also { tiny.getPixels(it, 0, tiny.width, 0, 0, tiny.width, tiny.height) }
+        val argb = tiny.argb()
         val palette = PaletteExtractorEngine.cluster(PaletteExtractorEngine.oklabPixels(argb), 6)
             .sortedByDescending { it.count }
             .map { it.colour }
@@ -244,21 +243,6 @@ private object AtlasFiles {
     }
 }
 
-private fun parseAtlasLand(json: String): List<FloatArray> {
-    val rings = JSONArray(json)
-    return (0 until rings.length()).mapNotNull { r ->
-        val ring = rings.getJSONArray(r)
-        if (ring.length() <= 2) return@mapNotNull null
-        FloatArray(ring.length() * 2).also { points ->
-            for (i in 0 until ring.length()) {
-                val point = ring.getJSONArray(i)
-                points[i * 2] = (point.getDouble(0) + 180).toFloat()
-                points[i * 2 + 1] = (WorldMap.NORTH - point.getDouble(1)).toFloat()
-            }
-        }
-    }
-}
-
 /** dt-ios ImageAtlasViewController: everything an image file says about itself. */
 class ImageAtlasModel(application: Application) : AndroidViewModel(application) {
     private var reading by mutableStateOf<AtlasReading?>(null)
@@ -281,9 +265,7 @@ class ImageAtlasModel(application: Application) : AndroidViewModel(application) 
     init {
         val assets = getApplication<Application>().assets
         viewModelScope.launch {
-            land = withContext(Dispatchers.IO) {
-                runCatching { parseAtlasLand(assets.open("world-land.json").use { String(it.readBytes()) }) }.getOrDefault(emptyList())
-            }
+            land = withContext(Dispatchers.IO) { WorldMap.land(assets) }
         }
     }
 

@@ -95,7 +95,7 @@ class ImageCompressorModel(application: Application) : AndroidViewModel(applicat
                 val data = runCatching { resolver.openInputStream(uri)?.use { it.readBytes() } }.getOrNull()
                     ?: return@withContext null
                 val image = ImageCompressEngine.decode(data) ?: return@withContext null
-                Triple(image, ImageCompressEngine.preview(image, PREVIEW_PIXELS), data.size.toLong())
+                ImageFiles.unlessOutOfMemory { Triple(image, ImageCompressEngine.preview(image, PREVIEW_PIXELS), data.size.toLong()) }
             } ?: return@launch
             val (image, preview, bytes) = loaded
             source = image

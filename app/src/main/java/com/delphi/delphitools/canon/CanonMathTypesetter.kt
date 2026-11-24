@@ -100,6 +100,7 @@ private val inverses = setOf("asin", "acos", "atan", "asec", "acsc", "acot", "as
 internal fun mathIsItalic(shown: String) = shown !in setOf("π", "∞", "∅") && shown.all { it.isLetter() }
 
 private val spaced = setOf("+", "−", "×")
+private val relations = setOf("=", "≈", "∈")
 
 // ponytail: sets edited rows only; a CanonMath.Node tree (the algebra-calc result banner) goes through its rows instead
 /** Sets rows in the system serif at [size] dp. Levels follow TeX: 0 display, 1 text (a fraction's parts, same size), 2 script, 3 script-script. */
@@ -414,7 +415,7 @@ internal class MathTypesetter(val size: Float, val ink: MathInk = MathInk.Result
         if (previous == null) return 0f
         val operatorGap = if (level >= 2) s * 0.12f else s * 0.22f
         fun symbol(item: CanonMathItem?) = (item as? CanonMathItem.Symbol)?.symbol
-        if (symbol(previous) == "=" || symbol(item) == "=") return if (level >= 2) s * 0.14f else s * 0.28f
+        if (symbol(previous) in relations || symbol(item) in relations) return if (level >= 2) s * 0.14f else s * 0.28f
         if (symbol(item) in spaced) return operatorGap
         if (symbol(previous) in spaced) {
             // sign after sign: unary

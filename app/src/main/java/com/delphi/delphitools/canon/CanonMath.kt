@@ -215,6 +215,12 @@ internal class MathMorph {
         progress.animateTo(1f, tween(SETTLE_MILLIS, easing = LinearEasing))
     }
 
+    /** Re-keys what is shown, so the next [show] matches atoms under their new keys. */
+    fun rename(transform: (String) -> String) {
+        val s = state
+        state = State(s.order.map(transform), s.from.mapKeys { transform(it.key) }, s.target.mapKeys { transform(it.key) })
+    }
+
     /** Placed atoms in drawing order at the current progress: leaving atoms first, then the target's. */
     fun shown(): Map<String, MathPlaced> {
         val s = state

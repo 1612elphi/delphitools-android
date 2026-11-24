@@ -119,7 +119,6 @@ import kotlinx.coroutines.withContext
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.max
-import kotlin.math.min
 
 private val grey = Rgb(0.5, 0.5, 0.5)
 private const val PALETTE_INTERVAL_MS = 350L

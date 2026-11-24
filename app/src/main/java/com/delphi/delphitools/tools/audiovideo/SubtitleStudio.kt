@@ -184,8 +184,6 @@ class SubtitleStudioModel(application: Application) : AndroidViewModel(applicati
     override fun onCleared() = clear()
 }
 
-private fun Rgb.toColour() = Color(r.toFloat(), g.toFloat(), b.toFloat())
-
 @Composable
 fun SubtitleStudio(model: SubtitleStudioModel = viewModel()) {
     val source = model.source

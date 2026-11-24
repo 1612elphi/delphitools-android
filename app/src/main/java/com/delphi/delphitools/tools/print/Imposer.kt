@@ -173,7 +173,8 @@ class ImposerModel(application: Application) : AndroidViewModel(application) {
 
     fun export() {
         val source = pdf.source ?: return
-        val (result, config) = result to config
+        val result = result
+        val config = config
         val paperId = (paper as? PaperChoice.Paper)?.pick?.size?.id ?: "custom"
         job.start("imposed-${layout.id}-$paperId.pdf") { output, progress ->
             val context = coroutineContext

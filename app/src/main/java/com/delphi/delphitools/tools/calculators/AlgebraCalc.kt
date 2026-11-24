@@ -80,7 +80,6 @@ import com.delphi.delphitools.canon.math.CanonMathNode
 import com.delphi.delphitools.canon.math.CanonMathRow
 import com.delphi.delphitools.canon.mathInk
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
-import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiMono
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.Deferred

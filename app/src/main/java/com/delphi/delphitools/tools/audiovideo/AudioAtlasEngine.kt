@@ -9,11 +9,9 @@ import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
-import kotlin.math.tan
 
 /**
  * dt-ios AVInfoAudioDSP.scan and spectrogram, fed in chunks: interleaved float frames with their frame index from the file start.

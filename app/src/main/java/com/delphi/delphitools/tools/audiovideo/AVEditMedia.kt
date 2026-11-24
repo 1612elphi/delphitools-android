@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.max
@@ -278,6 +279,33 @@ object AVEditMedia {
             runCatching { codec?.release() }
             extractor.release()
         }
+    }
+
+    /** The first audio track as 16-bit PCM WAV; fails past the 4 GB RIFF limit. */
+    suspend fun wav(context: Context, uri: Uri, output: File, duration: Double, progress: AVEditProgress) {
+        RandomAccessFile(output, "rw").use { file ->
+            file.write(ByteArray(44))
+            var bytes = 0L
+            var format = 0 to 0
+            var reported = 0.0
+            val durationUs = AVEditEngine.micros(duration)
+            decode(context, uri) { pcm, rate, channels, ptsUs ->
+                format = rate to channels
+                val data = ByteBuffer.allocate(pcm.size * 2).order(ByteOrder.LITTLE_ENDIAN)
+                data.asShortBuffer().put(pcm)
+                file.write(data.array())
+                bytes += data.capacity()
+                check(AVEditEngine.fitsWav(bytes / (2 * channels), channels))
+                val fraction = AVEditEngine.fraction(ptsUs, 0, durationUs)
+                if (fraction - reported >= 0.01) {
+                    reported = fraction
+                    progress(fraction)
+                }
+            }
+            file.seek(0)
+            file.write(AVEditEngine.wavHeader(format.first, format.second, bytes))
+        }
+        progress(1.0)
     }
 
     suspend fun peaks(context: Context, uri: Uri, duration: Double, buckets: Int): AVEditPeaks? = runCatching {

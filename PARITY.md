@@ -111,20 +111,20 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 
 | id | tool | iOS controller | iOS lines | status |
 |---|---|---|---:|---|
-| `code-genny` | Barcode Generator | `BarcodeGeneratorViewController` | 515 | todo |
+| `code-genny` | Barcode Generator | `BarcodeGeneratorViewController` | 515 | review |
 | `base-converter` | Base Converter | `BaseConverterViewController` | 644 | review |
 | `decoder` | Cipher Decoder | `CipherDecoderViewController` | 698 | review |
 | `cron-builder` | Cron Builder | `CronBuilderViewController` | 862 | review |
 | `encoder` | Encoding Tools | `EncoderViewController` | 435 | done |
 | `http-status` | HTTP Status | `HTTPStatusViewController` | 520 | review |
-| `json-formatter` | JSON Formatter | `JSONFormatterViewController` | 1000 | todo |
+| `json-formatter` | JSON Formatter | `JSONFormatterViewController` | 1000 | review |
 | `jwt-decoder` | JWT Decoder | `JWTDecoderViewController` | 402 | done |
 | `meta-tag-genny` | Meta Tag Generator | `MetaTagGeneratorViewController` | 706 | review |
 | `password-genny` | Password Generator | `PasswordGeneratorViewController` | 652 | review |
-| `qr-genny` | QR Generator | `QRGeneratorViewController` | 996 | todo |
+| `qr-genny` | QR Generator | `QRGeneratorViewController` | 996 | review |
 | `regex-tester` | Regex Tester | `RegexTesterViewController` | 517 | review |
 | `request-builder` | Request Builder | `RequestBuilderViewController` | 626 | todo |
-| `tailwind-cheatsheet` | Tailwind Cheat Sheet | `TailwindCheatsheetViewController` | 723 | todo |
+| `tailwind-cheatsheet` | Tailwind Cheat Sheet | `TailwindCheatsheetViewController` | 723 | review |
 | `text-diff` | Text Diff | `TextDiffViewController` | 607 | review |
 | `markdown-writer` | Text Scratchpad | `TextScratchpadViewController` | 549 | todo |
 | `uuid-genny` | UUID Generator | `UUIDGeneratorViewController` | 475 | done |

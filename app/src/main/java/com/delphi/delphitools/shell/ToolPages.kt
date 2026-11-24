@@ -22,15 +22,19 @@ import com.delphi.delphitools.tools.colour.PaletteExtractor
 import com.delphi.delphitools.tools.colour.PaletteGenerator
 import com.delphi.delphitools.tools.colour.PixelPicker
 import com.delphi.delphitools.tools.colour.TailwindShades
+import com.delphi.delphitools.tools.devtools.BarcodeGenerator
 import com.delphi.delphitools.tools.devtools.BaseConverter
 import com.delphi.delphitools.tools.devtools.CipherDecoder
 import com.delphi.delphitools.tools.devtools.CronBuilder
 import com.delphi.delphitools.tools.devtools.Encoder
 import com.delphi.delphitools.tools.devtools.HttpStatus
+import com.delphi.delphitools.tools.devtools.JsonFormatter
 import com.delphi.delphitools.tools.devtools.JwtDecoder
 import com.delphi.delphitools.tools.devtools.MetaTagGenerator
 import com.delphi.delphitools.tools.devtools.PasswordGenerator
+import com.delphi.delphitools.tools.devtools.QrGenerator
 import com.delphi.delphitools.tools.devtools.RegexTester
+import com.delphi.delphitools.tools.devtools.TailwindCheatsheet
 import com.delphi.delphitools.tools.devtools.TextDiff
 import com.delphi.delphitools.tools.devtools.UuidGenerator
 import com.delphi.delphitools.tools.images.Base64ImageEncoder
@@ -126,4 +130,8 @@ internal val toolPages: Map<String, @Composable () -> Unit> = mapOf(
     "unit-converter" to { UnitConverter() },
     "time-calc" to { TimeCalc() },
     "sci-calc" to { SciCalc() },
+    "json-formatter" to { JsonFormatter() },
+    "tailwind-cheatsheet" to { TailwindCheatsheet() },
+    "code-genny" to { BarcodeGenerator() },
+    "qr-genny" to { QrGenerator() },
 )

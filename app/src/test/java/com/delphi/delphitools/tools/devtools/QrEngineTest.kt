@@ -41,6 +41,7 @@ class QrEngineTest {
         assertEquals("", payload(QrContentType.Wifi, "Home"))
         assertEquals("WIFI:T:WPA;S:My\\;Net;P:p\\\"w;;", payload(QrContentType.Wifi, "My;Net", "p\"w"))
         assertEquals("WIFI:T:nopass;S:Cafe;;", payload(QrContentType.Wifi, "Cafe", encryption = "None"))
+        assertEquals("sms:123?body=a%26b%20%23c%3F", QrEngine.payload(QrContentType.Sms, "123", "", "WPA", false, "a&b #c?", event))
         assertEquals(listOf("Content: hi"), QrEngine.infoLines(QrContentType.Text, "hi", "", "WPA", false, event))
     }
 

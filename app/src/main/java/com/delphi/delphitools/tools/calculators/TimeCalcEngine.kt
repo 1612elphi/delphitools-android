@@ -48,7 +48,7 @@ object TimeCalcZones {
         if (seconds == 0) return "0"
         val hours = abs(seconds) / 3600
         val minutes = abs(seconds) % 3600 / 60
-        return (if (seconds < 0) "−" else "+") + if (minutes == 0) "$hours" else "%d:%02d".format(hours, minutes)
+        return (if (seconds < 0) "−" else "+") + if (minutes == 0) "$hours" else "%d:%02d".format(Locale.ROOT, hours, minutes)
     }
 
     /** The zone's name in the user's language and its offset. */
@@ -213,8 +213,8 @@ object TimeCalcMath {
 
     /** [millis] read as a wall-clock time in [zone]: the instant whose [zone] wall clock reads what the device clock reads at [millis]. */
     fun instant(millis: Long, zone: String, local: String = TimeZone.getDefault().id): Long {
-        val source = TimeCalcZones.secondsFromGmt(zone, millis)
-        val here = TimeCalcZones.secondsFromGmt(local, millis)
-        return millis + (here - source) * 1000L
+        val wall = Instant.ofEpochMilli(millis).atZone(ZoneId.of(local)).toLocalDateTime()
+        // atZone moves a time in a gap forward by the gap and takes the earlier offset in an overlap
+        return wall.atZone(ZoneId.of(zone)).toInstant().toEpochMilli()
     }
 }

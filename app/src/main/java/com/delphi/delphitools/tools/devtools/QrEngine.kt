@@ -225,7 +225,7 @@ object QrEngine {
                 if (wifiHidden) wifi += ";H:true"
                 "$wifi;;"
             }
-            QrContentType.Sms -> if (smsBody.isEmpty()) "sms:$trimmed" else "sms:$trimmed?body=$smsBody"
+            QrContentType.Sms -> if (smsBody.isEmpty()) "sms:$trimmed" else "sms:$trimmed?body=${EncoderEngine.urlEncode(smsBody)}"
             QrContentType.Event -> event.vevent(trimmed, zone)
         }
     }

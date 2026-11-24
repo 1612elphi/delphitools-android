@@ -11,9 +11,9 @@ import kotlin.math.min
 
 /** dt-ios EAN13: the 95 modules of an EAN-13 code. */
 object Ean13 {
-    private val lPatterns = listOf("0001101", "0011001", "0010011", "0111101", "0100011", "0110001", "0101111", "0111011", "0110111", "0001011")
-    private val gPatterns = listOf("0100111", "0110011", "0011011", "0100001", "0011101", "0000101", "0010001", "0000101", "0001001", "0010111")
-    private val rPatterns = listOf("1110010", "1100110", "1101100", "1000010", "1011100", "1001110", "1010000", "1000100", "1001000", "1110100")
+    internal val rPatterns = listOf("1110010", "1100110", "1101100", "1000010", "1011100", "1001110", "1010000", "1000100", "1001000", "1110100")
+    internal val lPatterns = rPatterns.map { r -> r.map { if (it == '1') '0' else '1' }.joinToString("") }
+    internal val gPatterns = rPatterns.map { it.reversed() }
     private val parity = listOf("LLLLLL", "LLGLGG", "LLGGLG", "LLGGGL", "LGLLGG", "LGGLLG", "LGGGLL", "LGLGLG", "LGLGGL", "LGGLGL")
 
     /** Check digit for the first 12 digits, weights 1 and 3. */

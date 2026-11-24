@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -37,7 +36,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.input.OutputTransformation
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
@@ -59,8 +59,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
@@ -95,10 +97,6 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.TransformedText
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -143,11 +141,7 @@ import com.delphi.delphitools.canon.rememberCanonTextFilePicker
 import com.delphi.delphitools.colour.rgbOf
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
-import com.delphi.delphitools.tools.typography.TextDoc.Block
-import com.delphi.delphitools.tools.typography.TextDoc.Inline
 import com.delphi.delphitools.tools.typography.TextDoc.Style
-import com.delphi.delphitools.tools.typography.TextDoc.mark
-import com.delphi.delphitools.tools.typography.TextDoc.words
 import com.delphi.delphitools.tools.typography.TextEditorEngine.Look
 import com.delphi.delphitools.tools.typography.TextEditorEngine.Span
 import com.delphi.delphitools.ui.theme.CanonText
@@ -157,6 +151,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
@@ -196,16 +191,21 @@ private fun com.delphi.delphitools.colour.Rgb.doc() = clamped.let { TextDoc.Rgb(
 
 /** dt-ios TextEditorViewModel and the controller's settings. */
 class TextEditorModel(application: Application) : AndroidViewModel(application) {
-    var value by mutableStateOf(TextFieldValue(""))
-        private set
-    val text get() = value.text
+    val state = TextFieldState()
+    val text get() = state.text.toString()
 
-    /** Blocks of the text; a long text parses after typing settles. */
+    /** Blocks and Markdown marks of [parsedText]; a long text parses after typing settles. */
     var spans by mutableStateOf(emptyList<Span>())
         private set
+    var marks by mutableStateOf(emptyList<TextEditorEngine.Mark>())
+        private set
+    var parsedText by mutableStateOf("")
+        private set
 
-    /** The text the counts and the preview show; typing settles first. */
+    /** The text the counts and the preview show, and its blocks; typing settles first. */
     var settled by mutableStateOf("")
+        private set
+    var settledSpans by mutableStateOf(emptyList<Span>())
         private set
     var editorFont by mutableIntStateOf(0)
     var focus by mutableIntStateOf(0)
@@ -216,51 +216,52 @@ class TextEditorModel(application: Application) : AndroidViewModel(application) 
     var fullScreen by mutableStateOf(false)
 
     private var saving: Job? = null
-    private var parsing: Job? = null
     private var settling: Job? = null
     private var loaded = false
     private val draft get() = File(getApplication<Application>().filesDir, DRAFT_FILE)
 
     init {
+        viewModelScope.launch { snapshotFlow { state.text.toString() }.drop(1).collect(::changed) }
         viewModelScope.launch {
             val saved = withContext(Dispatchers.IO) { runCatching { draft.takeIf { it.exists() }?.readText() }.getOrNull() }.orEmpty()
             loaded = true
-            if (value.text.isEmpty()) {
-                value = TextFieldValue(saved)
-                spans = TextEditorEngine.spans(saved)
-                settled = saved
+            if (state.text.isEmpty()) {
+                state.edit {
+                    replace(0, length, saved)
+                    selection = TextRange.Zero
+                }
             }
         }
-    }
-
-    fun edit(next: TextFieldValue) {
-        val changed = next.text != value.text
-        value = next
-        if (changed) changed()
     }
 
     /** A whole replace; the caret goes to the end of what changed. */
     fun replace(new: String) {
-        if (new == text) return
-        value = TextFieldValue(new, TextRange(TextEditorEngine.changeEnd(text, new)))
-        changed()
+        val old = text
+        if (new == old) return
+        state.edit {
+            replace(0, length, new)
+            selection = TextRange(TextEditorEngine.changeEnd(old, new))
+        }
     }
 
-    private fun changed() {
-        val now = text
-        parsing?.cancel()
-        if (now.length <= TextEditorEngine.LIVE_LIMIT) {
-            spans = TextEditorEngine.spans(now)
-        } else {
-            parsing = viewModelScope.launch {
-                delay(TYPING_DELAY_MS)
-                spans = withContext(Dispatchers.Default) { TextEditorEngine.spans(now) }
-            }
-        }
+    private fun parsed(now: String, blocks: List<Span>, found: List<TextEditorEngine.Mark>) {
+        spans = blocks
+        marks = found
+        parsedText = now
+    }
+
+    private fun changed(now: String) {
+        // the field highlights a short text itself
+        if (now.length <= TextEditorEngine.LIVE_LIMIT) parsed(now, TextEditorEngine.spans(now), emptyList())
         settling?.cancel()
         settling = viewModelScope.launch {
             delay(TYPING_DELAY_MS)
+            if (parsedText != now) {
+                val (blocks, found) = withContext(Dispatchers.Default) { TextEditorEngine.spans(now) to TextEditorEngine.highlight(now) }
+                parsed(now, blocks, found)
+            }
             settled = now
+            settledSpans = spans
         }
         saving?.cancel()
         saving = viewModelScope.launch {
@@ -333,9 +334,9 @@ fun TextEditor(model: TextEditorModel = viewModel()) {
                                         runCatching {
                                             when (ext) {
                                                 "md" -> text.toByteArray()
-                                                "html" -> TextDoc.html(TextDoc.parseMarkdown(text), standalone = true, style = style).toByteArray()
-                                                "rtf" -> TextDoc.rtf(TextDoc.parseMarkdown(text), style).toByteArray(Charsets.US_ASCII)
-                                                else -> pdf(TextDoc.parseMarkdown(text), style)
+                                                "html" -> TextDoc.html(DocConvertEngine.parseMarkdown(text), standalone = true, style = style).toByteArray()
+                                                "rtf" -> TextDoc.rtf(DocConvertEngine.parseMarkdown(text), style).toByteArray(Charsets.US_ASCII)
+                                                else -> pdf(DocConvertEngine.parseMarkdown(text), style)
                                             }
                                         }.getOrNull()
                                     } ?: return@launch
@@ -360,7 +361,7 @@ fun TextEditor(model: TextEditorModel = viewModel()) {
         }
     }
 
-    val settledSpans = remember(model.settled) { TextEditorEngine.spans(model.settled) }
+    val settledSpans = model.settledSpans
     val preview = CanonSection.of {
         CanonRows {
             CanonHeading("Preview")
@@ -455,14 +456,17 @@ private fun StylePicker(selected: Int?, onSelect: (Int) -> Unit) {
     }
 }
 
-/** TextEditorHighlighter as a visual transformation: Markdown syntax styled in place, offsets unchanged. */
-private class Highlight(private val styled: AnnotatedString) : VisualTransformation {
-    override fun filter(text: AnnotatedString) = TransformedText(if (styled.text == text.text) styled else text, OffsetMapping.Identity)
-}
-
-private fun highlighted(text: String, base: Float, family: FontFamily, muted: Color, primary: Color, codeBackground: Color) = buildAnnotatedString {
-    append(text)
-    for (mark in TextEditorEngine.highlight(text)) {
+/**
+ * TextEditorHighlighter as an output transformation: Markdown syntax styled in place, offsets unchanged.
+ * A short text is highlighted as it is typed; a long one takes [marks], which apply only to [parsed].
+ */
+private fun highlight(parsed: String, marks: List<TextEditorEngine.Mark>, base: Float, family: FontFamily, muted: Color, primary: Color, codeBackground: Color) = OutputTransformation {
+    val shown = when {
+        length <= TextEditorEngine.LIVE_LIMIT -> TextEditorEngine.highlight(asCharSequence().toString())
+        asCharSequence().contentEquals(parsed) -> marks
+        else -> return@OutputTransformation
+    }
+    for (mark in shown) {
         val style = when {
             mark.level > 0 -> SpanStyle(fontSize = (base * TextEditorEngine.editorHeadingScale[min(mark.level, 6) - 1]).sp, fontWeight = FontWeight.Bold)
             mark.look == Look.Muted -> SpanStyle(color = muted)
@@ -497,7 +501,8 @@ private fun Manuscript(
     val scroll = rememberScrollState()
     var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
     var focused by remember { mutableStateOf(false) }
-    val value = model.value
+    val text = model.state.text.toString()
+    val selection = model.state.selection
     val spans = model.spans
     val family = families[model.editorFont]
     val gutter = model.gutter
@@ -505,16 +510,16 @@ private fun Manuscript(
 
     BoxWithConstraints(modifier.background(c.card).padding(top = top)) {
         val viewport = constraints.maxHeight
-        val viewportHeight = maxHeight
         val number = remember { NumberFormat.getIntegerInstance() }
         val base = if (gutter) ruleX + gutterText else CanonMetrics.panelPadding
         val shift = maxMeasure?.let { max(0f, ((maxWidth - base - CanonMetrics.panelPadding - it) / 2).value).roundToInt().dp } ?: 0.dp
         val leading = base + shift
-        val half = if (model.typewriter) maxOf(0.dp, maxHeight / 2 - with(density) { baseSize.sp.toDp() }) else 0.dp
-        val topPad = 16.dp + half
+        val topPad = 16.dp
 
-        val styled = remember(value.text, family, c, baseSize) { highlighted(value.text, baseSize, family, c.mutedForeground, c.primary, c.muted) }
-        val caret = value.selection.start
+        val styled = remember(model.parsedText, model.marks, family, c, baseSize) {
+            highlight(model.parsedText, model.marks, baseSize, family, c.mutedForeground, c.primary, c.muted)
+        }
+        val caret = selection.start
         val active = if (!focused) null else TextEditorEngine.block(caret, spans)?.takeIf { spans[it].end >= caret }
         val anchor by remember(spans, active) {
             derivedStateOf {
@@ -526,10 +531,10 @@ private fun Manuscript(
             }
         }
         LaunchedEffect(anchor) { anchorTo(anchor) }
-        LaunchedEffect(value.selection, layout, model.typewriter, focused, viewport) {
+        LaunchedEffect(selection, layout, model.typewriter, focused, viewport) {
             val result = layout ?: return@LaunchedEffect
             if (!model.typewriter || !focused) return@LaunchedEffect
-            val rect = result.getCursorRect(value.selection.end.coerceIn(0, result.layoutInput.text.length))
+            val rect = result.getCursorRect(selection.end.coerceIn(0, result.layoutInput.text.length))
             val target = (with(density) { topPad.toPx() } + rect.center.y - viewport / 2f).roundToInt()
             scroll.animateScrollTo(target.coerceIn(0, scroll.maxValue))
         }
@@ -537,85 +542,80 @@ private fun Manuscript(
         val markStyle = CanonText.captionSemibold
         val countStyle = TextStyle(fontFamily = DelphiMono, fontSize = 10.sp)
         val focusMode = model.focus
-        Column(
+        // a scrolled parent measures the field at full height, past the 262,143 px constraint limit
+        BasicTextField(
+            model.state,
             Modifier
                 .fillMaxSize()
+                .clipToBounds()
                 .drawBehind {
                     if (gutter) drawRect(c.border, Offset((shift + ruleX).toPx(), 0f), Size(CanonMetrics.hairline.toPx(), size.height))
                 }
-                .verticalScroll(scroll),
-        ) {
-            BasicTextField(
-                value,
-                model::edit,
-                Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = viewportHeight)
-                    .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
-                    .onFocusChanged { focused = it.isFocused }
-                    .semantics { contentDescription = "Text" }
-                    .drawWithContent {
-                        drawContent()
-                        val result = layout ?: return@drawWithContent
-                        val origin = Offset(leading.toPx(), topPad.toPx())
-                        if (focusMode != 0 && focused) {
-                            val length = value.text.length
-                            val block = active?.let { spans.getOrNull(it) }
-                            val lit = if (block != null) block.start..min(block.end, length) else paragraph(value.text, min(caret, length))
-                            val range = if (focusMode == 1) TextEditorEngine.sentence(caret, value.text, lit.first, lit.last)?.let { it.first..(it.last + 1) } ?: lit else lit
-                            val veil = Path().apply {
-                                fillType = PathFillType.EvenOdd
-                                addRect(Rect(origin.x - 4.dp.toPx(), 0f, size.width, size.height))
-                                if (range.last > range.first) addPath(result.getPathForRange(range.first, range.last), origin)
-                            }
-                            drawPath(veil, c.card.copy(alpha = 1 - DIMMED))
+                .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+                .onFocusChanged { focused = it.isFocused }
+                .semantics { contentDescription = "Text" }
+                .drawWithContent {
+                    drawContent()
+                    val result = layout ?: return@drawWithContent
+                    val origin = Offset(leading.toPx(), topPad.toPx() - scroll.value)
+                    if (focusMode != 0 && focused) {
+                        val length = text.length
+                        val block = active?.let { spans.getOrNull(it) }
+                        val lit = if (block != null) block.start..min(block.end, length) else paragraph(text, min(caret, length))
+                        val range = if (focusMode == 1) TextEditorEngine.sentence(caret, text, lit.first, lit.last)?.let { it.first..(it.last + 1) } ?: lit else lit
+                        val veil = Path().apply {
+                            fillType = PathFillType.EvenOdd
+                            addRect(Rect(origin.x - 4.dp.toPx(), 0f, size.width, size.height))
+                            if (range.last > range.first) addPath(result.getPathForRange(range.first, range.last), origin)
                         }
-                        if (gutter && spans.isNotEmpty()) {
-                            val from = scroll.value - viewport
-                            val to = scroll.value + viewport * 2
-                            val width = (gutterLead + gutterLabels).roundToPx()
-                            for ((index, span) in spans.withIndex()) {
-                                if (span.start > result.layoutInput.text.length) break
-                                val line = result.getLineForOffset(span.start)
-                                val middle = origin.y + (result.getLineTop(line) + result.getLineBottom(line)) / 2
-                                if (middle < from) continue
-                                if (middle > to) break
-                                val lit = index == active
-                                val ink = if (lit) c.primary else c.mutedForeground
-                                val label = buildAnnotatedString {
-                                    withStyle(markStyle.toSpanStyle().copy(color = ink)) { append(span.block.mark) }
-                                    val words = span.block.words
-                                    if (words > 0) {
-                                        withStyle(countStyle.toSpanStyle().copy(color = ink.copy(alpha = if (lit) 0.8f else 0.7f))) {
-                                            append("\n" + number.format(words))
-                                        }
+                        drawPath(veil, c.card.copy(alpha = 1 - DIMMED))
+                    }
+                    if (gutter && spans.isNotEmpty()) {
+                        val from = -viewport
+                        val to = viewport * 2
+                        val width = (gutterLead + gutterLabels).roundToPx()
+                        for ((index, span) in spans.withIndex()) {
+                            if (span.start > result.layoutInput.text.length) break
+                            val line = result.getLineForOffset(span.start)
+                            val middle = origin.y + (result.getLineTop(line) + result.getLineBottom(line)) / 2
+                            if (middle < from) continue
+                            if (middle > to) break
+                            val lit = index == active
+                            val ink = if (lit) c.primary else c.mutedForeground
+                            val label = buildAnnotatedString {
+                                withStyle(markStyle.toSpanStyle().copy(color = ink)) { append(span.block.mark) }
+                                val words = TextEditorEngine.words(span.block.text)
+                                if (words > 0) {
+                                    withStyle(countStyle.toSpanStyle().copy(color = ink.copy(alpha = if (lit) 0.8f else 0.7f))) {
+                                        append("\n" + number.format(words))
                                     }
                                 }
-                                val measured = measurer.measure(label, TextStyle(textAlign = TextAlign.End, lineHeight = 13.sp), constraints = Constraints.fixedWidth(width))
-                                val markHeight = measurer.measure(span.block.mark, markStyle).size.height
-                                translate(shift.toPx(), (middle - markHeight / 2f).roundToInt().toFloat()) { drawText(measured) }
                             }
+                            val measured = measurer.measure(label, TextStyle(textAlign = TextAlign.End, lineHeight = 13.sp), constraints = Constraints.fixedWidth(width))
+                            val markHeight = measurer.measure(span.block.mark, markStyle).size.height
+                            translate(shift.toPx(), (middle - markHeight / 2f).roundToInt().toFloat()) { drawText(measured) }
                         }
-                    },
-                textStyle = TextStyle(fontFamily = family, fontSize = baseSize.sp, color = c.foreground),
-                cursorBrush = SolidColor(c.primary),
-                visualTransformation = Highlight(styled),
-                keyboardOptions = KeyboardOptions(autoCorrectEnabled = true),
-                onTextLayout = { layout = it },
-                decorationBox = { inner ->
-                    Box(Modifier.padding(start = leading, top = topPad, end = CanonMetrics.panelPadding + shift, bottom = 32.dp + half)) {
-                        if (value.text.isEmpty()) {
-                            Text(
-                                "The Karman Institute for Planetary Observation has confirmed that Earth is no longer able to sustain organic life. After decades of atmospheric collapse, sensor data from the Donna Shirley Space Telescope indicates that oxygen and nitrogen concentrations in the atmosphere have reached irreversible levels of depletion. Carbon dioxide levels, combined with solar radiation and the absence of a protective ozone layer, have rendered the surface barren. The final viable microbial traces recorded last year by automated spectroscopic satellites have now vanished.",
-                                style = TextStyle(fontFamily = family, fontSize = baseSize.sp),
-                                color = c.mutedForeground,
-                            )
-                        }
-                        inner()
                     }
                 },
-            )
-        }
+            textStyle = TextStyle(fontFamily = family, fontSize = baseSize.sp, color = c.foreground),
+            cursorBrush = SolidColor(c.primary),
+            outputTransformation = styled,
+            keyboardOptions = KeyboardOptions(autoCorrectEnabled = true),
+            onTextLayout = { result -> layout = result() },
+            scrollState = scroll,
+            decorator = { inner ->
+                Box(Modifier.padding(start = leading, top = topPad, end = CanonMetrics.panelPadding + shift, bottom = 32.dp)) {
+                    if (text.isEmpty()) {
+                        Text(
+                            "The Karman Institute for Planetary Observation has confirmed that Earth is no longer able to sustain organic life. After decades of atmospheric collapse, sensor data from the Donna Shirley Space Telescope indicates that oxygen and nitrogen concentrations in the atmosphere have reached irreversible levels of depletion. Carbon dioxide levels, combined with solar radiation and the absence of a protective ozone layer, have rendered the surface barren. The final viable microbial traces recorded last year by automated spectroscopic satellites have now vanished.",
+                            style = TextStyle(fontFamily = family, fontSize = baseSize.sp),
+                            color = c.mutedForeground,
+                        )
+                    }
+                    inner()
+                }
+            },
+        )
     }
 }
 
@@ -628,7 +628,7 @@ private fun paragraph(text: String, caret: Int): IntRange {
 
 /** ManuscriptPreview: the blocks set in the preview style, scrolled to the block being written. */
 @Composable
-private fun ManuscriptPreview(blocks: List<Block>, style: Style, anchor: Int?) {
+private fun ManuscriptPreview(blocks: List<DocBlock>, style: Style, anchor: Int?) {
     val list = rememberLazyListState()
     val screen = LocalConfiguration.current.screenHeightDp
     val height = min(640, max(280, (screen * 0.55f).roundToInt())).dp
@@ -649,10 +649,10 @@ private fun ManuscriptPreview(blocks: List<Block>, style: Style, anchor: Int?) {
 }
 
 @Composable
-private fun PreviewBlock(block: Block, style: Style, body: Float) {
+private fun PreviewBlock(block: DocBlock, style: Style, body: Float) {
     val ink = style.text.colour
     val family = style.fontFamily()
-    fun runs(runs: List<Inline>, size: Float, bold: Boolean, italic: Boolean) = buildAnnotatedString {
+    fun runs(runs: List<DocInline>, size: Float, bold: Boolean, italic: Boolean) = buildAnnotatedString {
         for (run in runs) {
             val span = if (run.code) SpanStyle(fontFamily = FontFamily.Monospace, fontSize = (size * 0.9f).sp)
             else SpanStyle(
@@ -664,33 +664,33 @@ private fun PreviewBlock(block: Block, style: Style, body: Float) {
     }
     fun text(size: Float) = TextStyle(fontFamily = family, fontSize = size.sp, color = ink, lineHeight = (size * 1.2f * style.lineHeight.toFloat()).sp)
     when (block) {
-        is Block.Heading -> {
+        is DocBlock.Heading -> {
             val size = body * TextDoc.headingSizes[block.level.coerceIn(1, 6) - 1].toFloat()
             Text(runs(block.runs, size, bold = true, italic = false), Modifier.padding(top = body.dp, bottom = (body * 0.8f).dp), style = text(size))
         }
-        is Block.Paragraph -> Text(runs(block.runs, body, bold = false, italic = false), Modifier.padding(bottom = (body * 0.8f).dp), style = text(body))
-        is Block.Quote -> Text(runs(block.runs, body, bold = false, italic = true), Modifier.padding(start = (body * 2).dp, bottom = (body * 0.8f).dp), style = text(body))
-        is Block.Bullets -> {
+        is DocBlock.Paragraph -> Text(runs(block.runs, body, bold = false, italic = false), Modifier.padding(bottom = (body * 0.8f).dp), style = text(body))
+        is DocBlock.Quote -> Text(runs(block.runs, body, bold = false, italic = true), Modifier.padding(start = (body * 2).dp, bottom = (body * 0.8f).dp), style = text(body))
+        is DocBlock.Bullets -> {
             val joined = buildAnnotatedString {
                 block.items.forEachIndexed { offset, item ->
                     withStyle(ParagraphStyle(textIndent = TextIndent(body.sp, (body * 2).sp))) {
-                        append(runs(listOf(Inline(if (block.ordered) "${offset + 1}. " else "•  ")) + item, body, bold = false, italic = false))
+                        append(runs(listOf(DocInline(if (block.ordered) "${offset + 1}. " else "•  ")) + item, body, bold = false, italic = false))
                     }
                 }
             }
             Text(joined, Modifier.padding(bottom = (body * 0.8f).dp), style = text(body))
         }
-        is Block.Code -> Text(
+        is DocBlock.Code -> Text(
             block.body,
             Modifier.padding(start = body.dp, bottom = (body * 0.8f).dp),
             style = text(body).copy(fontFamily = FontFamily.Monospace, fontSize = (body * 0.9f).sp),
         )
-        Block.Rule -> Text("─".repeat(5), Modifier.padding(bottom = (body * 0.8f).dp), style = text(body).copy(color = ink.copy(alpha = 0.5f)))
+        DocBlock.Rule -> Text("─".repeat(5), Modifier.padding(bottom = (body * 0.8f).dp), style = text(body).copy(color = ink.copy(alpha = 0.5f)))
     }
 }
 
 /** DocConvert.pdfData: A4 with 48 pt margins, an 11 pt body, paginated by line. */
-private fun pdf(blocks: List<Block>, style: Style, body: Float = 11f): ByteArray {
+private fun pdf(blocks: List<DocBlock>, style: Style, body: Float = 11f): ByteArray {
     val pageWidth = 595
     val pageHeight = 842
     val margin = 48f
@@ -712,7 +712,7 @@ private fun pdf(blocks: List<Block>, style: Style, body: Float = 11f): ByteArray
         y = margin
     }
 
-    fun spanned(runs: List<Inline>, italic: Boolean): CharSequence {
+    fun spanned(runs: List<DocInline>, italic: Boolean): CharSequence {
         val out = SpannableStringBuilder()
         for (run in runs) {
             val start = out.length
@@ -770,17 +770,17 @@ private fun pdf(blocks: List<Block>, style: Style, body: Float = 11f): ByteArray
     newPage(1)
     for (block in blocks) {
         when (block) {
-            is Block.Heading -> {
+            is DocBlock.Heading -> {
                 val size = body * TextDoc.headingSizes[block.level.coerceIn(1, 6) - 1].toFloat()
                 place(spanned(block.runs, false), size, bold = true, before = body)
             }
-            is Block.Paragraph -> place(spanned(block.runs, false), body)
-            is Block.Quote -> place(spanned(block.runs, true), body, left = body * 2)
-            is Block.Bullets -> block.items.forEachIndexed { offset, item ->
-                place(spanned(listOf(Inline(if (block.ordered) "${offset + 1}. " else "•  ")) + item, false), body, after = body * 0.3f, left = body, rest = body * 2)
+            is DocBlock.Paragraph -> place(spanned(block.runs, false), body)
+            is DocBlock.Quote -> place(spanned(block.runs, true), body, left = body * 2)
+            is DocBlock.Bullets -> block.items.forEachIndexed { offset, item ->
+                place(spanned(listOf(DocInline(if (block.ordered) "${offset + 1}. " else "•  ")) + item, false), body, after = body * 0.3f, left = body, rest = body * 2)
             }
-            is Block.Code -> place(block.body, body * 0.9f, typeface = Typeface.MONOSPACE, left = body)
-            Block.Rule -> place("─".repeat(5), body, colour = (ink and 0x00FFFFFF) or (0x80 shl 24))
+            is DocBlock.Code -> place(block.body, body * 0.9f, typeface = Typeface.MONOSPACE, left = body)
+            DocBlock.Rule -> place("─".repeat(5), body, colour = (ink and 0x00FFFFFF) or (0x80 shl 24))
         }
     }
     page?.let(document::finishPage)

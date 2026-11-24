@@ -1,8 +1,5 @@
 package com.delphi.delphitools.tools.typography
 
-import com.delphi.delphitools.tools.typography.TextDoc.Block
-import com.delphi.delphitools.tools.typography.TextDoc.mark
-import com.delphi.delphitools.tools.typography.TextDoc.words
 import com.delphi.delphitools.tools.typography.TextEditorEngine.Look
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -12,27 +9,27 @@ import org.junit.Test
 class TextEditorEngineTest {
     @Test
     fun docConvert() {
-        val blocks = TextDoc.parseMarkdown("# Title\n\nSome **bold** and `code`.\n\n- one\n- two\n\n> quoted\n")
+        val blocks = DocConvertEngine.parseMarkdown("# Title\n\nSome **bold** and `code`.\n\n- one\n- two\n\n> quoted\n")
         assertEquals(4, blocks.size)
-        val heading = blocks[0] as Block.Heading
+        val heading = blocks[0] as DocBlock.Heading
         assertEquals(1, heading.level)
         assertEquals("Title", heading.runs.first().text)
-        val list = blocks[2] as Block.Bullets
+        val list = blocks[2] as DocBlock.Bullets
         assertFalse(list.ordered)
         assertEquals(2, list.items.size)
 
-        val inline = TextDoc.parseInline("a **b** [c](https://x) `d`")
+        val inline = DocConvertEngine.parseInline("a **b** [c](https://x) `d`")
         assertTrue(inline.any { it.bold && it.text == "b" })
         assertTrue(inline.any { it.link == "https://x" && it.text == "c" })
         assertTrue(inline.any { it.code && it.text == "d" })
-        assertEquals(1, TextDoc.parseInline("[".repeat(4000)).size)
+        assertEquals(1, DocConvertEngine.parseInline("[".repeat(4000)).size)
 
         val look = TextDoc.Style(TextDoc.Style.Family.Serif, 1.6, TextDoc.Rgb(0.0, 0.0, 0.0), TextDoc.Rgb(1.0, 1.0, 0.5))
         assertTrue(TextDoc.html(blocks, true, look).contains("line-height: 1.6"))
         assertFalse(TextDoc.html(blocks, true).contains("<style>"))
         assertEquals("#ffff7f", look.background.css)
 
-        val spans = TextDoc.markdownBlocks("# T\n\npara one\npara two\n\n- a\n- b\n\n```\nx\n```\nSet\n===")
+        val spans = DocConvertEngine.markdownBlocks("# T\n\npara one\npara two\n\n- a\n- b\n\n```\nx\n```\nSet\n===")
         assertEquals(listOf(0 until 1, 2 until 4, 5 until 7, 8 until 11, 11 until 13), spans.map { it.second })
         assertEquals(listOf("H1", "¶", "•", "{ }", "H1"), spans.map { it.first.mark })
         assertEquals(4, spans[1].first.words)
@@ -40,13 +37,14 @@ class TextEditorEngineTest {
 
     @Test
     fun rtf() {
-        val rtf = TextDoc.rtf(TextDoc.parseMarkdown("# Ti{t}le\n\ncafé **b** [l](https://x)"))
+        val rtf = TextDoc.rtf(DocConvertEngine.parseMarkdown("# Ti{t}le\n\ncafé **b** [l](https://x)"))
         assertTrue(rtf.startsWith("{\\rtf1"))
         assertTrue(rtf.endsWith("}"))
         assertTrue(rtf.contains("Ti\\{t\\}le"))
         assertTrue(rtf.contains("caf\\u233?"))
         assertTrue(rtf.contains("HYPERLINK \"https://x\""))
         assertTrue(rtf.contains("\\fs48"))
+        assertTrue(TextDoc.rtf(DocConvertEngine.parseMarkdown("[l](https://x\"y)")).contains("HYPERLINK \"https://x%22y\""))
     }
 
     @Test

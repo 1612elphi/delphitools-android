@@ -12,7 +12,7 @@ object PxToRemEngine {
     private val number = Regex("""[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?""")
 
     /** Decimal pads type a comma in many locales. */
-    fun parse(text: String): Double? = text.replace(',', '.').takeIf(number::matches)?.toDouble()
+    fun parse(text: String): Double? = text.replace(',', '.').takeIf(number::matches)?.toDouble()?.takeIf { it.isFinite() }
 
     /** At most four decimals, trailing zeros dropped: 0.5, 0.6875, 26.25. */
     fun format(value: Double): String {

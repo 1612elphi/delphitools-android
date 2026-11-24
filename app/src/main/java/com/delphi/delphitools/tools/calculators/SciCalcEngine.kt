@@ -73,7 +73,6 @@ object SciCalcEngine {
         fun number(): Double? {
             skipSpaces()
             val text = StringBuilder()
-            if (peek() == '-') text.append(advance())
             while (peek()?.let { it.isDigit() || it == '.' } == true) text.append(advance())
             if (peek() == 'e' || peek() == 'E') {
                 text.append(advance())
@@ -156,7 +155,7 @@ object SciCalcEngine {
                     else -> Double.NaN
                 }
             }
-            if (c.isDigit() || c == '.' || c == '-') return number() ?: Double.NaN
+            if (c.isDigit() || c == '.') return number() ?: Double.NaN
             if (c == '|') {
                 advance()
                 val value = addSub()
@@ -177,32 +176,37 @@ object SciCalcEngine {
         }
 
         fun power(): Double {
-            var base = postfix()
+            val base = postfix()
             skipSpaces()
-            if (peek() == '^') {
-                advance()
-                // right-associative
-                base = base.pow(factor())
-            }
-            return base
+            if (peek() != '^') return base
+            advance()
+            return base.pow(unary())
+        }
+
+        /** Binds looser than ^: -2^2 is -4. */
+        fun unary(): Double {
+            skipSpaces()
+            if (peek() != '-' && peek() != '−') return power()
+            advance()
+            return -unary()
         }
 
         fun mulDiv(): Double {
-            var left = power()
+            var left = unary()
             while (true) {
                 skipSpaces()
                 when (peek()) {
                     '×', '*' -> {
                         advance()
-                        left *= power()
+                        left *= unary()
                     }
                     '÷', '/' -> {
                         advance()
-                        left /= power()
+                        left /= unary()
                     }
                     '%' -> {
                         advance()
-                        left %= power()
+                        left %= unary()
                     }
                     else -> return left
                 }
@@ -218,7 +222,7 @@ object SciCalcEngine {
                         advance()
                         left += mulDiv()
                     }
-                    '-' -> {
+                    '-', '−' -> {
                         advance()
                         left -= mulDiv()
                     }

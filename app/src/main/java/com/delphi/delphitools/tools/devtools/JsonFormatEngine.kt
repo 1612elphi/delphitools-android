@@ -254,7 +254,22 @@ object JsonFormatEngine {
         out.append(close)
     }
 
-    fun escaped(text: String): String = Json.escaped(text)
+    fun escaped(text: String): String {
+        val out = StringBuilder("\"")
+        for (c in text) {
+            when (c) {
+                '"' -> out.append("\\\"")
+                '\\' -> out.append("\\\\")
+                '\n' -> out.append("\\n")
+                '\r' -> out.append("\\r")
+                '\t' -> out.append("\\t")
+                '\b' -> out.append("\\b")
+                '\u000C' -> out.append("\\f")
+                else -> if (c < ' ') out.append("\\u%04x".format(c.code)) else out.append(c)
+            }
+        }
+        return out.append('"').toString()
+    }
 
     fun rows(root: JsonValue, collapsed: Set<String>): List<JsonTreeRow> {
         val rows = mutableListOf<JsonTreeRow>()

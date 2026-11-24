@@ -5,8 +5,10 @@ import android.content.Context
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONTokener
@@ -75,7 +77,10 @@ class AlgebraEngine private constructor(private val web: WebView, private val lo
     suspend fun evaluate(expression: String, operation: AlgebraOperation, variable: String): Result<AlgebraResult> {
         val script = "(function(inputExpr,inputVar){try{${body(operation)}}catch(e){return JSON.stringify({error:e.message||String(e)});}})" +
             "(${JSONObject.quote(expression)},${JSONObject.quote(variable)})"
-        val json = evaluate(web, script, lost)
+        val reply = withTimeoutOrNull(EVALUATE_TIMEOUT_MS) { evaluate(web, script, lost) }
+        // a script nerdamer never finishes blocks every later call on this renderer
+        if (reply == null) kill(web, lost)
+        val json = reply
             ?.let { runCatching { JSONObject(JSONTokener(it).nextValue() as String) }.getOrNull() }
             ?: return Result.failure(Failure("Failed to evaluate expression"))
         if (json.has("error")) return Result.failure(Failure(json.optString("error").substringBefore('\n')))
@@ -83,11 +88,15 @@ class AlgebraEngine private constructor(private val web: WebView, private val lo
         return Result.success(AlgebraResult(json.optString("text", ""), strings("solutions"), strings("approx")))
     }
 
-    fun close() {
-        if (!isLost) web.destroy()
-    }
+    fun close() = kill(web, lost)
 
     companion object {
+        private const val EVALUATE_TIMEOUT_MS = 10_000L
+
+        private fun kill(web: WebView, lost: CompletableDeferred<Unit>) {
+            if (lost.complete(Unit)) web.destroy()
+        }
+
         private fun body(operation: AlgebraOperation) = when (operation) {
             AlgebraOperation.Simplify -> "var r=nerdamer(inputExpr);return JSON.stringify({text:r.text('fractions')});"
             AlgebraOperation.Expand -> "var r=nerdamer('expand('+inputExpr+')');return JSON.stringify({text:r.text('fractions')});"
@@ -134,9 +143,15 @@ class AlgebraEngine private constructor(private val web: WebView, private val lo
                 }
             }
             web.loadDataWithBaseURL("file:///android_asset/", "<script src=\"nerdamer-all.min.js\"></script>", "text/html", "utf-8", null)
-            loaded.await()
-            if (evaluate(web, "typeof nerdamer.solve", lost) != "\"function\"") {
-                if (!lost.isCompleted) web.destroy()
+            val ready = try {
+                loaded.await()
+                evaluate(web, "typeof nerdamer.solve", lost) == "\"function\""
+            } catch (e: CancellationException) {
+                kill(web, lost)
+                throw e
+            }
+            if (!ready) {
+                kill(web, lost)
                 return null
             }
             return AlgebraEngine(web, lost)

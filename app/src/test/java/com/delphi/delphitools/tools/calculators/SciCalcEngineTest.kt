@@ -90,4 +90,27 @@ class SciCalcEngineTest {
         assertTrue(SciCalcEngine.evaluate("foo(2)", degrees = true).isNaN())
         assertEquals("0.5", SciCalcEngine.format(SciCalcEngine.evaluate("sin(π/6)", degrees = false)))
     }
+
+    @Test
+    fun unaryMinus() {
+        fun eval(text: String) = SciCalcEngine.evaluate(text, degrees = true)
+        assertEquals(-4.0, eval("-2^2"), 0.0)
+        assertEquals(0.25, eval("2^-2"), 0.0)
+        assertEquals(-5.0, eval("-(2+3)"), 0.0)
+        assertEquals(-5.0, eval("−(2+3)"), 0.0)
+        assertEquals(-0.5, eval("-sin(30)"), 0.0)
+        assertEquals(-Math.PI, eval("-π"), 0.0)
+        assertEquals(-2.0, eval("2×-(1)"), 0.0)
+        assertEquals(1.0, eval("3−2"), 0.0)
+        assertEquals(5.0, eval("2--3"), 0.0)
+        assertEquals(-0.0015, eval("-1.5e-3"), 0.0)
+    }
+
+    @Test
+    fun powerIsRightAssociative() {
+        fun eval(text: String) = SciCalcEngine.evaluate(text, degrees = true)
+        assertEquals(512.0, eval("2^3^2"), 0.0)
+        assertEquals(81.0, eval("3^2^2"), 0.0)
+        assertEquals(64.0, eval("2^3!"), 0.0)
+    }
 }

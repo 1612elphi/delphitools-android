@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.FirstPage
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.remember
@@ -198,7 +199,7 @@ fun AudioTrimmer(model: AudioTrimmerModel = viewModel()) {
             AudioTrimWaveform(scan?.peaks, duration, model.start, model.end, model.fadeIn, model.fadeOut, playback.playhead, inset, showsFadeCurves = true)
         }
     }
-    val hasPlayhead = playback.playhead != null
+    val hasPlayhead by remember(playback) { derivedStateOf { playback.playhead != null } }
     val transport = CanonSection.of {
         CanonRows {
             CanonRow("Start", flush = true) {

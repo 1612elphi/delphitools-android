@@ -22,11 +22,13 @@ import androidx.compose.material.icons.filled.FirstPage
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -211,7 +213,7 @@ fun VideoToGif(model: VideoToGifModel = viewModel()) {
     val ready = duration > 0 && model.end > model.start
     val selection = if (ready) model.start..model.end else null
     val aspect = if (facts != null && facts.height > 0) facts.width.toFloat() / facts.height else 16f / 9
-    val hasPlayhead = playback.playhead != null
+    val hasPlayhead by remember(playback) { derivedStateOf { playback.playhead != null } }
     val frames = model.frames
     val over = ready && model.isOverCap
     val rate = model.fps.toInt()

@@ -27,6 +27,11 @@ private fun isWhite(b: Int) = b == 0 || b == 9 || b == 10 || b == 12 || b == 13 
 private fun isDelimiter(b: Int) = b in "()<>[]{}/%".map { it.code }
 private fun isRegular(b: Int) = !isWhite(b) && !isDelimiter(b)
 
+private val plainReal = Regex("""[+-]?(\d+\.?\d*|\.\d+)""")
+
+/** Inflated bytes allowed for a stream when the caller sets no tighter limit. */
+internal const val MAX_INFLATED = 256L shl 20
+
 /** Reads PDF objects out of [bytes]; [resolveLength] turns an indirect /Length into a number. */
 internal class PdfLexer(private val bytes: ByteArray, var pos: Int, private val resolveLength: (Any?) -> Any? = { it }) {
     private fun at(i: Int) = if (i < bytes.size) bytes[i].toInt() and 0xff else -1
@@ -118,7 +123,9 @@ internal class PdfLexer(private val bytes: ByteArray, var pos: Int, private val 
     private fun number(word: String): Any? {
         val whole = word.toLongOrNull()
         if (whole == null) {
-            return word.toDoubleOrNull() ?: if (word.startsWith("--")) word.drop(2).toDoubleOrNull()?.unaryMinus() else null
+            val plain = if (word.startsWith("--")) word.drop(1) else word
+            if (!plainReal.matches(plain)) return null
+            return plain.toDouble().takeIf { it.isFinite() }
         }
         val saved = pos
         val gen = token().toIntOrNull()
@@ -205,9 +212,9 @@ internal class PdfLexer(private val bytes: ByteArray, var pos: Int, private val 
         if (at(pos) == 13) pos++
         if (at(pos) == 10) pos++
         val start = pos
-        val length = (resolveLength(dict["Length"]) as? Number)?.toInt()
-        val end = if (length != null && length >= 0 && start + length <= bytes.size && endsStream(start + length)) {
-            start + length
+        val length = (resolveLength(dict["Length"]) as? Number)?.toLong()
+        val end = if (length != null && length in 0..(bytes.size - start).toLong() && endsStream(start + length.toInt())) {
+            start + length.toInt()
         } else {
             val found = indexOf(bytes, "endstream".toByteArray(Charsets.ISO_8859_1), start)
             if (found < 0) throw PdfSyntaxException("endstream missing")
@@ -254,12 +261,12 @@ object PdfFilters {
         else -> emptyList()
     }
 
-    /** Undoes FlateDecode with any PNG predictor; null for any other filter. */
-    fun decode(stream: PdfStream): ByteArray? {
+    /** Undoes FlateDecode with any PNG predictor; null for any other filter. Throws past [limit] inflated bytes. */
+    fun decode(stream: PdfStream, limit: Long = MAX_INFLATED): ByteArray? {
         val filters = filters(stream.dict)
         if (filters.isEmpty()) return stream.data
         if (filters != listOf("FlateDecode")) return null
-        val inflated = inflate(stream.data)
+        val inflated = inflate(stream.data, limit)
         val parms = when (val p = stream.dict["DecodeParms"]) {
             is Map<*, *> -> p
             is List<*> -> p.firstOrNull() as? Map<*, *>
@@ -273,15 +280,16 @@ object PdfFilters {
         return unpredict(inflated, maxOf(1, colours * bits / 8), (colours * bits * columns + 7) / 8)
     }
 
-    fun inflate(data: ByteArray): ByteArray {
+    fun inflate(data: ByteArray, limit: Long = MAX_INFLATED): ByteArray {
         val inflater = Inflater()
         inflater.setInput(data)
-        val out = ByteArrayOutputStream(data.size * 3)
+        val out = ByteArrayOutputStream(minOf(data.size.toLong() * 3, limit).toInt())
         val buffer = ByteArray(16 * 1024)
         try {
             while (!inflater.finished()) {
                 val n = inflater.inflate(buffer)
                 if (n == 0 && (inflater.needsInput() || inflater.needsDictionary())) break
+                if (out.size() + n.toLong() > limit) throw PdfSyntaxException("inflated past $limit bytes")
                 out.write(buffer, 0, n)
             }
         } catch (_: java.util.zip.DataFormatException) {

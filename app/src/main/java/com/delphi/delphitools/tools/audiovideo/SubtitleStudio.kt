@@ -576,7 +576,7 @@ private fun SubtitleCueLane(
 
 /** dt-ios SubtitleCueRow: number, start and end over the text, all editable; a tap seeks to the cue, a bar marks the one playing. */
 @Composable
-private fun SubtitleCueRow(index: Int, cue: SubtitleCue, marked: Boolean, onChange: (SubtitleCue) -> Unit, onSelect: () -> Unit) {
+internal fun SubtitleCueRow(index: Int, cue: SubtitleCue, marked: Boolean, onChange: (SubtitleCue) -> Unit, onSelect: () -> Unit) {
     val c = LocalDelphiColours.current
     val mono = CanonText.caption.copy(fontFamily = DelphiMono, fontSize = CanonText.footnoteSemibold.fontSize)
     val select by rememberUpdatedState(onSelect)

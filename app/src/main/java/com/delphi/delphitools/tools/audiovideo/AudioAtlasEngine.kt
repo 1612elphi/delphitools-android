@@ -15,61 +15,6 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.math.tan
 
-/** dt-ios AVInfoAudioDSP.Scan: peaks of equal spans, levels in dBFS (-Infinity for digital silence) and gated loudness. */
-class AudioScan(
-    val peaks: AVEditPeaks,
-    val peakDb: Double,
-    val rmsDb: Double,
-    /** Null when the range is shorter than one 400 ms gating block. */
-    val lufs: Double?,
-    val sampleRate: Int,
-    val channels: Int,
-    val duration: Double,
-)
-
-private class Biquad(val b0: Double, val b1: Double, val b2: Double, val a1: Double, val a2: Double) {
-    private var x1 = 0.0
-    private var x2 = 0.0
-    private var y1 = 0.0
-    private var y2 = 0.0
-
-    fun process(x: Double): Double {
-        val y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2
-        x2 = x1
-        x1 = x
-        y2 = y1
-        y1 = y
-        return y
-    }
-}
-
-/** BS.1770-4 K-weighting: a high shelf, then a high-pass. */
-private class KWeighting(rate: Double) {
-    private val shelf: Biquad
-    private val highpass: Biquad
-
-    init {
-        var f0 = 1681.974450955533
-        var q = 0.7071752369554196
-        val gainDb = 3.999843853973347
-        var k = tan(PI * f0 / rate)
-        val vh = 10.0.pow(gainDb / 20)
-        val vb = vh.pow(0.4996667741545416)
-        var a0 = 1 + k / q + k * k
-        shelf = Biquad(
-            (vh + vb * k / q + k * k) / a0, 2 * (k * k - vh) / a0, (vh - vb * k / q + k * k) / a0,
-            2 * (k * k - 1) / a0, (1 - k / q + k * k) / a0,
-        )
-        f0 = 38.13547087602444
-        q = 0.5003270373238773
-        k = tan(PI * f0 / rate)
-        a0 = 1 + k / q + k * k
-        highpass = Biquad(1.0, -2.0, 1.0, 2 * (k * k - 1) / a0, (1 - k / q + k * k) / a0)
-    }
-
-    fun process(x: Double) = highpass.process(shelf.process(x))
-}
-
 /**
  * dt-ios AVInfoAudioDSP.scan and spectrogram, fed in chunks: interleaved float frames with their frame index from the file start.
  * Frames before [startFrame] are skipped; past [spanFrames] they land in the last bucket when [open], else are skipped.

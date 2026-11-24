@@ -50,7 +50,7 @@ private class Biquad(val b0: Double, val b1: Double, val b2: Double, val a1: Dou
 }
 
 /** BS.1770-4 K-weighting: a high shelf, then a high pass. */
-private class KWeighting(rate: Double) {
+internal class KWeighting(rate: Double) {
     private val shelf: Biquad
     private val highpass: Biquad
 

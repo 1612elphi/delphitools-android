@@ -91,7 +91,8 @@ class ShavianEngine(
         core[word]?.let { it to GlossSource.Core } ?: full[word]?.let { it to GlossSource.Full }
 
     companion object {
-        private val tokenPattern = Regex("""(?U)([a-zA-Z']+)|(\s+)|([^\sa-zA-Z']+)""")
+        // android regex rejects (?U)
+        private val tokenPattern = Regex("""([a-zA-Z']+)|([\s\p{Z}]+)|([^\s\p{Z}a-zA-Z']+)""")
 
         // Shavian spelling rule 2
         private val shorthands = mapOf(

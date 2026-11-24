@@ -125,7 +125,7 @@ private val emptyPixels = IntSize(1600, 1200)
 private val emptyQuad = listOf(QuadPoint(470.0, 250.0), QuadPoint(1170.0, 320.0), QuadPoint(1330.0, 980.0), QuadPoint(260.0, 920.0))
 
 /** Perspective-corrects [image] through [quad], in its pixels, into a [width] × [height] bitmap. */
-private fun warp(image: Bitmap, quad: List<QuadPoint>, width: Int, height: Int): Bitmap {
+internal fun warp(image: Bitmap, quad: List<QuadPoint>, width: Int, height: Int): Bitmap {
     val out = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
     val matrix = Matrix()
     val src = quad.flatMap { listOf(it.x.toFloat(), it.y.toFloat()) }.toFloatArray()

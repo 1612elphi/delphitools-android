@@ -7,7 +7,6 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.graphics.Matrix
-import android.graphics.Paint
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -126,14 +125,13 @@ class ScanPage(val original: Bitmap) {
 
 private fun render(original: Bitmap, quad: List<QuadPoint>, turns: Int, filter: ScanFilter, contrast: Int, threshold: Int): Bitmap {
     val (width, height) = ImageDeskewEngine.target(quad, DeskewAspect.all[0], SCAN_PIXELS.toDouble())
-    val warped = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    val matrix = Matrix()
-    val src = quad.flatMap { listOf(it.x.toFloat(), it.y.toFloat()) }.toFloatArray()
-    matrix.setPolyToPoly(src, 0, floatArrayOf(0f, 0f, width.toFloat(), 0f, width.toFloat(), height.toFloat(), 0f, height.toFloat()), 0, 4)
-    android.graphics.Canvas(warped).drawBitmap(original, matrix, Paint(Paint.FILTER_BITMAP_FLAG))
+    val warped = warp(original, quad, width, height)
     val turned = if (turns == 0) warped else Bitmap.createBitmap(warped, 0, 0, width, height, Matrix().apply { setRotate(turns * 90f) }, false)
-    val pixels = IntArray(turned.width * turned.height).also { turned.getPixels(it, 0, turned.width, 0, 0, turned.width, turned.height) }
-    return Bitmap.createBitmap(DocumentScanEngine.filter(pixels, filter, contrast, threshold), turned.width, turned.height, Bitmap.Config.ARGB_8888)
+    if (turned !== warped) warped.recycle()
+    val pixels = turned.argb()
+    val (w, h) = turned.width to turned.height
+    turned.recycle()
+    return Bitmap.createBitmap(DocumentScanEngine.filter(pixels, filter, contrast, threshold), w, h, Bitmap.Config.ARGB_8888)
         .apply { setHasAlpha(false) }
 }
 
@@ -154,6 +152,9 @@ class DocumentScannerModel(application: Application) : AndroidViewModel(applicat
     val job = PdfJob(viewModelScope, application)
     private var generation = 0
     private var settling: Job? = null
+
+    // a render holds about 150 MB at 3072 px
+    private val renderer = Dispatchers.Default.limitedParallelism(2)
 
     val selected get() = pages.firstOrNull { it.id == selectedId }
     val processing get() = pages.any { it.page == null }
@@ -275,7 +276,7 @@ class DocumentScannerModel(application: Application) : AndroidViewModel(applicat
         val quad = page.quad
         val turns = page.turns
         viewModelScope.launch {
-            val done = withContext(Dispatchers.Default) {
+            val done = withContext(renderer) {
                 runCatching {
                     val image = render(page.original, quad, turns, filter, contrast, threshold)
                     Triple(image, image.asImageBitmap(), ImageCompressEngine.preview(image, THUMBNAIL_PIXELS).asImageBitmap())

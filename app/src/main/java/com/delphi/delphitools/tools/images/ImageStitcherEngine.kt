@@ -163,7 +163,7 @@ object ImageStitcherEngine {
     /** 64 MP is 256 MB of RGBA: a big batch grid stays within the side cap but not within memory. */
     const val MAX_EXPORT_PIXELS = 64_000_000.0
 
-    // dp: gutter, gap, the dimension line's room, ghost, lift, drop band, roomy tile
+    // measures in dp
     const val GUTTER = 26.0
     const val GAP = 6.0
     const val DIMENSION = 38.0
@@ -243,7 +243,6 @@ object ImageStitcherEngine {
 
         val rootAspect = aspect(root, sources, baseAspect)
         walk(root, StitchRect(0.0, 0.0, rootAspect * 1000, 1000.0))
-        // the base image at its native pixel size
         val k = ops.firstOrNull { it.isBase }?.let { base.width / it.dest.width } ?: 1.0
         return StitchLayout(
             rootAspect * 1000 * k,

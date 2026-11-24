@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
         if (debuggable && intent.getBooleanExtra("favour", false)) {
             ShellStores.of(this).forcesFavour = true
         }
-        // debug builds: `am start --es tool <id>` opens on that tool
+        // debug: --es tool <id>
         val startTool = if (debuggable) intent.getStringExtra("tool") else null
         if (savedInstanceState == null) sweepCache()
         enableEdgeToEdge()
@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // renamed first: a tool opened meanwhile writes to fresh folders
+    // rename, then delete
     private fun sweepCache() {
         val stale = File(cacheDir, "stale-${System.nanoTime()}")
         val moved = listOf("pdf-sources", "jobs", "media").count { File(cacheDir, it).renameTo(File(stale.apply { mkdirs() }, it)) }

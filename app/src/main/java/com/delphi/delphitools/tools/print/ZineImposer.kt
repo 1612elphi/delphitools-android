@@ -133,7 +133,6 @@ class ZineImposerModel(application: Application) : AndroidViewModel(application)
         job.reset()
     }
 
-    /** The slot list follows the page count, keeping images by index. */
     private fun reconfigure() {
         val target = layout.pageCount
         while (images.size > target) images.removeAt(images.size - 1)
@@ -209,7 +208,6 @@ class ZineImposerModel(application: Application) : AndroidViewModel(application)
         add(listOf(uri), slot)
     }
 
-    // hasImage never shows the paste notice
     fun clipboardHasImage() = clipboard?.primaryClipDescription?.let { d ->
         (0 until d.mimeTypeCount).any { ClipDescription.compareMimeTypes(d.getMimeType(it), "image/*") }
     } == true
@@ -240,7 +238,6 @@ class ZineImposerModel(application: Application) : AndroidViewModel(application)
 private fun millimetres(width: Double, height: Double) =
     "${PaperUnit.decimal((width * 10).roundToInt() / 10.0)} × ${PaperUnit.decimal((height * 10).roundToInt() / 10.0)} mm"
 
-/** Where a picture of [image] proportions sits in [cell], fitted or filled. */
 private fun placement(image: Size, cell: Size, fills: Boolean): Rect {
     val aspect = image.width / maxOf(image.height, 1f)
     val byWidth = (aspect > cell.width / maxOf(cell.height, 1f)) != fills
@@ -389,7 +386,7 @@ fun ZineImposer(model: ZineImposerModel = viewModel()) {
     if (picking) PaperSizePicker(null, model.paper, onDismiss = { picking = false }, onPick = model::pickPaper)
 }
 
-/** dt-ios FoldKeyView: a sample line and name for each kind of line the layout uses. */
+// dt-ios FoldKeyView
 @Composable
 private fun FoldKey(valley: Boolean, mountain: Boolean, cut: Boolean) {
     val c = LocalDelphiColours.current
@@ -421,7 +418,7 @@ private fun FoldKey(valley: Boolean, mountain: Boolean, cut: Boolean) {
     }
 }
 
-/** dt-ios FoldStepRow. */
+// dt-ios FoldStepRow
 @Composable
 private fun FoldStep(number: Int, text: String) {
     val c = LocalDelphiColours.current

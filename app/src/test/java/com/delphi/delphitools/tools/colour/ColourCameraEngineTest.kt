@@ -6,7 +6,6 @@ import org.junit.Test
 import kotlin.random.Random
 
 class ColourCameraEngineTest {
-    /** A 4 × 2 grey ramp: luma 10 * (index + 1), neutral chroma. */
     private fun frame(rotation: Int): YuvFrame {
         val y = ByteArray(8) { (10 * (it + 1)).toByte() }
         val chroma = ByteArray(4) { 128.toByte() }
@@ -26,7 +25,7 @@ class ColourCameraEngineTest {
         val plain = frame(0)
         assertEquals(4 to 2, plain.width to plain.height)
         assertEquals(20, luma(plain, 1, 0))
-        // clockwise: the sensor's bottom-left lands top-left
+        // clockwise turn
         val turned = frame(90)
         assertEquals(2 to 4, turned.width to turned.height)
         assertEquals(50, luma(turned, 0, 0))
@@ -45,7 +44,6 @@ class ColourCameraEngineTest {
 
     @Test
     fun extractsFromTheRegionOnly() {
-        // left half red, right half blue
         val split = object : ColourFrame {
             override val width = 200
             override val height = 100

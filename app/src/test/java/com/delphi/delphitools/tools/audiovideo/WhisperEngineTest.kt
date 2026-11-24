@@ -13,7 +13,7 @@ class WhisperEngineTest {
 
     @Test
     fun tokenBytesReversesTheByteLevelAlphabet() {
-        // GPT-2 stands a space in as Ġ and a newline as Ċ
+        // gpt-2: Ġ space, Ċ newline
         assertArrayEquals(bytes(" the"), WhisperEngine.tokenBytes("Ġthe"))
         assertArrayEquals(bytes("\n"), WhisperEngine.tokenBytes("Ċ"))
         assertArrayEquals(bytes("é"), WhisperEngine.tokenBytes("Ã©"))
@@ -65,7 +65,6 @@ class WhisperEngineTest {
 
     @Test
     fun rowTimesPlaceEachRowWhereItsAttentionPeaks() {
-        // one head; row 0 is untimed prompt, rows 1..3 attend to frames 10, 30, 50
         val peaks = listOf(0, 10, 30, 50)
         val head = peaks.map { peak -> FloatArray(60) { f -> if (abs(f - peak) <= 3) 1f else 0f } }
         val times = WhisperEngine.rowTimes(listOf(head), 60, 1)
@@ -81,7 +80,6 @@ class WhisperEngineTest {
         assertEquals(80, filters.size)
         assertEquals(201, filters[0].size)
         assertTrue(filters.all { row -> row.all { it >= 0f } && row.any { it > 0f } })
-        // slaney filters peak higher in the narrow low bands
         assertTrue(filters[0].max() > filters[79].max())
     }
 
@@ -92,13 +90,11 @@ class WhisperEngineTest {
         val mel = WhisperEngine.logMel(tone, filters)
         assertEquals(80 * WhisperEngine.FRAMES, mel.size)
         val max = mel.max()
-        // log10 peak minus 8, plus 4, over 4: the range is two units
         assertTrue(mel.min() >= max - 2.0001f)
         val frame = 50
         val loudest = (0 until 80).maxBy { mel[it * WhisperEngine.FRAMES + frame] }
         val centre = (0 until 201).maxBy { filters[loudest][it] } * 40
         assertEquals(1000.0, centre.toDouble(), 120.0)
-        // past the audio only padding remains
         assertEquals(mel[2999], mel[2998], 0f)
     }
 

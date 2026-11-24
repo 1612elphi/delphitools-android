@@ -36,7 +36,7 @@ object ScrollGeneratorEngine {
         val tileWidth = max(1, (height * ratio).roundToInt())
         val slideCount = max(1, (width + tileWidth - 1) / tileWidth)
         val fill = tileWidth * slideCount - width
-        // whole pixels: no half-pixel seam
+        // whole pixels: no seam
         return Geometry(tileWidth, height, slideCount, fill > 0, width, (fill / 2).toDouble())
     }
 

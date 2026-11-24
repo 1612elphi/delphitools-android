@@ -18,7 +18,6 @@ class TimeCalcEngineTest {
         // equinox noon: sun 0,0
         val noon = TimeCalcWorld.subsolar(at("2026-03-20T12:00:00Z"))
         assertTrue(abs(noon.first) < 1.5 && abs(noon.second) < 0.01)
-        // june: terminator near arctic
         val june = TimeCalcWorld.subsolar(at("2026-06-21T12:00:00Z"))
         assertTrue(june.first > 23 && abs(TimeCalcWorld.terminator(180.0, june) - 66.6) < 1)
     }
@@ -28,14 +27,12 @@ class TimeCalcEngineTest {
     @Test
     fun axis() {
         val rungs = TimeCalcAxis.rungs
-        // epoch-2038, 330 pt: decades
         val decades = rungs[TimeCalcAxis.rung(TimeCalcAxis.LIMIT, 330.0, 44.0)]
         assertEquals(TimeUnitRung.Year, decades.component)
         assertEquals(10, decades.count)
         val years = TimeCalcAxis.ticks(0.0, TimeCalcAxis.LIMIT, decades, utc, DayOfWeek.MONDAY)
         assertEquals(7, years.size)
         assertEquals(0.0, years.first(), 0.0)
-        // week, 330 pt: days
         val days = rungs[TimeCalcAxis.rung(7 * 86_400.0, 330.0, 44.0)]
         assertEquals(TimeUnitRung.Day, days.component)
         assertEquals(1, days.count)
@@ -60,14 +57,14 @@ class TimeCalcEngineTest {
     fun arithmetic() {
         assertArrayEquals(intArrayOf(1, 2, 3, 4), TimeCalcMath.difference(0, (86_400L + 7_384) * 1000))
         assertEquals(0L, TimeCalcMath.instant(0, "UTC", "UTC"))
-        // 00:00 in Kolkata is 18:30 the day before in UTC
+        // kolkata 00:00 is 18:30z
         assertEquals(-19_800_000L, TimeCalcMath.instant(0, "Asia/Kolkata", "UTC"))
         assertEquals("1.5", TimeCalcMath.cleaned(" 1,5 "))
     }
 
     @Test
     fun instantAfterSourceDstChange() {
-        // new york moves to edt at 07:00z; berlin is still on cet
+        // new york edt from 07:00z
         val wall = Instant.parse("2026-03-08T05:00:00Z").toEpochMilli()
         assertEquals(Instant.parse("2026-03-08T10:00:00Z").toEpochMilli(), TimeCalcMath.instant(wall, "America/New_York", "Europe/Berlin"))
     }

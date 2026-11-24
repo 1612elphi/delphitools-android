@@ -133,19 +133,16 @@ private val functionsWide = listOf(
 )
 private val keyIds = (functionsNarrow + digitKeys).flatten().distinct()
 
-/** Key height over width the arrangement aims for; the one nearer to it is used. */
 private const val KEY_ASPECT = 0.7f
 // ponytail: a fixed keypad height; iOS gives the keypad whatever height the page has left so it never scrolls
 private val KEYPAD_HEIGHT = (9 * 52 + 10).dp
-/** Key height the type is set for; taller keys scale it up to half again. */
 private const val TYPE_HEIGHT = 58f
 private const val EXPRESSION_SIZE = 21f
 private const val RESULT_SIZE = 50f
 private const val EXPRESSION_LINE = 28f
 private const val RESULT_LINE = 60f
-/** Opacity of a lamp that is off, and of a value not yet worked out. */
 private const val DIM = 0.3f
-/** Space either side of the segment font's full stop, as a share of the point size. */
+// share of point size
 private const val STOP_PADDING = 0.08f
 
 class SciEntry(val id: Long, val expression: String, val result: String)
@@ -279,7 +276,6 @@ class SciCalcModel : ViewModel() {
         phase = SciPhase.Result(original)
     }
 
-    /** The value the expression would give now, its open brackets closed. */
     private fun preview(raw: String): Double? =
         SciCalcEngine.evaluate(raw + ")".repeat(SciCalcEntry.openParens(raw)), degrees).takeIf { it.isFinite() }
 
@@ -290,7 +286,6 @@ class SciCalcModel : ViewModel() {
                 shownExpression = raw
                 dimmed = false
                 ghosts = SciCalcEntry.openParens(raw)
-                // unfinished keeps last value
                 lastPreview = if (raw.isEmpty()) null else preview(raw)?.let(SciCalcEngine::format) ?: lastPreview
                 readout = if (raw.isEmpty()) SciReadout.Idle else lastPreview?.let { SciReadout.Preview(it) } ?: SciReadout.Blank
             }
@@ -311,7 +306,6 @@ class SciCalcModel : ViewModel() {
     }
 }
 
-/** The key a typed character stands for. */
 private fun typed(character: Char): String? = when (character) {
     '*' -> "×"
     '/' -> "÷"
@@ -331,7 +325,6 @@ fun SciCalc(model: SciCalcModel = viewModel()) {
     val view = LocalView.current
     val density = LocalDensity.current.density
     val window = LocalWindowInfo.current.containerSize
-    // one column: the history leaves the page for a dialog
     val stacked = splitLayout((window.width / density).dp, (window.height / density).dp, beside = false, across = false, halves = false) == SplitLayout.Stacked
     var showsHistory by remember { mutableStateOf(false) }
     var showsConstants by remember { mutableStateOf(false) }
@@ -451,7 +444,6 @@ private fun SciDialog(width: Int, onDismiss: () -> Unit, content: @Composable ()
     }
 }
 
-/** A constant as a cell: the symbol large, the name, the value with its unit. */
 @Composable
 private fun ConstantCell(constant: SciConstant, onClick: () -> Unit) {
     val c = LocalDelphiColours.current
@@ -473,7 +465,6 @@ private fun ConstantCell(constant: SciConstant, onClick: () -> Unit) {
     }
 }
 
-/** The expression as a calculator prints it, raised exponents, brackets still to close greyed. */
 @Composable
 private fun styled(raw: String, dimmed: Boolean = false, ghosts: Int = 0): AnnotatedString {
     val c = LocalDelphiColours.current
@@ -499,7 +490,6 @@ private fun styled(raw: String, dimmed: Boolean = false, ghosts: Int = 0): Annot
     }
 }
 
-/** The calculator's display: angle lamps and the expression as typed, a rule, the value in the segment font. */
 @Composable
 private fun SciDisplay(expression: String, dimmed: Boolean, ghosts: Int, readout: SciReadout, degrees: Boolean) {
     val c = LocalDelphiColours.current
@@ -558,7 +548,6 @@ private fun SciDisplay(expression: String, dimmed: Boolean, ghosts: Int, readout
     }
 }
 
-/** The readout in the segment font: thousands gaps as spacing, the stop padded, a power of ten raised. */
 private fun readoutText(readout: SciReadout): AnnotatedString {
     val text = when (readout) {
         SciReadout.Idle -> "0"
@@ -567,7 +556,7 @@ private fun readoutText(readout: SciReadout): AnnotatedString {
         is SciReadout.Result -> readout.text
         is SciReadout.Failure -> readout.text
     }
-    // segment font lacks letters, ∞
+    // segment font lacks letters
     if (readout is SciReadout.Failure) {
         val infinite = '∞' in text
         return buildAnnotatedString {
@@ -622,13 +611,11 @@ private fun spoken(id: String) = when (id) {
     else -> id
 }
 
-/** Functions beside the digits, 9 by 5, when that shapes the keys nearer to [KEY_ASPECT] than 5 by 9 does. */
 private fun sideBySide(width: Float, height: Float): Boolean {
     fun miss(columns: Float, rows: Float) = abs(ln(max(height / rows, 1f) / max(width / columns, 1f) / KEY_ASPECT))
     return miss(9f, 5f) < miss(5f, 9f)
 }
 
-/** Flush keys in two blocks, functions and digits: one over the other in a narrow column, side by side when wide. */
 @Composable
 private fun SciKeypad(onPress: (String) -> Unit) {
     val c = LocalDelphiColours.current
@@ -656,7 +643,7 @@ private fun SciKeypad(onPress: (String) -> Unit) {
         for ((grid, blockRow, blockColumn) in blocks) {
             grid.forEachIndexed { row, ids ->
                 ids.forEachIndexed { column, id ->
-                    // a repeated id spans
+                    // repeated id spans
                     if ((row > 0 && grid[row - 1][column] == id) || (column > 0 && ids[column - 1] == id)) return@forEachIndexed
                     var lastRow = row
                     while (lastRow + 1 < grid.size && grid[lastRow + 1][column] == id) lastRow++
@@ -683,7 +670,6 @@ private fun SciKeypad(onPress: (String) -> Unit) {
     }
 }
 
-/** One key: colour by role, the Canon press, ⌫ repeating while held. */
 @Composable
 private fun SciKey(id: String, onPress: (String) -> Unit) {
     val c = LocalDelphiColours.current
@@ -711,7 +697,6 @@ private fun SciKey(id: String, onPress: (String) -> Unit) {
             .semantics { contentDescription = spoken(id) },
         contentAlignment = Alignment.Center,
     ) {
-        // font scales with key
         val scale = (maxHeight.value / TYPE_HEIGHT).coerceIn(0.85f, 1.5f)
         if (id == "⌫") {
             Icon(Icons.AutoMirrored.Outlined.Backspace, contentDescription = null, tint = ink, modifier = Modifier.size((20 * scale).dp))
@@ -727,7 +712,6 @@ private fun SciKey(id: String, onPress: (String) -> Unit) {
     }
 }
 
-/** One line of the tape: the expression as typed over its result. A tap takes the expression back; a hold offers the result. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TapeRow(entry: SciEntry, onLoad: () -> Unit, onUse: () -> Unit) {
@@ -778,7 +762,6 @@ private fun TapeRow(entry: SciEntry, onLoad: () -> Unit, onUse: () -> Unit) {
     }
 }
 
-/** The maker's name under the keys, faint, as moulded into a desk calculator's case. */
 @Composable
 private fun Nameplate() {
     val c = LocalDelphiColours.current

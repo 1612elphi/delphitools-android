@@ -104,7 +104,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-/** The largest favicon is 512 px, so the short side needs no more; 2048 on the long side covers a 4:1 image. */
+// 512 px largest favicon
 private const val FAVICON_MAX_PIXELS = 2048
 private const val FAVICON_PREVIEW_PIXELS = 800
 private val cropHeight = 220.dp
@@ -128,7 +128,7 @@ class FaviconGeneratorModel(application: Application) : AndroidViewModel(applica
     val stem get() = source?.stem
     val pixels get() = source?.let { IntSize(it.width, it.height) }
 
-    /** Source pixels; null is the largest centred square. */
+    // null: largest centred square
     private var square by mutableStateOf<IntRect?>(null)
     val cropSquare get() = source?.let { square ?: FaviconEngine.centred(it.width, it.height) }
 
@@ -171,7 +171,6 @@ class FaviconGeneratorModel(application: Application) : AndroidViewModel(applica
         render()
     }
 
-    // a cancelled render still waiting for the renderer is skipped, so a drag renders its latest square
     private fun render() {
         val source = source ?: return
         val square = cropSquare ?: return
@@ -209,7 +208,7 @@ class FaviconGeneratorModel(application: Application) : AndroidViewModel(applica
     }
 }
 
-/** Every favicon size from [square] of [image]; halving first keeps a large crop from aliasing at 16 px. */
+// halving avoids aliasing
 private fun renderIcons(image: Bitmap, square: IntRect): Map<Int, FaviconIcon> {
     val cropped = runCatching { Bitmap.createBitmap(image, square.left, square.top, square.width, square.height) }.getOrNull()
         ?: return emptyMap()
@@ -279,7 +278,7 @@ fun FaviconGenerator(model: FaviconGeneratorModel = viewModel()) {
     CanonSplit(sidebar = listOf(input), main = listOf(sizes, snippet), banner = banner)
 }
 
-/** dt-ios FaviconSizeRow: the icon at up to 48 dp, unsmoothed, its pixel size and role, and a flush Share cell. */
+// dt-ios FaviconSizeRow
 @Composable
 private fun FaviconSizeRow(size: Int, image: ImageBitmap?, onShare: () -> Unit) {
     val c = LocalDelphiColours.current
@@ -310,7 +309,7 @@ private fun FaviconSizeRow(size: Int, image: ImageBitmap?, onShare: () -> Unit) 
     }
 }
 
-/** dt-ios FaviconCropView: the square that becomes the icon lit, outside dimmed. Drag the corner handle to resize, inside to move. */
+// dt-ios FaviconCropView
 @Composable
 private fun FaviconCrop(preview: ImageBitmap, pixels: IntSize, square: IntRect, onChange: (IntRect) -> Unit) {
     val c = LocalDelphiColours.current
@@ -340,7 +339,6 @@ private fun FaviconCrop(preview: ImageBitmap, pixels: IntSize, square: IntRect, 
     ) {
         val reach = with(density) { ImageCropReach.toPx() }
         val page = Size(pixels.width.toFloat(), pixels.height.toFloat())
-        // handle never clipped
         val imageFrame = ImageCrop.pageRect(page, Size(constraints.maxWidth.toFloat(), constraints.maxHeight.toFloat()), reach)
         val scale = imageFrame.width / max(pixels.width, 1)
         val shown = Rect(
@@ -356,7 +354,6 @@ private fun FaviconCrop(preview: ImageBitmap, pixels: IntSize, square: IntRect, 
                 .fillMaxSize()
                 .canonGrabPan(
                     grabs = { point ->
-                        // whole image keeps scrolling
                         val movable = current.width < pixels.width || current.height < pixels.height
                         nearHandle(point) || (movable && shown.contains(point))
                     },
@@ -379,7 +376,6 @@ private fun FaviconCrop(preview: ImageBitmap, pixels: IntSize, square: IntRect, 
                     val moving = grab
                     val next = when {
                         resizing -> {
-                            // top-leading corner fixed
                             val side = max(p.x - start.left, p.y - start.top)
                             val room = min(pixels.width - start.left, pixels.height - start.top).toFloat()
                             FaviconEngine.clamp(start.left.toFloat(), start.top.toFloat(), min(side, room), pixels.width, pixels.height)
@@ -414,7 +410,7 @@ private val sceneWindow = 380.dp
 private val sceneTouch = 60.dp
 private val sceneApp = 52.dp
 
-/** dt-ios FaviconScene: a browser tab with the 32 px icon at 16 dp, a home screen icon and an app icon. */
+// dt-ios FaviconScene
 @Composable
 private fun FaviconScene(tab: ImageBitmap?, touch: ImageBitmap?, app: ImageBitmap?, name: String?) {
     val top = LocalCanonCanvas.current.top
@@ -501,7 +497,6 @@ private fun SceneIcons(touch: ImageBitmap?, app: ImageBitmap?, name: String?) {
         listOf(Triple(touch, sceneTouch, RoundedCornerShape(sceneTouch * 0.225f)), Triple(app, sceneApp, CircleShape)).forEach { (image, side, shape) ->
             Column(Modifier.width(side), horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(Modifier.size(side, sceneTouch), contentAlignment = Alignment.Center) {
-                    // ios icon mask
                     SceneIcon(image, Modifier.size(side).clip(shape))
                 }
                 Text(

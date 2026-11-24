@@ -96,7 +96,6 @@ object PaletteExtractorEngine {
             Strategy.Dark -> 1 - cluster.l
             Strategy.Warm -> if (hue <= 70 || hue >= 320) chroma + 0.5 else chroma * 0.1
             Strategy.Cool -> if (hue in 150.0..300.0) chroma + 0.5 else chroma * 0.1
-            // rare colours outrank common
             Strategy.Accent -> {
                 val point = doubleArrayOf(cluster.l, cluster.a, cluster.b)
                 (large.minOfOrNull { distance(point, it) } ?: Double.POSITIVE_INFINITY) / ln(cluster.count + 2.0)

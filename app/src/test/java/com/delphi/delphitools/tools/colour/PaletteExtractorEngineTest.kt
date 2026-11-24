@@ -23,7 +23,6 @@ class PaletteExtractorEngineTest {
         assertTrue(PaletteExtractorEngine.rank(clusters, Strategy.Light, 1).first().l > blue[0])
         assertEquals(2, PaletteExtractorEngine.rank(clusters, Strategy.Dominant, 5).size)
 
-        // k exceeds distinct pixels
         val flat = List(5) { doubleArrayOf(0.5, 0.0, 0.0) }
         assertEquals(1, PaletteExtractorEngine.cluster(flat, 3).size)
         assertEquals(1, PaletteExtractorEngine.cluster(listOf(doubleArrayOf(0.5, 0.0, 0.0)), PaletteExtractorEngine.MAX_CLUSTERS).size)
@@ -51,7 +50,6 @@ class PaletteExtractorEngineTest {
         assertEquals(0.5, grey[0], 1e-6)
         assertEquals(0.0, grey[1], 1e-6)
 
-        // pink maps to red
         val pixels = intArrayOf(0xFFE0405A.toInt(), 0xFF0000FF.toInt(), 0)
         assertTrue(PalettePainter.paint(pixels, 3, listOf(parseHex("0000FF")!!, parseHex("FF0000")!!)))
         assertArrayEquals(intArrayOf(0xFFFF0000.toInt(), 0xFF0000FF.toInt(), 0), pixels)

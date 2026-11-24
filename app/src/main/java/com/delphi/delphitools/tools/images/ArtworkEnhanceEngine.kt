@@ -11,7 +11,7 @@ object ArtworkEnhanceEngine {
     fun noise(x: Int, y: Int, seed: Int, scale: Int): Int {
         val bx = x / scale
         val by = y / scale
-        // murmur3 finaliser over the block coordinates
+        // murmur3 finaliser
         var h = bx * -0x61c88647 xor by * 0x27d4eb2d xor seed * 0x165667b1
         h = h xor (h ushr 16)
         h *= -0x7a143595

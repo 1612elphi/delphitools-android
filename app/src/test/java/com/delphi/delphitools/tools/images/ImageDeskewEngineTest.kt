@@ -33,7 +33,6 @@ class ImageDeskewEngineTest {
             assertEquals(corner.x, point.x, 1e-9)
             assertEquals(corner.y, point.y, 1e-9)
         }
-        // the centre is where the diagonals cross
         val centre = ImageDeskewEngine.project(0.5, 0.5, skewed)
         val (a, b, c, d) = listOf(skewed[0], skewed[2], skewed[1], skewed[3])
         val t = ((c.x - a.x) * (d.y - c.y) - (c.y - a.y) * (d.x - c.x)) / ((b.x - a.x) * (d.y - c.y) - (b.y - a.y) * (d.x - c.x))

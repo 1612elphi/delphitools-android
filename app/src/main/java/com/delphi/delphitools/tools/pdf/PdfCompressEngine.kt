@@ -57,7 +57,7 @@ object PdfCompressEngine {
         if ((dict["Subtype"] as? PdfName)?.name != "Image" || file.resolve(dict["ImageMask"]) == true) return null
         if ((file.resolve(dict["BitsPerComponent"]) as? Number)?.toInt() != 8) return null
         if (dict["Decode"] != null || file.resolve(dict["Mask"]) is List<*> || dict["SMaskInData"] != null) return null
-        // a matte needs the mask at the image's size
+        // matte needs full-size mask
         if (file.dict(dict["SMask"])?.get("Matte") != null) return null
         if (!rgb(file, file.resolve(dict["ColorSpace"]))) return null
         val width = (file.resolve(dict["Width"]) as? Number)?.toInt() ?: return null
@@ -66,7 +66,7 @@ object PdfCompressEngine {
         val bytes = width.toLong() * height * 3
         return when (PdfFilters.filters(dict)) {
             listOf("DCTDecode") -> ImageSamples(width, height, stream.data, null)
-            // a predictor adds one byte a row
+            // predictor adds row byte
             listOf("FlateDecode") -> runCatching { PdfFilters.decode(stream, limit = bytes + height + 4096) }.getOrNull()
                 ?.takeIf { it.size >= bytes }
                 ?.let { ImageSamples(width, height, null, it) }

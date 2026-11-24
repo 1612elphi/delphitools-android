@@ -102,7 +102,7 @@ class PdfOrganiserModel(application: Application) : AndroidViewModel(application
         reading += uris.size
         viewModelScope.launch {
             var insertAt = minOf(at, entries.size)
-            // one at a time keeps the picked order
+            // keeps the picked order
             for (uri in uris) {
                 val copied = PdfDocuments.copy(app, uri)
                 val loaded = copied?.let { (file, name) ->

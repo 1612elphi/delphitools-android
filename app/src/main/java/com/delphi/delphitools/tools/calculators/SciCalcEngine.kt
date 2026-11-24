@@ -92,7 +92,6 @@ object SciCalcEngine {
 
         private fun fromRadians(value: Double) = if (degrees) value * 180 / PI else value
 
-        /** Trig noise near round values. */
         private fun clean(value: Double) = when {
             abs(value) < 1e-12 -> 0.0
             abs(value - 1) < 1e-12 -> 1.0
@@ -143,7 +142,7 @@ object SciCalcEngine {
                     "log" -> log10(arg)
                     "ln" -> ln(arg)
                     "abs" -> abs(arg)
-                    // root(n, x): nth root
+                    // root(n, x)
                     "root" -> if (peek() == ',') {
                         advance()
                         val x = addSub()

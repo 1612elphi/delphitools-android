@@ -102,7 +102,6 @@ object WhisperModelStore {
         }
     }
 
-    /** One file into [dir]: resumes its `.part`, hashes it whole, renames it over [WhisperFile.name]. */
     private suspend fun fetch(url: String, dir: File, file: WhisperFile, progress: (Long) -> Unit) = withContext(Dispatchers.IO) {
         val target = File(dir, file.name)
         if (target.isFile && target.length() == file.bytes) return@withContext
@@ -116,7 +115,7 @@ object WhisperModelStore {
                 connection.connectTimeout = 15_000
                 connection.readTimeout = 30_000
                 connection.useCaches = false
-                // the platform default names the device model and build
+                // default names the device
                 connection.setRequestProperty("User-Agent", "delphitools")
                 connection.setRequestProperty("Accept-Encoding", "identity")
                 if (from > 0) connection.setRequestProperty("Range", "bytes=$from-")

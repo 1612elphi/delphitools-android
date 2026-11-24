@@ -5,7 +5,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class PixelPickerSamplerTest {
-    // 3x2: rgb, white/black/grey
     private val pixels = intArrayOf(
         0xFFFF0000.toInt(), 0xFF00FF00.toInt(), 0xFF0000FF.toInt(),
         0xFFFFFFFF.toInt(), 0xFF000000.toInt(), 0xFF808080.toInt(),

@@ -141,7 +141,7 @@ object TextEditorEngine {
         return count
     }
 
-    // as NSString: CR LF counts as two separators
+    // nsstring: cr lf two
     fun lines(text: String) = if (text.isEmpty()) 0 else 1 + text.count { it in "\n\u000B\u000C\r\u0085  " }
 
     // 200 words per minute

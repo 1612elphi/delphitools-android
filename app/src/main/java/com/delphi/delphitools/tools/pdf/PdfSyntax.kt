@@ -166,7 +166,7 @@ internal class PdfLexer(private val bytes: ByteArray, var pos: Int, private val 
                     }
                 }
                 13 -> {
-                    // an unescaped end of line reads as a line feed
+                    // bare eol reads lf
                     if (at(pos) == 10) pos++
                     b = 10
                 }
@@ -293,7 +293,7 @@ object PdfFilters {
                 out.write(buffer, 0, n)
             }
         } catch (_: java.util.zip.DataFormatException) {
-            // a damaged tail keeps what came before it
+            // damaged tail keeps prefix
         } finally {
             inflater.end()
         }
@@ -407,7 +407,6 @@ object PdfSerialiser {
 
 internal fun OutputStream.ascii(text: String) = write(text.toByteArray(Charsets.ISO_8859_1))
 
-/** Counts what goes through, for xref offsets. */
 private class CountingStream(private val out: OutputStream) : OutputStream() {
     var count = 0L
         private set

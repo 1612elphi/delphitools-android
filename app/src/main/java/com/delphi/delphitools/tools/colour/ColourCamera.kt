@@ -184,7 +184,7 @@ class ColourCameraModel(application: Application) : AndroidViewModel(application
     /** Camera thread. */
     fun receive(frame: YuvFrame) {
         viewModelScope.launch {
-            // a frame queued before close lands after stopped()
+            // late frame after stop
             if (!live || device?.isOpen != true) return@launch
             latest = frame
             streaming = true
@@ -323,7 +323,6 @@ fun ColourCamera(model: ColourCameraModel = viewModel()) {
         CanonRows {
             CanonSegmented(listOf("Colour", "Palette"), if (colourMode) 0 else 1) {
                 model.palette = it == 1
-                // colour mode stays live
                 if (!model.palette && hasStill) model.retake()
                 model.reprocess()
             }
@@ -495,7 +494,7 @@ private fun ColourCameraViewfinder(model: ColourCameraModel, foreground: Boolean
             }
         }
 
-        // a refresh cannot undo a drag
+        // refresh keeps the drag
         var dragged by remember { mutableStateOf<Rect?>(null) }
         val point = model.point
         val region = dragged ?: model.region
@@ -597,7 +596,7 @@ private fun ColourCameraViewfinder(model: ColourCameraModel, foreground: Boolean
     }
 }
 
-/** dt-ios CapturedColourGrid: the colours taken so far as swatches a row at a time; a tap copies, a long press removes. */
+// dt-ios CapturedColourGrid
 @Composable
 private fun CapturedColourGrid(colours: MutableList<Rgb>) {
     val c = LocalDelphiColours.current

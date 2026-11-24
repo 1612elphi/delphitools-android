@@ -121,10 +121,10 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-// a take finishes writing after its page has gone
+// write outlives its page
 private val saves = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-/** The picture runs this far behind capture, so the strip always has peaks up to its head. */
+// picture lag behind capture
 private const val LATENCY_NANOS = 120_000_000L
 private const val FOLDER = "VoiceRecordings"
 
@@ -228,7 +228,7 @@ class VoiceRecorderModel(application: Application) : AndroidViewModel(applicatio
         refresh()
     }
 
-    // never overwrite a sibling; in-flight writes count
+    // in-flight writes count
     private fun free(name: String, extension: String) =
         VoiceRecorderEngine.freeName(name, extension) { File(folder, it).exists() || it in writing }
 
@@ -238,7 +238,6 @@ class VoiceRecorderModel(application: Application) : AndroidViewModel(applicatio
         refresh()
     }
 
-    // MARK: recording
 
     @SuppressLint("MissingPermission")
     fun start() {
@@ -273,17 +272,16 @@ class VoiceRecorderModel(application: Application) : AndroidViewModel(applicatio
         val held = held ?: return false
         if (runCatching { record.startRecording() }.isFailure || record.recordingState != AudioRecord.RECORDSTATE_RECORDING) return false
         reader = viewModelScope.launch(Dispatchers.IO) {
-            // device buffers of up to 20 ms
             val buffer = FloatArray(max(1, record.sampleRate / 50))
             while (isActive) {
                 val read = record.read(buffer, 0, buffer.size, AudioRecord.READ_BLOCKING)
-                // a pause or stop cancels before stopping the record, which then fails the read
+                // cancel fails the read
                 if (read < 0) {
                     if (isActive) viewModelScope.launch { if (this@VoiceRecorderModel.held === held) stop() }
                     break
                 }
                 if (read == 0) continue
-                // a pause cancels this job before it scrubs; the lock keeps a late buffer off the new head
+                // lock blocks late buffer
                 val kept = synchronized(held) {
                     if (isActive) held.append(buffer, read)
                     isActive
@@ -370,7 +368,6 @@ class VoiceRecorderModel(application: Application) : AndroidViewModel(applicatio
         stop()
     }
 
-    // MARK: playback
 
     fun play(take: VoiceTake) {
         if (recording) return
@@ -493,7 +490,6 @@ fun VoiceRecorder(model: VoiceRecorderModel = viewModel()) {
     val playing = model.playing != null
     val active = model.recording || playing
     val held = if (playing) model.playbackPaused else model.paused
-    // every display frame while capturing or playing
     var frame by remember { mutableLongStateOf(0L) }
     val running = model.recording && !model.paused || playing && !model.playbackPaused
     LaunchedEffect(running) {
@@ -621,7 +617,7 @@ fun VoiceRecorder(model: VoiceRecorderModel = viewModel()) {
     renaming?.let { take -> VoiceRenameDialog(take.name, onDismiss = { renaming = null }) { model.rename(take, it) } }
 }
 
-/** dt-ios VoiceTakeStrip: the held take as a waveform under a fixed head; after a scrub back, what lies ahead of the head is dim. */
+// dt-ios VoiceTakeStrip
 @Composable
 private fun VoiceTakeStrip(model: VoiceRecorderModel, position: Double, showsHead: Boolean) {
     val c = LocalDelphiColours.current
@@ -645,7 +641,6 @@ private fun VoiceTakeStrip(model: VoiceRecorderModel, position: Double, showsHea
             val height = max(1f, (peak * half).roundToInt() * 2f)
             drawRect(colour, Offset(x, mid - height / 2), Size(step, height))
         }
-        // overwrite target, grey
         drawRect(if (flipped) dim else lit, Offset(0f, mid - 0.5f), Size(headX, 1f))
         drawRect(if (flipped) lit else dim, Offset(headX, mid - 0.5f), Size(size.width - headX, 1f))
         strip.behind.forEachIndexed { index, peak -> column(index - strip.behind.size, peak, lit) }
@@ -719,7 +714,6 @@ private fun VoicePlatter(
         val height = size.height
         val path = Path()
         var x = -offset - period - height
-        // 45 degree hatch
         while (x < size.width + period) {
             path.moveTo(x, height)
             path.lineTo(x + height, 0f)
@@ -729,7 +723,7 @@ private fun VoicePlatter(
     }
 }
 
-/** dt-ios VoiceTakeRow: a play cell, the name over its length and date, and a menu cell. */
+// dt-ios VoiceTakeRow
 @Composable
 private fun VoiceTakeRow(
     take: VoiceTake,

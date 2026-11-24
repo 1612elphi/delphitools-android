@@ -274,7 +274,7 @@ fun ArtworkEnhancer(model: ArtworkEnhancerModel = viewModel()) {
     CanonSplit(sidebar = listOf(canvas), main = main, halves = true, collapsesTo = 240.dp)
 }
 
-/** dt-ios ArtworkFrame: [content] fitted at [aspect] inside the panel padding, a caption under it; the empty state without an aspect. */
+// dt-ios ArtworkFrame
 @Composable
 private fun ArtworkFrame(aspect: IntSize?, caption: String? = null, content: @Composable () -> Unit) {
     val c = LocalDelphiColours.current

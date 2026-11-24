@@ -45,7 +45,7 @@ class TextScratchpadEngineTest {
 
     @Test
     fun find() {
-        // ScratchpadEditor.selfCheck
+        // dt-ios ScratchpadEditor.selfCheck
         assertEquals(listOf(TextSpan(0, 3), TextSpan(8, 11)), e.matches("a.b", false, "A.B axb a.b"))
         assertEquals(2, e.matches("a.b", true, "A.B axb a.b")?.size)
         assertNull(e.matches("(", true, "x"))

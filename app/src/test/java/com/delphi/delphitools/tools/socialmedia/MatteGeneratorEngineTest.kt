@@ -32,7 +32,6 @@ class MatteGeneratorEngineTest {
         assertEquals(3, MatteEngine.boxes(8.0).size)
         val flat = IntArray(64) { 0xFF336699.toInt() }
         assertTrue(MatteEngine.blur(flat, 8, 8, 3.0).all { it == 0xFF336699.toInt() })
-        // one white pixel spreads and keeps its total
         val dot = IntArray(81) { if (it == 40) 0xFFFFFFFF.toInt() else 0xFF000000.toInt() }
         val spread = MatteEngine.blur(dot, 9, 9, 1.0)
         assertTrue((spread[40] and 0xFF) in 1..254)

@@ -334,7 +334,7 @@ fun SubtitleStudio(model: SubtitleStudioModel = viewModel()) {
     )
 }
 
-/** dt-ios SubtitleBurnRenderer.bitmap: the wrapped lines in the style, cut to their bounds; the rect is in frame pixels. */
+// dt-ios SubtitleBurnRenderer.bitmap
 private object SubtitleStudioRenderer {
     class Rendered(val image: ImageBitmap, val left: Int, val top: Int)
 
@@ -359,7 +359,7 @@ private object SubtitleStudioRenderer {
         val lines = SubtitleStudioEngine.layout(text, frameWidth.toFloat(), frameHeight.toFloat(), style, fill::measureText)
         if (lines.isEmpty()) return null
         val (dx, dy) = SubtitleStudioEngine.overhang(style, px)
-        // ascenders, stroke, shadow overhang
+        // room for stroke, shadow
         val left = floor(lines.minOf { it.left } - dx).toInt()
         val top = floor(lines.minOf { it.top } - dy).toInt()
         val right = ceil(lines.maxOf { it.right } + dx).toInt()
@@ -392,7 +392,7 @@ private object SubtitleStudioRenderer {
     }
 }
 
-/** dt-ios SubtitleStudioBoard: the subtitle drawn as it would burn over the video, dragged by a handle round it, with safe corners and snap guides. */
+// dt-ios SubtitleStudioBoard
 @Composable
 private fun SubtitleStudioBoard(
     playback: AVEditPlayback,
@@ -417,7 +417,6 @@ private fun SubtitleStudioBoard(
             Rect(Offset((bounds.width - size.width) / 2, (bounds.height - size.height) / 2), size)
         }
         AVEditPlayerView(playback, aspect)
-        // one bitmap per direction
         val placed = style.copy(x = 0.0, y = if (SubtitleStudioEngine.growsDown(style.y)) -0.5 else 0.0)
         val pixelsWide = picture.width.roundToInt()
         val pixelsHigh = picture.height.roundToInt()
@@ -428,7 +427,6 @@ private fun SubtitleStudioBoard(
             val dy = ((style.y - placed.y) * pixelsHigh).roundToInt()
             Rect(Offset(picture.left + it.left + dx, picture.top + it.top + dy), Size(it.image.width.toFloat(), it.image.height.toFloat()))
         }
-        // wrap column, text height
         val handle = subtitle?.let {
             val column = style.width.toFloat() * picture.width
             Rect(Offset(picture.center.x + style.x.toFloat() * picture.width - column / 2, it.top), Size(column, it.height))
@@ -491,7 +489,6 @@ private fun SubtitleStudioBoard(
                 }
             }
         }
-        // edge away from subtitle
         val hint by animateFloatAsState(if (handle != null && !dragging) 1f else 0f, tween(200), label = "hint")
         if (handle != null && hint > 0) {
             var plate by remember { mutableStateOf(0) }
@@ -516,7 +513,7 @@ private fun SubtitleStudioBoard(
     }
 }
 
-/** dt-ios SubtitleStudioStrips.CueLane: each cue as a block on the file's time axis, the one playing lit; a tap on a cue seeks to it. */
+// dt-ios SubtitleStudioStrips.CueLane
 @Composable
 private fun SubtitleCueLane(
     cues: List<SubtitleCue>,
@@ -582,7 +579,6 @@ internal fun SubtitleCueRow(index: Int, cue: SubtitleCue, marked: Boolean, onCha
         Modifier
             .fillMaxWidth()
             .background(c.card)
-            // fields keep their taps
             .pointerInput(Unit) { detectTapGestures { select() } }
     ) {
         Column(Modifier.padding(start = 14.dp, top = 8.dp, end = 12.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -597,7 +593,6 @@ internal fun SubtitleCueRow(index: Int, cue: SubtitleCue, marked: Boolean, onCha
     }
 }
 
-/** A cue time field: a valid timestamp applies when editing ends, anything else reverts. */
 @Composable
 private fun CueTime(ms: Long, style: androidx.compose.ui.text.TextStyle, modifier: Modifier = Modifier, onChange: (Long) -> Unit) {
     var text by remember(ms) { mutableStateOf(SubtitleCodec.formatTimestamp(ms, '.')) }

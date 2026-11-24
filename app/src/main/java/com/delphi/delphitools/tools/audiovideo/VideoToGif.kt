@@ -97,7 +97,6 @@ private suspend fun writeGif(context: Context, uri: Uri, start: Double, end: Dou
                 for (index in 0 until frames) {
                     ensureActive()
                     val us = AVEditEngine.micros(from + index.toDouble() / fps)
-                    // failed frames retry once
                     val image = retriever.getScaledFrameAtTime(us, MediaMetadataRetriever.OPTION_CLOSEST, width, width * 8)
                         ?: checkNotNull(retriever.getScaledFrameAtTime(us, MediaMetadataRetriever.OPTION_CLOSEST, width, width * 8))
                     val (w, h) = size ?: (image.width to image.height).also {
@@ -136,7 +135,6 @@ class VideoToGifModel(application: Application) : AndroidViewModel(application) 
     val frames get() = VideoToGifEncoder.frameCount(start, end, fps.toInt())
     val isOverCap get() = frames > VideoToGifEncoder.MAX_FRAMES
 
-    // encoder keeps aspect
     val outputHeight get() = source.facts?.takeIf { it.width > 0 }?.let { (width.toDouble() * it.height / it.width).roundToInt() } ?: 0
 
     fun load(uri: Uri) {
@@ -339,7 +337,7 @@ fun VideoToGif(model: VideoToGifModel = viewModel()) {
     )
 }
 
-/** dt-ios GIFView: the written GIF, playing, at the video's aspect. */
+// dt-ios GIFView
 @Composable
 private fun GifPreview(file: File, aspect: Float) {
     val drawable by produceState<Drawable?>(null, file) {

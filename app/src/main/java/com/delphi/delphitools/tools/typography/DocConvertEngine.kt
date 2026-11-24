@@ -127,7 +127,6 @@ object DocConvertEngine {
         return DocFormat.Plain
     }
 
-    // Markdown reader
 
     fun parseMarkdown(source: String): List<DocBlock> = markdownBlocks(source).map { it.first }
 
@@ -265,7 +264,7 @@ object DocConvertEngine {
         }
         fun find(needle: Char, from: Int) = chars.indexOf(needle, from).takeIf { it >= 0 }
         fun findMarker(marker: String, from: Int) = chars.indexOf(marker, from).takeIf { it >= 0 }
-        // a forward-only cursor: `[` with no `]` after it would otherwise rescan the rest for every bracket
+        // forward-only: avoids rescans
         var bracketCursor = 0
         fun findCloseBracket(from: Int): Int? {
             bracketCursor = maxOf(bracketCursor, from)
@@ -324,13 +323,11 @@ object DocConvertEngine {
         return runs
     }
 
-    // Plain text reader
 
     fun parsePlain(source: String): List<DocBlock> =
         source.replace("\r\n", "\n").split("\n\n").map { it.trim() }.filter { it.isNotEmpty() }
             .map { DocBlock.Paragraph(listOf(DocInline(it.replace("\n", " ")))) }
 
-    // HTML reader
 
     private val dotAll = setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
     private val stripped = listOf(
@@ -395,7 +392,6 @@ object DocConvertEngine {
                 index = end
                 val collapsed = if (pending == "pre") decoded else spaces.replace(decoded, " ")
                 if (collapsed.isBlank()) {
-                    // keeps inter-tag word gaps
                     if (runs.isNotEmpty() || text.isNotEmpty()) text.append(' ')
                 } else {
                     text.append(collapsed)
@@ -454,7 +450,7 @@ object DocConvertEngine {
                 }
             }
         }
-        // unconditional: `<li>` outside any list still has items to flush
+        // stray li still flushes
         closeList()
         return blocks
     }
@@ -479,7 +475,6 @@ object DocConvertEngine {
         return out.replace("&amp;", "&")
     }
 
-    // Writers
 
     fun markdown(blocks: List<DocBlock>): String {
         val rendered = blocks.map { block ->
@@ -550,7 +545,6 @@ object DocConvertEngine {
         return rendered.joinToString("\n\n") + if (rendered.isEmpty()) "" else "\n"
     }
 
-    // Rich text
 
     private val headingSizes = listOf(2.0f, 1.6f, 1.35f, 1.2f, 1.1f, 1.0f)
 
@@ -645,14 +639,13 @@ object DocConvertEngine {
                 char == '\n' -> out.append("\\line ")
                 char == '\t' -> out.append("\\tab ")
                 char.code < 0x80 -> out.append(char)
-                // rtf \u takes a signed 16-bit value
+                // rtf \u is signed 16-bit
                 else -> out.append("\\u").append(char.code.toShort().toInt()).append('?')
             }
         }
         return out.toString()
     }
 
-    // Ledger
 
     fun ledger(blocks: List<DocBlock>): List<DocLedgerRow> {
         val counts = mutableMapOf<DocElement, Int>()

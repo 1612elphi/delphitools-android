@@ -6,7 +6,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ImageTracerEngineTest {
-    // expected file: this picture through dt-core imagetracer_v1.2.6.js under node, the same options
+    // from imagetracer_v1.2.6.js, node
     private fun image(w: Int, h: Int) = ByteArray(w * h * 4).also { d ->
         for (y in 0 until h) for (x in 0 until w) {
             val i = (y * w + x) * 4

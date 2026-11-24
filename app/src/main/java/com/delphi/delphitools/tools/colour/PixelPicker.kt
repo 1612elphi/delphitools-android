@@ -189,7 +189,7 @@ class PixelPickerModel(application: Application) : AndroidViewModel(application)
 
     private fun sample(image: Bitmap) {
         val (x, y) = pixel
-        // getPixel converts to sRGB; getColor keeps the bitmap's own colour space
+        // getColor keeps colour space
         sampled = rgbOf(image.getPixel(x, y))
         val patch = PixelPickerSampler.loupe(image.width, image.height, x, y, LOUPE_RADIUS, image::getPixel)
         val side = LOUPE_RADIUS * 2 + 1
@@ -279,7 +279,7 @@ private sealed interface Grab {
     data class Loupe(val from: IntOffset, val at: Offset) : Grab
 }
 
-/** PixelPickerPicture: the image fitted below the status bar, a crosshair on the sampled pixel and the loupe beside it. */
+// dt-ios PixelPickerPicture
 @Composable
 private fun PixelPickerPicture(model: PixelPickerModel, modifier: Modifier) {
     val c = LocalDelphiColours.current

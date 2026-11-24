@@ -167,7 +167,7 @@ fun AudioNormaliser(model: AudioNormaliserModel = viewModel()) {
     )
 }
 
-/** dt-ios AudioNormaliserPicture: the wave before and after the gain, the -1 dBFS ceiling dashed, the gain as a figure. */
+// dt-ios AudioNormaliserPicture
 @Composable
 private fun NormaliserPicture(peaks: AVEditPeaks?, plan: AudioGainPlan?) {
     val c = LocalDelphiColours.current
@@ -211,7 +211,6 @@ private fun NormaliserPicture(peaks: AVEditPeaks?, plan: AudioGainPlan?) {
                 after.addRect(Rect(Offset(x, mid - boostedHigh * half), Size(width, max(1f, (boostedHigh - boostedLow) * half))))
             }
             val faded = c.mutedForeground.copy(alpha = 0.55f)
-            // smaller wave in front
             if (gain >= 1) {
                 drawPath(after, c.primary)
                 drawPath(before, faded)

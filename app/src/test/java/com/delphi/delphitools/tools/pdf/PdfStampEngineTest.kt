@@ -53,7 +53,6 @@ class PdfStampEngineTest {
         for (rotation in listOf(0, 90, 180, 270)) {
             val m = PdfStampEngine.displayMatrix(box, rotation)
             val size = PdfCropEngine.displaySize(box, rotation)
-            // display top-left, through PdfCropEngine's own mapping, must match the matrix
             val expected = PdfCropEngine.toPage(PdfRect(0.0, 0.0, 1.0, 1.0), box, rotation)
             val x = m[2] * size.height + m[4]
             val y = m[3] * size.height + m[5]
@@ -76,7 +75,6 @@ class PdfStampEngineTest {
         val stamp = PdfFilters.decode(out.resolve(contents.last()) as PdfStream)!!.toString(Charsets.ISO_8859_1)
         assertTrue(stamp, stamp.contains("(3 / 3) Tj") && stamp.contains("(DRAFT) Tj"))
         assertTrue(out.dict(out.dict(last.attribute("Resources"))!!["Font"])!!.containsKey("DTStampF"))
-        // first page number
         assertTrue(PdfFilters.decode(out.resolve((out.resolve(out.pages[0].dict["Contents"]) as List<*>).last()) as PdfStream)!!
             .toString(Charsets.ISO_8859_1).contains("(1 / 3) Tj"))
     }
@@ -97,7 +95,6 @@ class PdfStampEngineTest {
         val stamped = PdfFile(PdfStampEngine.stamp(file, PdfStampEngine.Options(stampOn = true, stampText = "DRAFT")))
         val contents = stamped.resolve(stamped.pages[0].dict["Contents"]) as List<*>
         val stamp = PdfFilters.decode(stamped.resolve(contents.last()) as PdfStream)!!.toString(Charsets.ISO_8859_1)
-        // the save before the content and the two the content left open
         assertTrue(stamp, stamp.startsWith("\nQ\nQ\nQ\nq "))
     }
 }

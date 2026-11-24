@@ -363,7 +363,6 @@ fun Imposer(model: ImposerModel = viewModel()) {
     val stripKey = listOf(config, streamed, sheets, paperColours)
     val first = remember { booleanArrayOf(true) }
     LaunchedEffect(stripKey) {
-        // strip redraws after drags
         if (!first[0]) delay(120)
         first[0] = false
         val shown = thumbnails

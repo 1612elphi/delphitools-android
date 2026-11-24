@@ -181,7 +181,6 @@ class BarcodeGeneratorModel : ViewModel() {
             if (svg) {
                 context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("SVG", written.svg(pixels)))
             } else {
-                // png keeps transparency
                 val data = withContext(Dispatchers.Default) { written.png(context, pixels) } ?: return@launch
                 ImageFiles.copyPng(context, data, "${kind.fileStem}.png")
             }
@@ -275,7 +274,6 @@ fun BarcodeGenerator(model: BarcodeGeneratorModel = viewModel()) {
         }
     }
 
-    // stacked: not full screen
     val canvas = CanonSection.canvas(CanonCanvasSize.Aspect(1f), background = c.card, maxHeight = 520.dp) {
         CodeSheetPicture(sheet, kind.label, model.pixels, Icons.Outlined.ViewWeek, if (sheet == null) null else model.shownText)
     }

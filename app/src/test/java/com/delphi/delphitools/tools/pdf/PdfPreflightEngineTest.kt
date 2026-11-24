@@ -12,7 +12,6 @@ class PdfPreflightEngineTest {
 
     private fun stream(text: String) = PdfStream(linkedMapOf(), text.toByteArray(Charsets.ISO_8859_1))
 
-    /** Page 1: trim and bleed, an unembedded font, a 72 PPI image, a thin stroke, soft transparency, RGB and a rich black. */
     private fun sample(): PdfFile {
         val out = ByteArrayOutputStream()
         val writer = PdfWriter(out)

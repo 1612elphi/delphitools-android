@@ -191,7 +191,6 @@ class TimeCalcModel(application: Application) : AndroidViewModel(application) {
     private var typing: Job? = null
 
     init {
-        // week gives visible span
         offsetEnd(java.time.temporal.ChronoUnit.DAYS, 7)
         fillNow()
         val assets = application.assets
@@ -295,7 +294,6 @@ private fun parseLand(json: String): List<FloatArray> {
 
 private val formatters = HashMap<String, DateFormat>()
 
-/** A formatter for a date skeleton in the user's locale, in [zone]. */
 private fun formatter(skeleton: String, zone: String = TimeZone.getDefault().id): DateFormat =
     formatters.getOrPut("$skeleton|$zone|${Locale.getDefault()}") {
         DateFormat.getInstanceForSkeleton(skeleton, Locale.getDefault()).apply { timeZone = android.icu.util.TimeZone.getTimeZone(zone) }
@@ -304,7 +302,7 @@ private fun formatter(skeleton: String, zone: String = TimeZone.getDefault().id)
 private fun formatted(skeleton: String, seconds: Double, zone: String = TimeZone.getDefault().id) =
     runCatching { formatter(skeleton, zone).format(Date((seconds * 1000).toLong())) }.getOrDefault(DASH)
 
-/** Full date and long time, as DateFormatter's .full and .long. */
+// DateFormatter .full, .long
 private fun fullDate(millis: Long, zone: String): String = runCatching {
     DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.LONG, Locale.getDefault())
         .apply { timeZone = android.icu.util.TimeZone.getTimeZone(zone) }
@@ -313,7 +311,7 @@ private fun fullDate(millis: Long, zone: String): String = runCatching {
 
 private fun epochMillis(seconds: Double): Long? = (seconds * 1000).takeIf { abs(it) < 8.64e15 }?.toLong()
 
-/** Days to seconds, abbreviated, zero units dropped: DateComponentsFormatter's .abbreviated. */
+// DateComponentsFormatter .abbreviated
 private fun breakdown(parts: IntArray): String {
     val units = listOf(MeasureUnit.DAY, MeasureUnit.HOUR, MeasureUnit.MINUTE, MeasureUnit.SECOND)
     val measures = parts.indices.filter { parts[it] > 0 }.map { Measure(parts[it], units[it]) }
@@ -430,7 +428,6 @@ fun TimeCalc(model: TimeCalcModel = viewModel()) {
     CanonSplit(sidebar = listOf(controls), main = listOf(results), banner = picture)
 }
 
-/** A date and time as a flush cell that opens the system date and time pickers, beside a Now cell. */
 @Composable
 private fun TimeDateCell(millis: Long, label: String, onChange: (Long) -> Unit) {
     val context = LocalContext.current
@@ -452,12 +449,11 @@ private fun TimeDateCell(millis: Long, label: String, onChange: (Long) -> Unit) 
     }
 }
 
-/** A flush cell showing a zone that opens a menu: common zones first, then every zone by region. */
 @Composable
 private fun TimeZoneCell(zone: String, millis: Long, label: String, onPick: (String) -> Unit) {
     val c = LocalDelphiColours.current
     var open by remember { mutableStateOf(false) }
-    // null: common zones; "": regions; else the region's zones
+    // null common, "" regions
     var level by remember { mutableStateOf<String?>(null) }
     val title = TimeCalcZones.title(zone, millis)
     Box(propagateMinConstraints = true) {
@@ -530,7 +526,6 @@ private fun ZoneItem(title: String, detail: String, checked: Boolean, onClick: (
     }
 }
 
-/** A submenu row: [forward] opens it, else it leads back out. */
 @Composable
 private fun ZoneFolder(title: String, forward: Boolean, onClick: () -> Unit) {
     val c = LocalDelphiColours.current
@@ -549,22 +544,17 @@ private fun ZoneFolder(title: String, forward: Boolean, onClick: () -> Unit) {
     }
 }
 
-/** Axis ends and the marked times, in seconds since 1970; what animates. */
 private data class TimePose(val lo: Double = 0.0, val hi: Double = 1.0, val a: Double = 0.0, val b: Double = 0.0)
 
 private const val SETTLE_MILLIS = 600
-/** Beyond this a date is too far out to draw, about 317,000 years either way. */
+// about 317,000 years
 private const val REACH = 1e13
 private const val STRIP = 24f
-/** Share of a day strip before the instant. */
 private const val LEAD = 0.3
 private const val LINE = 14f
 private const val FIGURE_ROW = 40f
-/** Room from which the Timezone map sits beside the day strips instead of above them. */
 private const val BESIDE_ROOM = 560f
-/** Tallest the map gets above the strips. */
 private const val MAP_CAP = 190f
-/** Two zone captions and their strips. */
 private const val STRIPS = (LINE + 4 + STRIP) * 2 + 10
 
 private fun pose(scene: TimeScene, now: Double): TimePose = when (scene) {
@@ -572,11 +562,9 @@ private fun pose(scene: TimeScene, now: Double): TimePose = when (scene) {
         val seconds = scene.seconds?.coerceIn(-REACH, REACH) ?: now
         val lo = min(0.0, seconds)
         val hi = maxOf(TimeCalcAxis.LIMIT, seconds, now)
-        // 1970 tick, local time
         TimePose(lo - (hi - lo) * 0.01, hi + (hi - lo) * 0.01, seconds)
     }
     is TimeScene.Span -> {
-        // label room either side
         val half = max(abs(scene.b - scene.a), 3600.0) / 2 * 1.45
         TimePose((scene.a + scene.b) / 2 - half, (scene.a + scene.b) / 2 + half, scene.a, scene.b)
     }
@@ -662,7 +650,6 @@ private fun TimePicture(scene: TimeScene, changedAt: Double, land: List<FloatArr
     fun shown(t: Float): TimePose {
         val eased = PxToRemEngine.settle(t).toDouble()
         fun mix(a: Double, b: Double) = a + (b - a) * eased
-        // zoom eases logarithmically
         val width = exp(ln(start.hi - start.lo) + (ln(goal.hi - goal.lo) - ln(start.hi - start.lo)) * min(1.0, eased))
         val centre = mix((start.lo + start.hi) / 2, (goal.lo + goal.hi) / 2)
         return TimePose(centre - width / 2, centre + width / 2, mix(start.a, goal.a), mix(start.b, goal.b))
@@ -732,7 +719,6 @@ private val small = CanonText.captionSemibold
 private val plain = CanonText.caption
 private val timeMono = TextStyle(fontFamily = DelphiMono, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
 
-/** One frame of the picture, in dp. */
 private class TimeDrawing(
     val scope: DrawScope,
     val measurer: TextMeasurer,
@@ -748,7 +734,6 @@ private class TimeDrawing(
     private val zone = TimeZone.getDefault().id
     private val zoneId = ZoneId.systemDefault()
 
-    /** Width of the time axis; the day strips give some of the room to the map. */
     private var axisRoom = room
 
     private fun x(seconds: Double): Float {
@@ -773,7 +758,6 @@ private class TimeDrawing(
         scope.drawText(this, colour, at)
     }
 
-    /** Draws [layout] centred on [centre], kept inside the picture, and returns where. */
     private fun place(layout: TextLayoutResult, colour: Color, centre: Float, y: Float): Rect {
         val width = layout.size.width.toFloat()
         val origin = Offset(min(max(centre - width / 2, left), left + room - width), y)
@@ -818,7 +802,6 @@ private class TimeDrawing(
         val labelY = top + 6
         val axis = labelY + LINE * 2 + 14
         val span = shown.hi - shown.lo
-        // weekends at day scale
         if (86_400 / span * room >= 6) {
             var day = runCatching { Instant.ofEpochSecond(floor(shown.lo).toLong()).atZone(zoneId).toLocalDate().atStartOfDay(zoneId) }.getOrNull()
             var count = 0
@@ -847,7 +830,6 @@ private class TimeDrawing(
         scope.drawRect(c.primary, Offset(x(early), axis - 3), Size(max(2f, x(late) - x(early)), 6f))
         for (seconds in listOf(shown.a, shown.b)) mark(x(seconds), labelY + LINE * 2 + 2, axis + 8, c.primary, 2f)
 
-        // earlier label leans left
         val middle = (x(early) + x(late)) / 2
         val startFirst = shown.a <= shown.b
         val names = listOf("Start", "End")
@@ -893,7 +875,6 @@ private class TimeDrawing(
             drawStrip(strip, zone)
             y += STRIP + 10
         }
-        // card edge separates labels
         mark(cursor, stripTop - 3, stripBottom + 3, c.card, 4f)
         mark(cursor, stripTop - 3, stripBottom + 3, c.primary, 2f)
         axisRoom = this.room
@@ -908,7 +889,6 @@ private class TimeDrawing(
         fun point(lat: Double, lon: Double) =
             Offset(map.left + ((lon + 180) / 360).toFloat() * map.width, map.top + ((WorldMap.NORTH - lat) / span).toFloat() * map.height)
         val sunAt = TimeCalcWorld.subsolar(shown.a)
-        // edges fade, no box
         scope.drawIntoCanvas { it.saveLayer(map, Paint()) }
         val night = Path().apply {
             var lon = -180.0
@@ -960,11 +940,9 @@ private class TimeDrawing(
                 val colour = if (index == 0) c.primary else c.foreground
                 val place = TimeCalcWorld.places[zone]
                 if (place == null) {
-                    // no city: offset meridian
                     val lon = TimeCalcZones.secondsFromGmt(zone, millis) / 240.0
                     val x = point(0.0, lon).x
                     drawLine(colour.copy(alpha = 0.5f), Offset(x, map.top), Offset(x, map.bottom), 1f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3f, 3f)))
-                    // meridian marks offset
                     val name = text(TimeCalcZones.offset(zone, millis), small)
                     val width = name.size.width
                     val leftward = x + 5 + width > map.right - map.width * 0.08f
@@ -981,7 +959,6 @@ private class TimeDrawing(
                 }
                 val name = text(TimeCalcZones.city(zone), small)
                 val size = name.size
-                // clear the faded edge
                 val leftward = spotAt.x + 7 + size.width > map.right - map.width * 0.08f
                 var box = Rect(Offset(if (leftward) spotAt.x - 7 - size.width else spotAt.x + 7, spotAt.y - size.height / 2f), Size(size.width.toFloat(), size.height.toFloat()))
                 if (taken.any { it.overlaps(box) }) box = box.translate(0f, size.height.toFloat())
@@ -991,11 +968,10 @@ private class TimeDrawing(
         }
     }
 
-    /** Hours of one zone as cells, day and night shaded, every third hour named and midnight as the weekday. */
     private fun drawStrip(strip: Rect, zone: String) {
         val zoneId = runCatching { ZoneId.of(zone) }.getOrDefault(ZoneId.of("UTC"))
         scope.clipRect(strip.left, strip.top, strip.right, strip.bottom) {
-            // the zone's own hours: half-hour offsets start mid hour
+            // half-hour offsets
             val offset = TimeCalcZones.secondsFromGmt(zone, (shown.lo * 1000).toLong())
             var hour = floor((shown.lo + offset) / 3600) * 3600 - offset
             var count = 0
@@ -1021,7 +997,6 @@ private class TimeDrawing(
         scope.drawRect(c.border, strip.deflate(0.5f).topLeft, strip.deflate(0.5f).size, style = Stroke(hairline))
     }
 
-    /** Calendar ticks under an axis at the unit its span calls for, finer ticks between them, labels that fit. */
     private fun drawTicks(axis: Float, y: Float) {
         val span = shown.hi - shown.lo
         val firstDay = WeekFields.of(Locale.getDefault()).firstDayOfWeek

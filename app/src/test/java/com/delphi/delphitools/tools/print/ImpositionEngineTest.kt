@@ -23,7 +23,6 @@ class ImpositionEngineTest {
         assertEquals(297.0 to 210.0, front.width to front.height)
         assertEquals(listOf(8, 1), front.cells.map { it.page })
         assertEquals(1, front.creases.size)
-        // two marks per edge
         assertEquals(12, front.marks.size)
         assertTrue(front.marks.all { m -> !(m.x1 > 5.01 && m.x1 < 297 - 5.01 && m.y1 > 5.01 && m.y1 < 210 - 5.01) })
 
@@ -53,7 +52,6 @@ class ImpositionEngineTest {
             ImpositionEngine.signatures(bound.sheets),
         )
 
-        // backs register behind fronts
         for (layout in listOf(ImpositionLayoutId.SaddleStitch, ImpositionLayoutId.PerfectBind, ImpositionLayoutId.FourUpBooklet)) {
             for (orientation in ImpositionOrientation.entries) {
                 for (flip in DuplexFlip.entries) {
@@ -83,7 +81,6 @@ class ImpositionEngineTest {
     @Test
     fun writesFormXObjects() {
         val source = PdfFile(javaClass.getResourceAsStream("/pdf/xref-stream.pdf")!!.readBytes())
-        // one page turned, so the placement follows /Rotate
         val file = PdfFile(PdfRotateCropWriter.apply(source, listOf(PdfRotateCropWriter.Edit(), PdfRotateCropWriter.Edit(rotation = 90))))
         val config = base.copy(layoutId = ImpositionLayoutId.FourUpBooklet)
         val result = config.layoutId.calculate(file.pages.size, config)

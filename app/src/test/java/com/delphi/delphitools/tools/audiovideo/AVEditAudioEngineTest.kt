@@ -36,7 +36,6 @@ class AVEditAudioEngineTest {
         val expected = sine(48000, 0.1, 0.5, channels = 2, hz = 1000.0)
         assertEquals(expected.size, whole.size)
         whole.forEachIndexed { i, s -> assertEquals(expected[i].toFloat(), s.toFloat(), 2f) }
-        // 88.2 kHz to 48 kHz, interpolated between source frames
         val ramp = ShortArray(882) { it.toShort() }
         val down = PcmResampler(88200, 48000, 1).process(ramp)
         assertEquals(480, down.size)
@@ -75,7 +74,7 @@ class AVEditAudioEngineTest {
     @Test
     fun meterMeasuresPeakAndLoudness() {
         val rate = 48000
-        // a full-scale 997 Hz sine reads -3.01 LUFS per BS.1770 (mono)
+        // bs.1770: -3.01 lufs mono
         val meter = AudioMeter(rate, 1, rate * 2L, 10, loudness = true)
         val pcm = sine(rate, 2.0, 1.0)
         pcm.toList().chunked(4096).forEach { meter.feed(it.toShortArray()) }
@@ -128,7 +127,6 @@ class AVEditAudioEngineTest {
         val expected = listOf(0.0, 0.25, 0.5, 0.75, 1.0, 1.0, 0.75, 0.5, 0.25, 0.0)
         pcm.forEachIndexed { i, s -> assertEquals(expected[i] * 0.5, s / 32767.0, 0.001) }
 
-        // split across chunks gives the same result
         val first = ShortArray(6) { full }
         val second = ShortArray(4) { full }
         AVEditAudioEngine.shape(first, 1, 0, 10, 1f, 4, 4)

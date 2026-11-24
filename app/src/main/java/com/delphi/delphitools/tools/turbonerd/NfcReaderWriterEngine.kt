@@ -121,7 +121,7 @@ object NfcReaderWriterEngine {
         val languageLength = status and 0x3f
         if (payload.size <= 1 + languageLength) return ""
         val text = payload.drop(1 + languageLength).toByteArray()
-        // status bit 7: UTF-16, NFC Forum Text RTD 3.2.1
+        // nfc forum text rtd 3.2.1
         return if (status and 0x80 == 0) utf8(text.toList()).orEmpty() else String(text, Charsets.UTF_16)
     }
 

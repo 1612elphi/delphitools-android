@@ -153,7 +153,7 @@ class DocumentScannerModel(application: Application) : AndroidViewModel(applicat
     private var generation = 0
     private var settling: Job? = null
 
-    // a render holds about 150 MB at 3072 px
+    // 150 mb per render
     private val renderer = Dispatchers.Default.limitedParallelism(2)
 
     val selected get() = pages.firstOrNull { it.id == selectedId }
@@ -261,7 +261,7 @@ class DocumentScannerModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
-    // one render per page in flight; the last request wins
+    // last request wins
     private fun process(page: ScanPage) {
         job.reset()
         if (page.rendering) {
@@ -343,7 +343,7 @@ fun DocumentScanner(model: DocumentScannerModel = viewModel()) {
         val uri = capture
         if (taken && uri != null) {
             model.add(listOf(uri))
-            // reopens for the next page, as VisionKit's camera keeps scanning until it is closed
+            // reopens as visionkit does
             launchCamera()
         }
     }
@@ -472,7 +472,7 @@ private fun fitted(pixels: IntSize, area: Rect): Rect {
     return Rect(Offset(area.center.x - size.width / 2, area.center.y - size.height / 2), size)
 }
 
-/** dt-ios ScannedPagePicture: the page fitted with a hairline edge; a dashed A4 sheet while empty. */
+// dt-ios ScannedPagePicture
 @Composable
 private fun ScanPicture(image: ImageBitmap?, pixels: IntSize?) {
     val c = LocalDelphiColours.current

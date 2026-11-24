@@ -99,7 +99,7 @@ private class ScrollSource(val image: Bitmap, val preview: Bitmap, val name: Str
 
 internal class ScrollContent(val geometry: Geometry, val slides: List<ImageBitmap>)
 
-/** ScrollEngine.Renderer: slides from `image`, which may be a smaller copy; `fill` is a solid ARGB colour, or null to blur. */
+// dt-ios ScrollEngine.Renderer
 private class ScrollRenderer(private val image: Bitmap, geometry: Geometry, private val fill: Int?) {
     private val scale = image.height.toDouble() / geometry.tileHeight
     private val size = ScrollGeneratorEngine.slideSize(geometry, image.height)
@@ -338,7 +338,7 @@ fun ScrollGenerator(model: ScrollGeneratorModel = viewModel()) {
     CanonSplit(sidebar = listOf(input, settings), main = listOf(readings, strip), banner = banner)
 }
 
-/** ScrollCarouselPicture: the slides side by side as one strip, seams dashed, the image's own edges marked. */
+// dt-ios ScrollCarouselPicture
 @Composable
 private fun CarouselPicture(content: ScrollContent?) {
     val c = LocalDelphiColours.current

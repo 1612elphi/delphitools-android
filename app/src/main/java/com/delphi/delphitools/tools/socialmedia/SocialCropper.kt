@@ -361,7 +361,6 @@ private fun SocialCropBoard(
 
         val hintStyle = CanonText.captionSemibold.copy(fontSize = 12.sp)
         val hintText = measurer.measure(hintWords, hintStyle).size
-        // icon, gap and padding: 14 + 6 + 18 dp across, 10 dp down
         val hintSize = Size(hintText.width + with(density) { 38.dp.toPx() }, maxOf(hintText.height.toFloat(), with(density) { 14.dp.toPx() }) + with(density) { 10.dp.toPx() })
         val hint = hintPlace(image, cropped, hintSize)
         val hintVisible = movable && !dragging && image.width > hintSize.width + with(density) { 16.dp.toPx() }
@@ -386,7 +385,6 @@ private fun SocialCropBoard(
             Text(hintWords, style = hintStyle, color = c.foreground, maxLines = 1)
         }
 
-        // labels never overlap: each ghost takes the first free inside corner
         val taken = mutableListOf(tag)
         if (hintVisible) taken += Rect(Offset(hint.x - hintSize.width / 2, hint.y - hintSize.height / 2), hintSize)
         val gapX = with(density) { 6.dp.toPx() }
@@ -409,7 +407,6 @@ private fun SocialCropBoard(
     }
 }
 
-/** Centre of the widest dimmed strip that holds [size], or above the crop's bottom edge. */
 private fun hintPlace(image: Rect, crop: Rect, size: Size): Offset {
     val strips = listOf(
         Rect(image.left, image.top, crop.left, image.bottom),

@@ -46,7 +46,6 @@ class TranscribeException(val failure: TranscribeFailure) : Exception(failure.na
  * without it each chunk's words are spread over the chunk.
  */
 object AutoSubtitleRecogniser {
-    // feeding share of the progress, after the decode
     private const val DECODE_SHARE = 0.1
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -172,7 +171,7 @@ object AutoSubtitleRecogniser {
         val words = mutableListOf<SubtitleWord>()
         var spoken = language
         RandomAccessFile(scratch, "r").use { file ->
-            // windows of 15 to 25 s, under Whisper's 30 s
+            // under whisper's 30 s
             for (chunk in AutoSubtitleEngine.chunks(energy)) {
                 val pcm = ByteBuffer.wrap(read(file, chunk)).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer()
                 val samples = FloatArray(pcm.remaining()) { pcm.get(it) / 32768f }
@@ -188,7 +187,6 @@ object AutoSubtitleRecogniser {
         return AutoSubtitleEngine.cues(words)
     }
 
-    /** One segmented session over [pcm] through a pipe; [fed] gets the share of it the recogniser has read. */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private suspend fun session(recogniser: SpeechRecognizer, language: String, pcm: ByteArray, fed: (Double) -> Unit): Heard = withContext(Dispatchers.Main) {
         val heard = Heard()
@@ -208,7 +206,6 @@ object AutoSubtitleRecogniser {
             override fun onError(error: Int) {
                 done.complete(
                     when (error) {
-                        // silence
                         SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> null
                         SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED, SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE -> TranscribeFailure.Unavailable
                         SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> TranscribeFailure.Denied
@@ -226,7 +223,7 @@ object AutoSubtitleRecogniser {
             override fun onEvent(eventType: Int, params: Bundle?) = Unit
         })
         recogniser.startListening(intent(language).putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE, read))
-        // not a child: a write blocked on a stalled recogniser must not hold the session open; destroy() closes the far end
+        // blocked write: not child
         val feeder = CoroutineScope(Dispatchers.IO).launch {
             try {
                 ParcelFileDescriptor.AutoCloseOutputStream(write).use { out ->
@@ -240,7 +237,6 @@ object AutoSubtitleRecogniser {
                     }
                 }
             } catch (_: IOException) {
-                // recogniser closed the pipe
             }
         }
         var finished = false

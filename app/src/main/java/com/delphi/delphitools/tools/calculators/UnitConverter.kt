@@ -133,7 +133,6 @@ class UnitConverterModel : ViewModel() {
     var ppi by mutableIntStateOf(300)
         private set
 
-    /** Row taps fill from, then to, then from again. */
     private var tapsFrom = true
     private var typing: Job? = null
 
@@ -248,7 +247,6 @@ fun UnitConverter(model: UnitConverterModel = viewModel()) {
                 unit = from.symbol,
                 label = "Value",
                 onEndEditing = model::refresh,
-                // minus sign for temperatures
                 keyboardOptions = KeyboardOptions(
                     keyboardType = if (model.category == "Temperature") KeyboardType.Ascii else KeyboardType.Decimal,
                     imeAction = ImeAction.Done,
@@ -309,7 +307,6 @@ fun UnitConverter(model: UnitConverterModel = viewModel()) {
     CanonSplit(sidebar = listOf(controls, convert), main = listOf(table, quick), banner = picture)
 }
 
-/** Both picked rows are lit; the plate tells them apart, as the banner's scales do: ink for the from unit, primary for the result. */
 @Composable
 private fun UnitRow(unit: UnitScale, value: String, role: UnitRole, onClick: () -> Unit) {
     val c = LocalDelphiColours.current
@@ -383,7 +380,6 @@ private fun UnitPicture(instrument: UnitInstrument, value: Double?, from: UnitSc
         return UnitPose(
             lerp(start.value, goal.value, eased),
             lerp(start.lo, goal.lo, eased),
-            // zoom eases logarithmically
             exp(ln(start.span) + (ln(goal.span) - ln(start.span)) * min(1.0, eased)),
         )
     }
@@ -423,7 +419,6 @@ private fun UnitPicture(instrument: UnitInstrument, value: Double?, from: UnitSc
                 InstrumentDrawing(this, measurer, c, instrument, from, to, pose(progress.value), value != null).draw(area, readout)
             }
         }
-        // balance sits under readout
         val lead = when (instrument) {
             UnitInstrument.Tape, UnitInstrument.Thermometer, UnitInstrument.Balance -> padding
             else -> padding + instrumentWidth(instrument, area) + 12
@@ -456,7 +451,6 @@ private const val BALANCE_WIDTH = 560f
 private fun gaugeRadius(manometer: Boolean, height: Float, width: Float) =
     max(20f, min((height - if (manometer) STEM_HEIGHT else 0f) / 2, width / 2))
 
-/** Width the square instruments take on the leading side; the readout keeps to the rest. */
 private fun instrumentWidth(instrument: UnitInstrument, area: Rect): Float {
     val most = area.width * 0.55f
     return when (instrument) {
@@ -470,7 +464,6 @@ private fun instrumentWidth(instrument: UnitInstrument, area: Rect): Float {
 private val tickStyle = TextStyle(fontFamily = DelphiMono, fontSize = 9.sp, fontWeight = FontWeight.Medium)
 private val plateStyle = TextStyle(fontFamily = DelphiMono, fontSize = 11.sp, fontWeight = FontWeight.Bold)
 
-/** One frame of the picture, in dp. */
 private class InstrumentDrawing(
     val scope: DrawScope,
     val measurer: TextMeasurer,
@@ -490,7 +483,6 @@ private class InstrumentDrawing(
         if (area.width <= 40 || area.height <= 40) return
         when (instrument) {
             UnitInstrument.Balance -> {
-                // from left, result right
                 val region = Rect(area.left, area.top, area.left + min(area.width, BALANCE_WIDTH), area.bottom)
                 val underReadout = readout.left < region.right && readout.right > region.left
                 drawBalance(region, if (underReadout) readout.bottom + 6 else area.top)
@@ -515,7 +507,6 @@ private class InstrumentDrawing(
 
     private fun width(string: String, style: TextStyle = tickStyle) = text(string, style).size.width.toFloat()
 
-    /** [anchor] is the share of the text's size the point sits at; [halo] outlines it first, for a label over a fill line. */
     private fun label(string: String, at: Offset, colour: Color, anchor: Offset = Offset.Zero, style: TextStyle = tickStyle, halo: Color? = null) {
         val layout: TextLayoutResult = text(string, style)
         val origin = Offset(at.x - layout.size.width * anchor.x, at.y - layout.size.height * anchor.y)
@@ -525,7 +516,6 @@ private class InstrumentDrawing(
 
     private fun plateWidth() = max(36f, ceil(max(width(from.symbol, plateStyle), width(to.symbol, plateStyle))) + 12)
 
-    /** The unit's name plate at the start of its scale: ink for the from unit, primary for the result, as in the units list. */
     private fun plate(scale: UnitScale, isResult: Boolean, rect: Rect) {
         scope.drawRect(if (isResult) c.primary else c.foreground, rect.topLeft, rect.size)
         label(scale.symbol, rect.center, if (isResult) c.primaryForeground else c.background, Offset(0.5f, 0.5f), plateStyle)
@@ -534,7 +524,6 @@ private class InstrumentDrawing(
     private fun ticks(scale: UnitScale, length: Float, spacing: Float, style: TextStyle = tickStyle) =
         UnitConverterEngine.ticks(scale, shown.lo, shown.span, length, spacing) { width(it, style) }
 
-    /** Graduates a rule from [x0] to [x1] at [edge]; [down] hangs the ticks below the edge, else they rise above it. */
     private fun rule(scale: UnitScale, x0: Float, x1: Float, edge: Float, down: Boolean, ink: Color, labelsOutside: Boolean) {
         for (tick in ticks(scale, x1 - x0, 40f)) {
             val x = x0 + tick.offset
@@ -542,9 +531,7 @@ private class InstrumentDrawing(
             scope.drawRect(ink, Offset(x - hairline / 2, if (down) edge else edge - length), Size(hairline, length))
             val name = tick.label ?: continue
             val size = text(name).size
-            // no clipped numbers
             if (x + 3 + size.width > x1 + 2) continue
-            // inside clears minor ticks
             val y = if (labelsOutside) {
                 if (down) edge + length + 1 else edge - length - 1 - size.height
             } else {
@@ -592,7 +579,7 @@ private class InstrumentDrawing(
         fun xFor(base: Double) = x0 + ((base - shown.lo) / shown.span).toFloat() * (x1 - x0)
         scope.clipPath(tube) {
             drawRect(c.card, strip.topLeft, strip.size)
-            // below absolute zero: muted
+            // below absolute zero
             if (shown.lo < 0) {
                 val edge = min(xFor(0.0), strip.right)
                 drawRect(c.muted, Offset(bulbCentre.x, centreY - tubeHeight), Size(edge - bulbCentre.x, tubeHeight * 2))
@@ -665,7 +652,6 @@ private class InstrumentDrawing(
                 scope.drawLine(ink, point(angle, rim), point(angle, rim - long), weight)
                 val name = tick.label ?: continue
                 val size = text(name, style).size
-                // inset by label extent
                 val reach = abs(cos(angle)) * size.width / 2 + abs(sin(angle)) * size.height / 2
                 label(name, point(angle, rim - long - 3 - reach), ink, Offset(0.5f, 0.5f), style)
             }
@@ -699,7 +685,6 @@ private class InstrumentDrawing(
 
     private class Shape(val width: Float, val height: Float, val blocks: Int)
 
-    /** Block frames per stack, bottom layer first, centred on [midX] and standing on [floor]; an upper layer is centred on the one below. */
     private fun stack(shape: Shape, perLayer: Int, unit: Float, midX: Float, floor: Float): List<Rect> {
         val stackWidth = shape.width * unit * min(perLayer, shape.blocks)
         val x = midX - stackWidth / 2
@@ -715,21 +700,18 @@ private class InstrumentDrawing(
         }
     }
 
-    /** [top] is where the cords fade in and the weights stop, clear of the readout. */
     private fun drawBalance(region: Rect, top: Float) {
         val wire = c.mutedForeground.copy(alpha = 0.7f)
         val panWidth = region.width * 0.47f
         val reach = region.width * 0.25f
         val centres = listOf(region.center.x - reach, region.center.x + reach)
         val rim = region.bottom - 12
-        // cords meet far above
         val hookY = region.top - region.height * 2.5f
         if (rim - top <= 40 || panWidth <= 40) return
 
         val quantity = if (hasValue) max(0.0, shown.value) else 0.0
         val sides = listOf(from to fromInk, to to toInk).map { (scale, ink) ->
             val weights = UnitConverterEngine.weights(scale.value(quantity))
-            // block mass, base units
             Side(scale, ink, weights, weights?.let { scale.base(it.denomination) } ?: 0.0)
         }
         // 1.6:1 ingots, side ∛mass
@@ -738,7 +720,6 @@ private class InstrumentDrawing(
             val size = cbrt(side.block / heaviest).toFloat()
             Shape(1.6f * size, size, side.weights?.let { it.full + if (it.part > 0) 1 else 0 } ?: 0)
         }
-        // within cords, label room
         fun fits(frames: List<List<Rect>>) = frames.zip(centres).all { (stack, apex) ->
             stack.all { frame ->
                 val half = (panWidth / 2 - 4) * (frame.top - hookY) / (rim - hookY)
@@ -755,7 +736,6 @@ private class InstrumentDrawing(
                 val unit = (low + high) / 2
                 if (fits(layout(perLayer, unit))) low = unit else high = unit
             }
-            // tall towers score lower
             val layers = shapes.maxOf { (it.blocks + perLayer - 1) / perLayer }
             val score = low * if (layers > 4) 0.75f else 1f
             if (score > bestScore) {
@@ -875,7 +855,6 @@ private class InstrumentDrawing(
         val u = square(unitSide)
         if (quantitySide > 0.5f) {
             scope.drawRect(c.foreground.copy(alpha = 0.06f), q.topLeft, q.size)
-            // ruled in result units
             val cells = quantitySide / unitSide
             if (unitSide >= 5 && cells > 1 && cells < 200) {
                 val ruling = c.primary.copy(alpha = 0.3f)

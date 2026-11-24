@@ -272,7 +272,7 @@ class AVEditPlayback(private val context: Context, private val scope: CoroutineS
         this.surface = surface
         val player = player ?: return
         runCatching { player.setSurface(surface) }
-        // a new surface stays black until the next frame
+        // new surface starts black
         if (surface != null && ready && !playing) player.seekTo(ms(playhead ?: range.start), MediaPlayer.SEEK_CLOSEST)
     }
 
@@ -437,7 +437,6 @@ internal fun AVEditPlayerView(
     }
 }
 
-/** A tap or a sideways drag reports the time under the finger. */
 private fun Modifier.scrubs(at: (Float) -> Double?, onScrub: ((Double) -> Unit)?): Modifier =
     if (onScrub == null) this
     else pointerInput(Unit) { detectTapGestures { offset -> at(offset.x)?.let(onScrub) } }
@@ -510,7 +509,6 @@ internal fun AVEditFilmstrip(
             AVEditEngine.spread(count, thumbnails.size).forEachIndexed { index, pick ->
                 val image = thumbnails[pick]
                 val slot = if (rightToLeft) count - 1 - index else index
-                // aspect fill: crop the source to the cell's shape
                 val scale = max(cell / image.width, size.height / image.height)
                 val srcWidth = (cell / scale).roundToInt().coerceIn(1, image.width)
                 val srcHeight = (size.height / scale).roundToInt().coerceIn(1, image.height)

@@ -21,7 +21,7 @@ object AutoSubtitleEngine {
     private const val MAX_WORD_SECONDS = 0.8
     private const val LIMIT_MS = 3.6e12
 
-    // ethnologue 2026, total speakers
+    // ethnologue 2026 speaker order
     val mostSpoken = listOf("en", "zh", "hi", "es", "ar", "fr", "bn", "pt", "id", "ur")
 
     /** Languages in [mostSpoken] first, in its order, each language's variants by name; the rest by name. */

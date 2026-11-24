@@ -19,29 +19,24 @@ class VoiceRecorderEngineTest {
     fun heldFoldsPeaksAndPunchesIn() {
         val held = held(1000)
         assertEquals(20, held.window)
-        // fold crosses buffer edges
         held.append(FloatArray(30) { 0.5f })
         held.append(FloatArray(20) { -0.25f })
         assertTrue(held.peakCount == 2 && held.count == 50 && held.head == 50)
         assertTrue(abs(held.peaks[0] - 0.5f) < 0.001 && abs(held.peaks[1] - 0.5f) < 0.001)
         held.append(FloatArray(10))
         assertTrue(held.peakCount == 3 && abs(held.peaks[2] - 0.25f) < 0.001)
-        // punch-in overwrites tail
         held.scrub(0.045)
         assertTrue(held.head == 45 && abs(held.position - 0.045) < 0.0001)
         held.append(FloatArray(10) { 1f })
         assertTrue(held.count == 60 && held.peakCount == 3 && held.peaks[2] > 0.999 && held.head == 55)
         held.append(FloatArray(5))
         assertTrue(held.count == 60 && held.head == 60 && held.peaks[2] > 0.999)
-        // clamps both ends
         held.scrub(-1.0)
         assertEquals(0, held.head)
         held.scrub(9.0)
         assertEquals(60, held.head)
-        // clipping
         held.append(floatArrayOf(2f, -2f))
         assertArrayEquals(shortArrayOf(32767, -32767), held.read(60, 2))
-        // punch-in kept the samples around it in the file
         assertEquals((-8192).toShort(), held.read(44, 1)[0])
         assertEquals(32767.toShort(), held.read(45, 1)[0])
         assertEquals(124L, held.file.length())

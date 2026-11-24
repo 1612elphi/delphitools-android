@@ -31,7 +31,7 @@ import kotlin.math.tanh
 /** Half away from zero, as Swift's `rounded()`. */
 internal fun Double.roundedAway(): Double = if (this < 0) -floor(-this + 0.5) else floor(this + 0.5)
 
-// dt-core MathExpression: tokeniser, recursive descent parser and evaluator
+// dt-core MathExpression
 
 internal sealed interface MathToken {
     data class Number(val value: Double) : MathToken
@@ -110,7 +110,6 @@ object MathTokeniser {
         return implicitMultiplication(tokens)
     }
 
-    /** `*` where multiplication is implied: `2x`, `2(`, `)(`, `x(`, `)2`, `pi x`. */
     private fun implicitMultiplication(tokens: List<MathToken>): List<MathToken> {
         val result = mutableListOf<MathToken>()
         for (token in tokens) {
@@ -238,7 +237,7 @@ private object MathEvaluator {
             "atan" -> atan(a)
             "asec" -> acos(1 / a)
             "acsc" -> asin(1 / a)
-            // nerdamer's acot, continuous through 0
+            // nerdamer's acot
             "acot" -> PI / 2 - atan(a)
             "sinh" -> sinh(a)
             "cosh" -> cosh(a)
@@ -256,7 +255,7 @@ private object MathEvaluator {
             "floor" -> floor(a)
             "ceil" -> ceil(a)
             "round" -> a.roundedAway()
-            // nerdamer's mod is JavaScript's %: the dividend's sign
+            // nerdamer mod: dividend's sign
             "mod" -> a % b
             "min" -> if (a.isNaN() || b.isNaN()) Double.NaN else minOf(a, b)
             "max" -> if (a.isNaN() || b.isNaN()) Double.NaN else maxOf(a, b)
@@ -316,13 +315,11 @@ object GraphSyntax {
         is CanonMathNode.Power -> all(listOf(node.base, node.exponent), "^")
         is CanonMathNode.Call -> {
             val parts = all(node.arguments, ",")
-            // each argument is bracketed already
             fun call(name: String) = if (node.arguments.size == 1) name + parts else "$name($parts)"
             when {
                 parts == null -> null
                 node.name == "log" && node.arguments.size == 1 -> call("ln")
                 node.name == "log10" && node.arguments.size == 1 -> call("log")
-                // not keypad syntax: ln, and log10 with a base
                 node.name == "ln" || node.name == "log10" -> null
                 MathTokeniser.functions[node.name]?.contains(node.arguments.size) == true -> call(node.name)
                 else -> null

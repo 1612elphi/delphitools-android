@@ -49,7 +49,6 @@ class GradientGeneratorEngineTest {
         val once = GradientStops.autoStep(start, { it.position }, start, Space.Oklch, ::Stop)
         assertEquals(5, once.size)
         assertTrue(GradientStops.canAutoStep(once.size))
-        // srgb keeps oklch midpoint
         val sampled = GradientPaint.colour(0.5, once, Space.Srgb)
         assertTrue(kotlin.math.abs(sampled.r - middle.r) + kotlin.math.abs(sampled.g - middle.g) + kotlin.math.abs(sampled.b - middle.b) < 1e-9)
         val twice = GradientStops.autoStep(once, { it.position }, once, Space.Oklch, ::Stop)

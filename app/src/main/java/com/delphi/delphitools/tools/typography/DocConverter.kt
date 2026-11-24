@@ -151,7 +151,6 @@ class DocConverterModel(application: Application) : AndroidViewModel(application
     var result by mutableStateOf<DocResult?>(null)
         private set
 
-    /** Stops format detection. */
     private var sourcePicked = false
     private var typing: Job? = null
     private var parsing: Job? = null
@@ -261,7 +260,7 @@ class DocConverterModel(application: Application) : AndroidViewModel(application
     }
 }
 
-/** A4 with 48 pt margins, one page per screenful of lines, as dt-ios pdfData paginates with CoreText. */
+// a4, 48 pt margins
 private fun writePdf(paragraphs: List<DocParagraph>, file: File) {
     val width = 595
     val height = 842
@@ -471,7 +470,7 @@ private fun richString(runs: List<DocRun>, ink: Color, link: Color, underlinesLi
     }
 }
 
-/** dt-ios CanonOutputText showing the RTF: the same paragraphs, set in Compose. */
+// dt-ios CanonOutputText
 @Composable
 private fun RichText(paragraphs: List<DocParagraph>) {
     val c = LocalDelphiColours.current
@@ -494,7 +493,7 @@ private val ledgerRow = 34.dp
 private val ledgerHead = 30.dp
 private val ghost = listOf(0.55f to 0.7f, 0.9f to 0.8f, 0.4f to 0.5f)
 
-/** dt-ios DocConvertLedger: each kind of element in the source, its count, and how one is written before and after. */
+// dt-ios DocConvertLedger
 @Composable
 private fun DocLedger(blocks: List<DocBlock>, from: DocFormat, to: DocFormat) {
     val c = LocalDelphiColours.current

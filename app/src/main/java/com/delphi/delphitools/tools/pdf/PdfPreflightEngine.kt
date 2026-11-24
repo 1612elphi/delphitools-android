@@ -44,7 +44,6 @@ object PdfPreflightEngine {
         val passed get() = results.none { it.isError }
     }
 
-    // ---- document facts ----
 
     data class Page(val index: Int, val mediaBox: PdfBox, val trimBox: PdfBox?, val bleedBox: PdfBox?, val rotation: Int) {
         val effectiveTrimBox get() = trimBox ?: mediaBox
@@ -101,7 +100,6 @@ object PdfPreflightEngine {
         val fileSizeMb get() = fileSize / 1_048_576.0
     }
 
-    // ---- profiles ----
 
     /** One configured check: its id, what it is given, and the severity the profile sets. */
     data class Entry(val typeId: String, val severity: Severity, val number: Double = 0.0, val text: String = "")
@@ -242,7 +240,7 @@ object PdfPreflightEngine {
                     fail("${short.size} page(s) have bleed less than $mm mm", pages = short)
                 }
             }
-            // encrypted files do not open, so what reaches a check is never encrypted
+            // encrypted files never open
             "file.encryption" -> pass("File is not encrypted")
             "pages.size" -> {
                 if (d.pages.isEmpty()) return pass("No pages to check")
@@ -358,7 +356,6 @@ object PdfPreflightEngine {
         }
     }
 
-    // ---- parsing ----
 
     /** A PDF text string: UTF-16BE or UTF-8 with a byte order mark, else PDFDocEncoding read as Latin-1. */
     fun text(value: Any?): String? {

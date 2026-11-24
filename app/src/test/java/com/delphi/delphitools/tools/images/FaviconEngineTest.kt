@@ -23,7 +23,6 @@ class FaviconEngineTest {
     fun ico() {
         val file = FaviconEngine.ico(listOf(32 to bytes(9, 9), 16 to bytes(7)))
         assertArrayEquals(bytes(0, 0, 1, 0, 2, 0), file.copyOfRange(0, 6))
-        // first entry at 38
         assertArrayEquals(bytes(16, 16, 0, 0, 1, 0, 32, 0, 1, 0, 0, 0, 38, 0, 0, 0), file.copyOfRange(6, 22))
         assertEquals(32, file[22].toInt())
         assertEquals(39, file[34].toInt())

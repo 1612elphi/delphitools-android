@@ -78,7 +78,7 @@ class AlgebraEngine private constructor(private val web: WebView, private val lo
         val script = "(function(inputExpr,inputVar){try{${body(operation)}}catch(e){return JSON.stringify({error:e.message||String(e)});}})" +
             "(${JSONObject.quote(expression)},${JSONObject.quote(variable)})"
         val reply = withTimeoutOrNull(EVALUATE_TIMEOUT_MS) { evaluate(web, script, lost) }
-        // a script nerdamer never finishes blocks every later call on this renderer
+        // stuck script blocks renderer
         if (reply == null) kill(web, lost)
         val json = reply
             ?.let { runCatching { JSONObject(JSONTokener(it).nextValue() as String) }.getOrNull() }

@@ -127,7 +127,6 @@ class NfcReaderWriterModel(application: Application) : AndroidViewModel(applicat
     var available by mutableStateOf(adapter?.isEnabled == true)
         private set
 
-    /** The scan waiting for a tag; its record is what to write, null to read. */
     private class Scan(val record: NdefRecordBytes?)
 
     @Volatile
@@ -255,7 +254,6 @@ fun NfcReaderWriter(model: NfcReaderWriterModel = viewModel()) {
         ContextCompat.registerReceiver(context, receiver, IntentFilter(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED), ContextCompat.RECEIVER_NOT_EXPORTED)
         onDispose { context.unregisterReceiver(receiver) }
     }
-    // reader mode polls only while a scan waits and the page is in front
     DisposableEffect(lifecycle, activity, scanning) {
         fun enable() {
             if (scanning && activity != null) runCatching { adapter?.enableReaderMode(activity, model::onTag, READER_FLAGS, null) }
@@ -429,7 +427,7 @@ private val hexStyle = TextStyle(fontFamily = DelphiMono, fontSize = 11.sp, font
 private val payloadCaption = TextStyle(fontFamily = DelphiMono, fontSize = 10.sp, fontWeight = FontWeight.Medium)
 private val roleCaption = TextStyle(fontFamily = DelphiFont, fontSize = 9.sp, fontWeight = FontWeight.SemiBold)
 
-/** NDEF spec names, untranslated. */
+// ndef spec names
 private fun roleName(role: NdefRole, last: Boolean) = when (role) {
     NdefRole.Frame -> if (last) "END" else "TLV"
     NdefRole.Header -> "HDR"
@@ -439,7 +437,7 @@ private fun roleName(role: NdefRole, last: Boolean) = when (role) {
     NdefRole.Payload -> ""
 }
 
-/** dt-ios NDEFByteMap: the message's bytes as captioned cells, coloured by role, in wrapping rows. */
+// dt-ios NDEFByteMap
 @Composable
 private fun NdefByteMap(segments: List<NdefSegment>, fromStart: Boolean) {
     val c = LocalDelphiColours.current

@@ -135,7 +135,7 @@ object ImpositionEngine {
         return ImpositionResult(nestedSheets(totalPages, 0, 1, 0, totalSourcePages, config), totalPages, totalSourcePages)
     }
 
-    /** [totalPages]: a multiple of 4. */
+    // totalPages: multiple of 4
     private fun nestedSheets(totalPages: Int, base: Int, firstId: Int, signature: Int, source: Int, config: ImpositionConfig): List<SheetDefinition> {
         val numSheets = totalPages / 4
         val usableW = config.sheetW - config.marginMm * 2
@@ -182,7 +182,6 @@ object ImpositionEngine {
         val rotations = listOf(180, 180, 0, 0)
         val sheets = (0 until n / 8).map { s ->
             val base = s * 4
-            // right-angle fold, nested sheets
             val front = listOf(n - base - 3, base + 4, n - base, base + 1).map { pageOrBlank(it, totalSourcePages) }
             val back = listOf(base + 3, n - base - 2, base + 2, n - base - 1).map { pageOrBlank(it, totalSourcePages) }
             SheetDefinition(

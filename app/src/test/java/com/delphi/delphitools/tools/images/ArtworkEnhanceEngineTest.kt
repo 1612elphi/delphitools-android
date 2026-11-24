@@ -43,7 +43,6 @@ class ArtworkEnhanceEngineTest {
         assertArrayEquals(intArrayOf(grey), ArtworkEnhanceEngine.enhance(intArrayOf(grey), 1, 0f, 1, 0))
         val pixels = IntArray(64 * 64) { grey }
         val out = ArtworkEnhanceEngine.enhance(pixels, 64, 0.2f, 1, 0)
-        // opaque stays opaque; 20 % noise moves a channel at most a fifth of the way
         assertTrue(out.all { it ushr 24 == 0xFF })
         assertTrue(out.all { abs((it and 0xFF) - 0x80) <= 26 })
         assertTrue(out.any { it != grey })

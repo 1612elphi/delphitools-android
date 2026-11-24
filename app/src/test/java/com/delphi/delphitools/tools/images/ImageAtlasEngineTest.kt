@@ -82,7 +82,6 @@ class ImageAtlasEngineTest {
         val (x, y) = ImageColourScan.chromaticity(1.0, 1.0, 1.0)!!
         assertEquals(0.3127, x, 0.001)
         assertEquals(0.3290, y, 0.001)
-        // linear srgb red pushed past the gamut
         val wide = ImageColourScan.scan(intArrayOf(0xFFFF0000.toInt()), false, toLinearSrgb = doubleArrayOf(1.2, -0.2, 0.0, -0.04, 1.04, 0.0, -0.02, -0.08, 1.1))
         assertEquals(1.0, wide.outsideSRGB, 1e-9)
         assertNull(wide.transparent)

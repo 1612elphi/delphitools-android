@@ -108,7 +108,7 @@ private val widths = listOf(1080, 1200, 1440, 2048)
 private const val IMAGE_PIXELS = 4096
 private const val PREVIEW_PIXELS = 1600
 
-// the backdrop blurs at a size where sigma is this many px, then scales up
+// sigma px at blur size
 private const val BLUR_SIGMA = 8.0
 
 private class MatteSource(val image: Bitmap, val preview: ImageBitmap, val width: Int, val height: Int, val stem: String)
@@ -207,7 +207,6 @@ class MatteGeneratorModel(application: Application) : AndroidViewModel(applicati
         isCustom = index == ratios.size
         if (isCustom) return
         val (short, long) = ratios[index]
-        // keeps current orientation
         update(if (spec.ratioW > spec.ratioH) spec.copy(ratioW = long, ratioH = short) else spec.copy(ratioW = short, ratioH = long))
     }
 
@@ -318,7 +317,7 @@ fun MatteGenerator(model: MatteGeneratorModel = viewModel()) {
     )
 }
 
-/** MattePicture: the matte as it will be written, fitted to the pane, with dimension lines for its width and height. */
+// dt-ios MattePicture
 @Composable
 private fun MattePicture(model: MatteGeneratorModel) {
     val c = LocalDelphiColours.current
@@ -352,7 +351,6 @@ private fun MattePicture(model: MatteGeneratorModel) {
             val target = canonDimensionSheet(Size(spec.width.toFloat(), spec.height.toFloat()), area, rightToLeft)
             val sheet by animateRectAsState(target, spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow), label = "sheet")
 
-            // blur scaled to screen
             val box = IntSize(target.width.roundToInt(), target.height.roundToInt())
             val blurred = spec.style == MatteSpec.Style.Blurred
             LaunchedEffect(photo, box, spec.width, blurred) {
@@ -403,7 +401,6 @@ private fun MattePicture(model: MatteGeneratorModel) {
                         drawRect(c.muted, photoRect.topLeft, photoRect.size)
                     }
                     if (guideAlpha > 0f) {
-                        // visible on any matte
                         val inset = spec.padding * scale
                         val line = CanonMetrics.hairline.toPx()
                         val ink = Color.White.copy(alpha = 0.6f * guideAlpha)

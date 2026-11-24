@@ -186,7 +186,7 @@ internal object AudioAtlasMedia {
                             started = true
                             onStart(rate, channels, durationUs)
                         }
-                        // the first buffer places the run; later ones follow on without drift
+                        // later buffers avoid drift
                         if (next < 0) next = if (fromUs > 0) (info.presentationTimeUs * rate / 1_000_000.0).roundToLong() else 0L
                         chunk(samples, frames, next)
                         next += frames
@@ -277,11 +277,9 @@ class AudioAtlasModel(application: Application) : AndroidViewModel(application) 
     val span get() = max(viewEnd - viewStart, 0.0)
     val isZoomed get() = viewStart > 0 || viewEnd < duration - 1e-6
 
-    /** Loop: the window; else the file. */
     private val playRange get() = if (playback.looping) viewStart..max(viewStart, viewEnd) else 0.0..duration
 
     fun load(uri: Uri) {
-        // failed load keeps nothing
         clear()
         this.uri = uri
         busy = true
@@ -341,7 +339,7 @@ class AudioAtlasModel(application: Application) : AndroidViewModel(application) 
         busy = false
     }
 
-    // unzoomed window and spectrogram are the load's
+    // reuses the load's result
     private fun refreshWindow() {
         work?.cancel()
         val uri = uri ?: return
@@ -381,7 +379,7 @@ class AudioAtlasModel(application: Application) : AndroidViewModel(application) 
         if (playback.looping) settleRange()
     }
 
-    // moves rebuild nothing, but a range change mid-play waits for the window to rest
+    // range change waits
     private fun settleRange() {
         rangeSettle?.cancel()
         rangeSettle = viewModelScope.launch {
@@ -498,7 +496,6 @@ fun AudioAtlas(model: AudioAtlasModel = viewModel()) {
     )
 }
 
-/** The whole file's waveform with the window shown and the rest shaded, while zoomed. */
 @Composable
 private fun AudioAtlasOverview(model: AudioAtlasModel, playhead: Double?) {
     val c = LocalDelphiColours.current
@@ -520,7 +517,7 @@ private fun AudioAtlasOverview(model: AudioAtlasModel, playhead: Double?) {
     }
 }
 
-/** dt-ios AudioAtlasSheet: the window's waveform over a time ruler over its spectrogram; tap seeks, pinch zooms, a sideways drag pans. */
+// dt-ios AudioAtlasSheet
 @Composable
 private fun AudioAtlasSheet(model: AudioAtlasModel, playhead: Double?) {
     val c = LocalDelphiColours.current
@@ -553,7 +550,7 @@ private fun AudioAtlasSheet(model: AudioAtlasModel, playhead: Double?) {
                 }
             }
             .pointerInput(Unit) {
-                // two fingers: the time under them stays put
+                // pinch anchors time
                 awaitEachGesture {
                     awaitFirstDown(requireUnconsumed = false)
                     var grabbed: Triple<Double, Double, Double>? = null
@@ -589,7 +586,6 @@ private fun AudioAtlasSheet(model: AudioAtlasModel, playhead: Double?) {
             )
     ) {
         Box(Modifier.fillMaxWidth().height(WAVEFORM_HEIGHT_SHEET)) {
-            // the window fills the strip
             AVEditWaveform(model.window, end - start, shown?.minus(start))
         }
         Canvas(Modifier.fillMaxWidth().height(RULER_HEIGHT).background(c.card)) {
@@ -598,7 +594,7 @@ private fun AudioAtlasSheet(model: AudioAtlasModel, playhead: Double?) {
             val minor = step / 5
             val first = kotlin.math.ceil(start / minor).toLong()
             val last = kotlin.math.floor(end / minor).toLong()
-            // huge span: unreadable ticks
+            // huge span: no ticks
             if (last < first || last - first >= 2000) return@Canvas
             val ink = c.mutedForeground.copy(alpha = 0.6f)
             val style = TextStyle(fontFamily = DelphiMono, fontSize = 10.sp, fontWeight = FontWeight.Medium, color = c.mutedForeground)
@@ -625,7 +621,6 @@ private fun AudioAtlasSheet(model: AudioAtlasModel, playhead: Double?) {
                     }
                     val from = x(model.spectrogramRange.start)
                     val to = x(model.spectrogramRange.endInclusive)
-                    // image pinned to seconds
                     scale(if (flipped) -1f else 1f, 1f, pivot = Offset((from + to) / 2, size.height / 2)) {
                         drawImage(
                             image,
@@ -662,7 +657,7 @@ private fun AudioAtlasSheet(model: AudioAtlasModel, playhead: Double?) {
     }
 }
 
-/** dt-ios AudioAtlasTagRow: artwork beside title, artist and album. */
+// dt-ios AudioAtlasTagRow
 @Composable
 private fun AudioAtlasTagRow(tags: AtlasTags, artwork: ImageBitmap?) {
     val c = LocalDelphiColours.current

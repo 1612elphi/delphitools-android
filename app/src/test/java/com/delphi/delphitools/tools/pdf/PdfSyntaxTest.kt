@@ -37,7 +37,7 @@ class PdfSyntaxTest {
 
     @Test
     fun undoesPngPredictors() {
-        // rows of 2 bytes: none, sub, up
+        // predictors: none, sub, up
         val data = byteArrayOf(0, 1, 2, 1, 1, 1, 2, 1, 1)
         assertArrayEquals(byteArrayOf(1, 2, 1, 2, 2, 3), PdfFilters.unpredict(data, 1, 2))
         val raw = ByteArray(1000) { (it % 7).toByte() }

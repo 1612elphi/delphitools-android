@@ -40,7 +40,6 @@ class ColourCameraDevice private constructor(
     /** Zoom stops offered as lenses, 1 among them. */
     val zooms: List<Float>,
 ) {
-    /** One open: its camera thread, surfaces and, once the camera callbacks arrive, the device and session. */
     private class Run(val thread: HandlerThread, val handler: Handler, val preview: Surface, val reader: ImageReader) {
         @Volatile
         var closed = false
@@ -49,7 +48,7 @@ class ColourCameraDevice private constructor(
         var session: CameraCaptureSession? = null
         var request: CaptureRequest.Builder? = null
 
-        // the surfaces and thread outlive the device until it reports closed
+        // surfaces outlive the device
         fun finish() {
             handler.post {
                 reader.close()
@@ -160,7 +159,7 @@ class ColourCameraDevice private constructor(
             runCatching { run.session?.close() }
             run.camera to run.pending
         }
-        // a pending open still calls back on the thread: onOpened closes the device, onClosed finishes
+        // pending open still calls
         if (camera != null) runCatching { camera.close() } else if (!pending) run.finish()
     }
 

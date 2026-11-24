@@ -74,7 +74,6 @@ class WhisperRuntime(dir: File) : AutoCloseable {
 
     private fun empty() = OnnxTensor.createTensor(env, FloatBuffer.allocate(0), longArrayOf(1, heads.toLong(), 0, headSize.toLong()))
 
-    /** One decoder pass over [ids]; [cache] is the previous pass for self-attention and [first] for cross-attention. */
     private fun step(ids: LongArray, hidden: OnnxTensor, cache: Step?, first: Step?): Step {
         val owned = mutableListOf<OnnxTensor>()
         fun own(tensor: OnnxTensor) = tensor.also { owned += it }
@@ -176,10 +175,9 @@ class WhisperRuntime(dir: File) : AutoCloseable {
                 }
             }
         }
-        // openai/whisper transcribe.py: no_speech_threshold 0.6, logprob_threshold -1
+        // openai/whisper transcribe.py thresholds
         if (tokens.isEmpty() || silence > 0.6 && logProb / tokens.size < -1) return emptyList<SubtitleWord>() to read
         val frames = min(WhisperEngine.FRAMES / 2, (samples.size + 319) / 320)
-        // rows of sot, language and task are untimed; the no-timestamps row predicts the first word
         val times = WhisperEngine.rowTimes(attention, frames, 3)
         return WhisperEngine.words(tokens.map { vocab[it] ?: ByteArray(0) }, times, read, offset) to read
     }
@@ -200,7 +198,7 @@ class WhisperRuntime(dir: File) : AutoCloseable {
     }
 
     private companion object {
-        // openai/whisper decoding.py sample_len: half the 448-token context
+        // openai/whisper decoding.py sample_len
         const val MAX_TOKENS = 224
     }
 }

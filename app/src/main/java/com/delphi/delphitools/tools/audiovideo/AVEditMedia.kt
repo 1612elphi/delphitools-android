@@ -108,7 +108,7 @@ object AVEditMedia {
             retriever.setDataSource(context, uri)
             AVEditEngine.sheetTimes(duration, count).mapNotNull { seconds ->
                 ensureActive()
-                // sync frames repeat when spans are shorter than a GOP
+                // short spans repeat frames
                 frame(retriever, seconds, 120, exact = duration / count < 2)?.asImageBitmap()
             }
         } catch (_: RuntimeException) {
@@ -158,7 +158,6 @@ object AVEditMedia {
             for ((index, time) in seconds.withIndex()) {
                 ensureActive()
                 val us = AVEditEngine.micros(time)
-                // a failed frame retries once
                 val thumb = retriever.getScaledFrameAtTime(us, MediaMetadataRetriever.OPTION_CLOSEST, width, width * 8)
                     ?: retriever.getScaledFrameAtTime(us, MediaMetadataRetriever.OPTION_CLOSEST, width, width * 8)
                 thumbs += checkNotNull(thumb)

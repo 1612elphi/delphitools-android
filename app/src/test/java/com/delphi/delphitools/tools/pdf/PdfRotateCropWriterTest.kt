@@ -9,7 +9,7 @@ import java.io.File
 class PdfRotateCropWriterTest {
     private fun fixture(name: String) = javaClass.getResourceAsStream("/pdf/$name")!!.readBytes()
 
-    // pdf-out holds the written files for checking with pdfinfo or pdftoppm
+    // pdf-out: written files
     private fun keep(name: String, bytes: ByteArray) {
         File("build/pdf-out").apply { mkdirs() }.resolve(name).writeBytes(bytes)
     }

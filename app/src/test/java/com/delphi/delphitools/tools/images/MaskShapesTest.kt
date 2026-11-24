@@ -10,14 +10,14 @@ import java.util.Locale
 class MaskShapesTest {
     @Test
     fun mulberry() {
-        // the web tool's mulberry32, seed 7, under node
+        // web mulberry32, seed 7
         val rnd = MaskRandom(7)
         assertEquals(0.011704753153026104, rnd.next(), 0.0)
         assertEquals(0.06195825757458806, rnd.next(), 0.0)
         assertEquals(0.97690763277933, rnd.next(), 0.0)
     }
 
-    // expected file: dt-core MaskShapes.swift dumped by swiftc, each shape's id, CGPath.boundingBox and element count
+    // from MaskShapes.swift, swiftc
     @Test
     fun matchesDtCore() {
         val expected = javaClass.getResource("/mask-shapes-expected.txt")!!.readText().trim().lines()
@@ -35,7 +35,7 @@ class MaskShapesTest {
         assertTrue(MaskShapes.grouped.all { it.second.size == MaskShapes.VARIANTS })
     }
 
-    // dt-core MaskSpec.selfCheck, geometry part
+    // dt-core MaskSpec.selfCheck
     @Test
     fun spec() {
         var spec = MaskSpec()

@@ -48,7 +48,7 @@ class VoiceHeld(val rate: Int, val file: File) : Closeable {
         val end = head + frames
         val total = max(count, end)
         val first = head / window
-        // only windows written; a partly written one keeps what was held around it
+        // partial windows keep neighbours
         val last = min(total / window, (end + window - 1) / window)
         if (last > first) {
             val span = read(first * window, (last - first) * window)

@@ -152,7 +152,6 @@ class FrameExtractorModel(application: Application) : AndroidViewModel(applicati
         if (source.duration > 0) playback.scrub((playback.playhead ?: 0.0) + seconds)
     }
 
-    // grab needs the player clock
     fun grab() {
         val uri = source.uri ?: return
         val seconds = playback.position() ?: return
@@ -209,7 +208,6 @@ class FrameExtractorModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    // the sheet just built, else a png decode off main
     fun showSheet(output: File?) {
         if (output == shownSheet) return
         shownSheet = output
@@ -377,7 +375,7 @@ fun FrameExtractor(model: FrameExtractorModel = viewModel()) {
     )
 }
 
-/** FrameExtractorStills: grabbed frames in a grid, at least two to a row; a cell opens Share and Remove. */
+// dt-ios FrameExtractorStills
 @Composable
 private fun StillGrid(stills: List<FrameStill>, onShare: (FrameStill) -> Unit, onRemove: (FrameStill) -> Unit) {
     val c = LocalDelphiColours.current
@@ -387,7 +385,6 @@ private fun StillGrid(stills: List<FrameStill>, onShare: (FrameStill) -> Unit, o
             for (row in stills.chunked(columns)) {
                 Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(CanonMetrics.hairline)) {
                     for (still in row) StillCell(still, Modifier.weight(1f).fillMaxHeight(), onShare, onRemove)
-                    // blanks complete the last row
                     repeat(columns - row.size) { Box(Modifier.weight(1f).fillMaxHeight().background(c.card)) }
                 }
             }

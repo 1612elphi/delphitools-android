@@ -464,7 +464,6 @@ class JsonShape private constructor() {
             return shape
         }
 
-        /** Matches the formatter's byte count. */
         private fun leafWeight(value: JsonValue) = when (value) {
             is JsonValue.Str -> value.text.toByteArray().size + 2
             is JsonValue.Num -> value.literal.length

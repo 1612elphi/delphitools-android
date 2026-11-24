@@ -109,7 +109,6 @@ class PdfRotateCropModel(application: Application) : AndroidViewModel(applicatio
         val size = displaySize(index)
         val whole = PdfRect(0.0, 0.0, size.width, size.height)
         val crop = edits[index].crop ?: return whole
-        // paper crops may overflow
         val shown = PdfCropEngine.toDisplay(crop, geometry[index].box, totalRotation(index))
         return PdfCropEngine.intersectBox(shown, whole) ?: whole
     }
@@ -183,7 +182,6 @@ class PdfRotateCropModel(application: Application) : AndroidViewModel(applicatio
         if (page !in edits.indices) return
         val size = displaySize(page)
         val points = PdfSize(mm.width * PdfPagesEngine.MM_TO_POINTS, mm.height * PdfPagesEngine.MM_TO_POINTS)
-        // paper turns for landscape
         val turned = size.width > size.height && points.width < points.height
         val target = PdfCropEngine.cropToPaper(size, if (turned) PdfSize(points.height, points.width) else points)
         setCrop(PdfCropEngine.intersectBox(target, PdfRect(0.0, 0.0, size.width, size.height)), keepsPaper = true)

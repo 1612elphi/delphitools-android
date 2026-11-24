@@ -261,7 +261,7 @@ private fun partName(part: RequestPart) = when (part) {
     RequestPart.Body -> "Body"
 }
 
-/** dt-ios RequestWire: the message's size, its host, a bar of bytes per part, and the first lines as sent. */
+// dt-ios RequestWire
 @Composable
 private fun RequestWire(message: String) {
     val c = LocalDelphiColours.current

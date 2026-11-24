@@ -35,7 +35,7 @@ class AudioScanner(
     private var frames = 0L
     private val filters = if (measureLoudness) List(channels) { KWeighting(rate.toDouble()) } else emptyList()
 
-    // bs.1770-4 table 3 for 5.1 in Android order (FL FR FC LFE BL BR): no LFE, surrounds +1.5 dB
+    // bs.1770-4 table 3 weights
     private val weights = if (channels == 6) doubleArrayOf(1.0, 1.0, 1.0, 0.0, 1.41, 1.41) else DoubleArray(channels) { 1.0 }
     private val subBlockFrames = (0.1 * rate).roundToInt()
     private val subBlockSums = mutableListOf<Double>()

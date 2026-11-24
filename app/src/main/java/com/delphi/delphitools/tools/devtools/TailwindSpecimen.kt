@@ -246,10 +246,8 @@ private class SpecimenPainter(
     private val faint = inks.mutedForeground.copy(alpha = 0.45f)
     private val ink = inks.foreground
 
-    /** One screen pixel in design units. */
     private val point = 1 / scale
 
-    // Primitives
 
     fun fill(rect: Rect, colour: Color, radius: Float = 1.2f) {
         scope.drawRoundRect(colour, rect.topLeft, rect.size, CornerRadius(radius))
@@ -300,14 +298,13 @@ private class SpecimenPainter(
     fun symbol(name: String, size: Float, colour: Color = ink, centre: Offset) {
         if (name == "cursorarrow") return cursor(size, colour, centre)
         val painter = symbols[name] ?: return
-        // sf symbols at a point size run about 1.2 × that tall
+        // sf symbols run 1.2×
         val side = size * 1.2f
         scope.translate(centre.x - side / 2, centre.y - side / 2) {
             with(painter) { draw(Size(side, side), colorFilter = ColorFilter.tint(colour)) }
         }
     }
 
-    /** The arrow pointer, which Material icons do not have. */
     private fun cursor(size: Float, colour: Color, centre: Offset) {
         val unit = size * 1.1f / 18f
         val points = listOf(0f to 0f, 0f to 16f, 4f to 12.5f, 7f to 18f, 9.5f to 17f, 6.5f to 11.5f, 11.5f to 11.5f)
@@ -399,7 +396,6 @@ private class SpecimenPainter(
 
     private fun roundRectPath(rect: Rect, radius: Float) = Path().apply { addRoundRect(RoundRect(rect, CornerRadius(radius))) }
 
-    // Paint
 
     fun paint(item: TailwindClass, category: String) {
         when (category) {
@@ -648,7 +644,6 @@ private class SpecimenPainter(
             return
         }
         val heights = listOf(16f, 30f, 22f)
-        // 14-wide items, 9 apart
         val start = inner.center.x - (3 * 14 + 2 * 9) / 2f
         val xs = listOf(start, start + 23, start + 46)
         if (name == "items-baseline") {
@@ -893,7 +888,6 @@ private class SpecimenPainter(
                 }
             }
             else -> {
-                // line-clamp-n
                 val lines = max(1, TailwindSpecimen.number(name).toInt())
                 val box = rect(14f, 8f, 60f, 44f)
                 for (index in 0 until 4) {
@@ -1161,7 +1155,6 @@ private class SpecimenPainter(
         }
     }
 
-    /** An easing curve over time, time along the bottom. */
     private fun plot(curve: List<Float>) {
         val box = TailwindSpecimen.plot
         line(box.topLeft, box.bottomLeft, faint)
@@ -1374,7 +1367,6 @@ private class SpecimenPainter(
 
 private fun spinArc(scope: DrawScope, colour: Color, degrees: Float) {
     val centre = Offset(44f, 30f)
-    // -90° to 216°, clockwise
     scope.rotate(degrees, centre) {
         scope.drawArc(colour, -90f, 306f, false, Offset(28f, 14f), Size(32f, 32f), style = Stroke(3f, cap = StrokeCap.Round))
     }

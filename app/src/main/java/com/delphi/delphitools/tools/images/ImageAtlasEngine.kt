@@ -53,7 +53,7 @@ object ImageAtlasReport {
     // web parity: camera first
     private val leadingLabels = listOf("Make", "Model", "Lens Make", "Lens Model")
 
-    // exifinterface names imageio spells otherwise
+    // exifinterface names differ
     private val imageIoNames = mapOf(
         "PhotographicSensitivity" to "ISOSpeedRatings",
         "FocalLengthIn35mmFilm" to "FocalLenIn35mmFilm",
@@ -70,7 +70,6 @@ object ImageAtlasReport {
         "primarychromaticities", "ycbcrcoefficients", "referenceblackwhite",
         "stripoffsets", "stripbytecounts", "tileoffsets", "tilebytecounts", "rowsperstrip",
         "thumbnail", "padding", "offsetschema", "relatedsoundfile", "usercomment",
-        // exifinterface only: pointers and the dimensions the file row already shows
         "jpeginterchangeformat", "jpeginterchangeformatlength", "xmp", "imagewidth", "imagelength",
         "versionid", "processingmethod", "areainformation",
     )
@@ -161,7 +160,7 @@ object ImageAtlasReport {
             val lower = key.lowercase()
             if (lower in ignoredKeys || tag.lowercase() in ignoredKeys) continue
             if ("makernote" in lower || "serial" in lower) continue
-            // undefined bytes: imageio hands these over as data
+            // imageio: undefined as data
             if (text.any { it.isISOControl() }) continue
             val value = prettyValue(lower, raw(tag, text))
             if (value.isEmpty()) continue
@@ -208,7 +207,7 @@ object ImageAtlasReport {
         else -> type.removePrefix("x-").uppercase()
     }
 
-    // exif default unit is inches
+    // exif default: inches
     private fun dpi(tags: Map<String, String>): Double? {
         val resolution = tags["XResolution"]?.let(::number) ?: return null
         return if (tags["ResolutionUnit"]?.let(::number)?.toInt() == 3) resolution * 2.54 else resolution
@@ -299,7 +298,7 @@ object ImageAtlasReport {
         else -> value.toString()
     }
 
-    // %g: six significant digits, trailing zeros dropped
+    // %g: six significant digits
     private fun shortest(value: Double): String {
         val text = String.format(Locale.ROOT, "%g", value)
         if ('e' in text) {
@@ -447,7 +446,6 @@ class ImageColourScan(
             return x / sum to y / sum
         }
 
-        // log alpha: singles visible
         private fun densityImage(counts: IntArray): IntArray? {
             val most = counts.max()
             if (most <= 0) return null

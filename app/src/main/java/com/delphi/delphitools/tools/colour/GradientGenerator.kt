@@ -167,7 +167,7 @@ private val sizePresets = listOf(
 private val exportSizes = 100..GradientPaint.MAX_EDGE
 private val centred = Offset(0.5f, 0.5f)
 
-// degrees a turn snaps to a multiple of 45 from
+// snap range in degrees
 private const val SNAP = 4.0
 
 /** dt-ios GradientGeneratorViewModel and the controller's selection and export. */
@@ -200,7 +200,6 @@ class GradientGeneratorModel(application: Application) : AndroidViewModel(applic
 
     val solid = CanonColourSolidState(SolidSpace.OKLCH, Rgb(0.231, 0.510, 0.965))
 
-    // sliced row, oklch hue
     val controls = CanonColourControlsState(solid, activeRow = 2)
 
     private var meshJob: Job? = null
@@ -251,7 +250,6 @@ class GradientGeneratorModel(application: Application) : AndroidViewModel(applic
     }
 
     private fun colourChanged(colour: Rgb) {
-        // space switches round-trip
         if (colour.hex == shownColour?.hex) return
         shownColour = colour
         if (isMesh) {
@@ -317,7 +315,6 @@ class GradientGeneratorModel(application: Application) : AndroidViewModel(applic
     /** At most 400 px wide, at the export's aspect. */
     fun renderMeshFull() = renderMesh(400, maxOf(2, 400 * height / maxOf(width, 1)))
 
-    // newer renders cancel older ones
     private fun renderMesh(width: Int, height: Int) {
         val points = meshPoints
         if (points.isEmpty()) return
@@ -359,7 +356,7 @@ class GradientGeneratorModel(application: Application) : AndroidViewModel(applic
     }
 }
 
-/** GradientPaint.draw and grain on an android canvas, the picture's and the export's. */
+// dt-ios GradientPaint.draw
 private object GradientDrawing {
     private val tile by lazy {
         val levels = IntArray(GradientPaint.NOISE_SIDE * GradientPaint.NOISE_SIDE) {
@@ -425,7 +422,6 @@ fun GradientGenerator(model: GradientGeneratorModel = viewModel()) {
             model.solid.marks = if (model.isMesh) {
                 model.meshPoints.filter { it.id != model.selected }.map { it.colour }
             } else {
-                // gradient path on solid
                 (0..16).map { GradientPaint.colour(it / 16.0, model.paintStops, model.interpolation) }
             }
         }
@@ -520,7 +516,6 @@ fun GradientGenerator(model: GradientGeneratorModel = viewModel()) {
         }
     }
 
-    // rest waits for release
     val code = remember { arrayOf("", "") }
     if (!model.dragging) {
         code[1] = model.shape?.let { GradientPaint.swiftUI(it, model.paintStops, model.interpolation, model.width.toDouble(), model.height.toDouble()) }.orEmpty()
@@ -543,7 +538,6 @@ fun GradientGenerator(model: GradientGeneratorModel = viewModel()) {
     )
 }
 
-/** Where a gradient's stops sit on the picture. */
 private sealed interface GradientRail {
     data class Line(val from: Offset, val to: Offset) : GradientRail
 
@@ -590,7 +584,6 @@ private sealed interface GradientGrab {
     data class Centre(val offset: Offset) : GradientGrab
 }
 
-/** A drag on the picture: what is held, and a stop or point held off it, out of the model until it comes back. */
 private class GradientDrag {
     var grab by mutableStateOf<GradientGrab?>(null)
     var pulled by mutableStateOf<GradientStop?>(null)
@@ -658,7 +651,7 @@ private fun GradientPicture(model: GradientGeneratorModel, modifier: Modifier) {
                 }
             }
         }
-        // tethered so no stop can sit on it: behind the centre for radial stops, beside the line for linear ones
+        // tether avoids stops
         fun hubPoint(rail: GradientRail): Offset {
             val away = rail.normal(0.0)
             val reach = 44 * d
@@ -720,7 +713,6 @@ private fun GradientPicture(model: GradientGeneratorModel, modifier: Modifier) {
             val rail = rail()
             var (t, off) = rail.project(point)
             if (rail is GradientRail.Ring) {
-                // unwrap across seam, clamp
                 t = (t + Math.round(drag.lastRingT - t)).coerceIn(0.0, 1.0)
                 drag.lastRingT = t
             } else {
@@ -739,7 +731,6 @@ private fun GradientPicture(model: GradientGeneratorModel, modifier: Modifier) {
             }
             model.setPosition(id, t)
             drag.pulled = drag.pulled?.copy(position = t)
-            // capped when two remain
             val lift = if (canRemoveHeld()) max(0f, abs(off) - 16 * d) else min(max(0f, abs(off) - 16 * d), 10 * d)
             val base = inside(rail.point(t))
             val side = if (off < 0) -1f else 1f
@@ -920,13 +911,12 @@ private fun GradientPicture(model: GradientGeneratorModel, modifier: Modifier) {
             val colours = if (model.isMesh) (model.meshPoints + listOfNotNull(drag.pulledPoint)).associate { it.id to it.colour }
             else (model.stops + listOfNotNull(drag.pulled)).associate { it.id to it.colour }
             val held = drag.pulled?.id ?: drag.pulledPoint?.id
-            // selected handle on top
             for ((id, point) in shownPoints.entries.sortedBy { it.key == model.selected }) {
                 drawHandle(colours[id] ?: continue, point, id == model.selected, id == held, d)
             }
         }
 
-        // TalkBack: one element per handle
+        // talkback: element per handle
         for ((id, point) in shownPoints) {
             val stop = model.stops.firstOrNull { it.id == id }
             val colour = stop?.colour ?: model.meshPoints.firstOrNull { it.id == id }?.colour ?: continue
@@ -1003,7 +993,6 @@ private fun DrawScope.drawLines(type: GradientType, rail: GradientRail, centre: 
             path.lineTo(rail.centre.x + (rail.radius + 26 * d) * sin(radians).toFloat(), rail.centre.y - (rail.radius + 26 * d) * cos(radians).toFloat())
         }
     }
-    // tether to rail point
     if (tetherFrom != null) {
         path.moveTo(tetherFrom.x, tetherFrom.y)
         path.lineTo(lifted.x, lifted.y)
@@ -1013,7 +1002,6 @@ private fun DrawScope.drawLines(type: GradientType, rail: GradientRail, centre: 
 
 private enum class HubMark { Needle, Centre, Knob }
 
-/** The linear gradient's hub turned to its angle, the centre of a radial or conic one, or the conic start knob. */
 private fun DrawScope.drawHub(mark: HubMark, at: Offset, angle: Double, d: Float) {
     val path = Path()
     fun circle(r: Float) = path.addOval(Rect(at, r * d))
@@ -1031,7 +1019,6 @@ private fun DrawScope.drawHub(mark: HubMark, at: Offset, angle: Double, d: Float
             for ((dx, dy) in listOf(0f to -1f, 0f to 1f, -1f to 0f, 1f to 0f)) line(dx * 11, dy * 11, dx * 16, dy * 16)
         }
         HubMark.Needle -> {
-            // needle up; turned below
             circle(7f)
             line(0f, -7f, 0f, -20f)
             line(-5f, -15f, 0f, -20f)
@@ -1041,7 +1028,6 @@ private fun DrawScope.drawHub(mark: HubMark, at: Offset, angle: Double, d: Float
     rotate(angle.toFloat(), at) { shadowed(path, d, width = 2f, shade = 4f) }
 }
 
-/** A stop or mesh point: a square of its colour in a white frame, larger while chosen. */
 private fun DrawScope.drawHandle(colour: Rgb, at: Offset, chosen: Boolean, pulled: Boolean, d: Float) {
     val half = 12 * d
     val alpha = if (pulled) 0.45f else 1f
@@ -1053,7 +1039,7 @@ private fun DrawScope.drawHandle(colour: Rgb, at: Offset, chosen: Boolean, pulle
     }
 }
 
-/** GradientAngleDial: a tap or a drag points the needle, snapping to multiples of 45°. */
+// dt-ios GradientAngleDial
 @Composable
 private fun GradientAngleDial(value: Double, onChange: (Double) -> Unit) {
     val c = LocalDelphiColours.current

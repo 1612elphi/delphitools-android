@@ -10,7 +10,6 @@ import java.io.File
 class PdfCompressEngineTest {
     private fun fixture(name: String) = javaClass.getResourceAsStream("/pdf/$name")!!.readBytes()
 
-    /** One page holding a 40 x 20 Flate RGB image, and an SMask beside it. */
     private fun imagePdf(): ByteArray {
         val out = ByteArrayOutputStream()
         val document = PdfImageDocument(out)
@@ -35,7 +34,7 @@ class PdfCompressEngineTest {
     fun skipsImagesTooLargeOrShorterThanTheirSize() {
         val file = PdfFile(imagePdf())
         val image = (1 until file.size).mapNotNull { file.obj(it) as? PdfStream }.first { PdfCompressEngine.samples(file, it) != null }
-        // 65536 x 65536 x 3 is 0 in Int arithmetic
+        // int overflow to 0
         val huge = PdfStream(LinkedHashMap(image.dict).apply { put("Width", 65536); put("Height", 65536) }, image.data)
         assertNull(PdfCompressEngine.samples(file, huge))
         val tall = PdfStream(LinkedHashMap(image.dict).apply { put("Height", 4000) }, PdfFilters.deflate(ByteArray(40 * 8000 * 3)))

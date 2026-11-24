@@ -27,7 +27,6 @@ class VideoAtlasEngineTest {
         VideoAtlasEngine.plot(pixels, width, height, vector, wave)
         assertEquals(255, vector[cells / 2 * cells + cells / 2])
         assertEquals(1, vector.count { it > 0 })
-        // every column has one lit level
         assertEquals(width, wave.count { it > 0 })
     }
 

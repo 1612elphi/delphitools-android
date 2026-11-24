@@ -120,7 +120,6 @@ object PdfStampEngine {
         return out
     }
 
-    // ---- writer ----
 
     private val winAnsi: Charset = Charset.forName("windows-1252")
 
@@ -248,7 +247,6 @@ object PdfStampEngine {
         return depth
     }
 
-    /** Past the `EI` that ends inline image data starting at [from]. */
     private fun inlineImageEnd(data: ByteArray, from: Int): Int {
         var at = from
         while (true) {
@@ -264,7 +262,7 @@ object PdfStampEngine {
     private fun Int.isContentWhite() = this == 0 || this == 9 || this == 10 || this == 12 || this == 13 || this == 32
 }
 
-// URW Nimbus Sans and Roman advance widths per 1000 em for WinAnsiEncoding codes 32 to 255, metric twins of Helvetica and Times-Roman
+// urw nimbus advance widths
 private val HELVETICA = intArrayOf(
     278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556,
     556, 556, 278, 278, 584, 584, 584, 556, 1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778,

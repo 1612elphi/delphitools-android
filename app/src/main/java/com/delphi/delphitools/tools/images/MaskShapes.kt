@@ -59,7 +59,6 @@ object MaskShapes {
         return points.map { QuadPoint(C + (it.x - C) * cosine - (it.y - C) * sine, C + (it.x - C) * sine + (it.y - C) * cosine) }
     }
 
-    // one factor keeps proportions
     private fun fit(parts: List<List<QuadPoint>>): List<List<QuadPoint>> {
         val reach = parts.flatten().maxOfOrNull { hypot(it.x - C, it.y - C) } ?: 0.0
         if (reach <= 0) return parts
@@ -96,7 +95,6 @@ object MaskShapes {
 
     private fun spin(turns: Double, parts: List<List<QuadPoint>>) = poly(fit(parts.map { rotate(it, turns) }))
 
-    // clockwise, safe at zero
     private fun rrect(x: Double, y: Double, w: Double, h: Double, radius: Double): List<QuadPoint> {
         val corners = listOf(
             Triple(x + w - radius, y + radius, -0.25),
@@ -157,7 +155,6 @@ object MaskShapes {
 
     private fun pie(turns: Double) = listOf(QuadPoint(C, C)) + (0..64).map { polar(-PI / 2 + (it / 64.0) * turns * TAU, R) }
 
-    // disc minus shifted copy
     private fun moon(d: Double): List<QuadPoint> {
         val phi = acos(d / (2 * R))
         val outer = (0..64).map { polar(phi + (it / 64.0) * (TAU - 2 * phi), R) }
@@ -185,7 +182,6 @@ object MaskShapes {
         return jittered(rnd, n, jitter = 0.6) { R * (0.7 + 0.3 * rnd.next()) }
     }
 
-    // bites go inward
     private fun torn(rnd: MaskRandom): List<QuadPoint> {
         val a = 0.92 * R
         val b = a * (0.65 + 0.35 * rnd.next())
@@ -213,7 +209,6 @@ object MaskShapes {
         return parts
     }
 
-    // holes inside radius floor
     private fun puddle(rnd: MaskRandom): List<List<QuadPoint>> {
         val lobes = count(rnd, 6, 4)
         val parts = mutableListOf(blob(rnd, lobes, 0.62))

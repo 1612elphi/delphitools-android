@@ -150,7 +150,7 @@ private fun MaskShape.composePath(scale: Float, left: Float = 0f, top: Float = 0
     }
 }
 
-/** dt-core MaskSpec.render: [image] cut to [shape] in a square of [side] pixels, transparent outside it. */
+// dt-core MaskSpec.render
 private fun maskRender(image: Bitmap?, spec: MaskSpec, shape: MaskShape, side: Int): Bitmap {
     val out = Bitmap.createBitmap(side, side, Bitmap.Config.ARGB_8888)
     val canvas = android.graphics.Canvas(out)
@@ -159,7 +159,7 @@ private fun maskRender(image: Bitmap?, spec: MaskSpec, shape: MaskShape, side: I
         val (x, y, w, h) = spec.imageFrame(image.width, image.height, side.toDouble())
         canvas.drawBitmap(image, null, RectF(x.toFloat(), y.toFloat(), (x + w).toFloat(), (y + h).toFloat()), Paint(Paint.FILTER_BITMAP_FLAG))
     }
-    // anti-aliased: a canvas clipPath is not
+    // clipPath is not anti-aliased
     val mask = Bitmap.createBitmap(side, side, Bitmap.Config.ALPHA_8)
     android.graphics.Canvas(mask).drawPath(shape.androidPath(side / 100f), Paint(Paint.ANTI_ALIAS_FLAG))
     canvas.drawBitmap(mask, 0f, 0f, Paint().apply { xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN) })
@@ -480,7 +480,6 @@ private fun MaskBoard(
     }
 }
 
-/** The "Drag to reposition" chip at the foot of the square, when the square is wide enough for it. */
 @Composable
 private fun MaskHint(square: Rect, visible: Boolean) {
     val c = LocalDelphiColours.current
@@ -510,7 +509,7 @@ private fun MaskHint(square: Rect, visible: Boolean) {
 
 private val wideWidth = 600.dp
 
-/** dt-ios MaskShapePicker: a cell per family, then the chosen family's variants, each showing the framed image cut to it. */
+// dt-ios MaskShapePicker
 @Composable
 private fun MaskShapePicker(chosen: MaskShape, thumb: ImageBitmap?, onPick: (MaskShape) -> Unit) {
     val c = LocalDelphiColours.current

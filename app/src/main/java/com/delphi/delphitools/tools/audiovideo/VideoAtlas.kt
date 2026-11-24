@@ -185,7 +185,7 @@ fun VideoAtlas(model: VideoAtlasModel = viewModel()) {
         maxHeight = TALLEST_PREVIEW,
         boxing = CanonCanvasBoxing.UnlessWide,
     ) {
-        // the full screen view holds the player's surface while it is open
+        // full screen holds surface
         if (!fullScreen) AVEditPlayerView(playback, aspect, onTexture = { texture = it }, onFrame = { frames.intValue++ })
     }
     val scopes = CanonSection.canvas(CanonCanvasSize.Fixed(SCOPES_HEIGHT), background = SCOPE_PLATE, boxing = CanonCanvasBoxing.UnlessWide) {
@@ -231,14 +231,13 @@ fun VideoAtlas(model: VideoAtlasModel = viewModel()) {
     if (fullScreen) VideoAtlasFullScreen(model, aspect, format) { fullScreen = false }
 }
 
-/** dt-ios AVEditFullScreenViewController: the picture on black, one row of transport cells, filmstrip and counter; a tap hides the controls. */
+// dt-ios AVEditFullScreenViewController
 @Composable
 private fun VideoAtlasFullScreen(model: VideoAtlasModel, aspect: Float, format: (Double) -> String, close: () -> Unit) {
     val source = model.source
     val playback = model.playback
     var controls by remember { mutableStateOf(true) }
     Dialog(close, DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        // dark tokens on black
         CompositionLocalProvider(LocalDelphiColours provides selectedTheme().colours(true)) {
             Box(Modifier.fillMaxSize().background(Color.Black)) {
                 AVEditPlayerView(
@@ -364,7 +363,6 @@ private fun VideoScopes(texture: TextureView?, frames: IntState) {
             val point = Offset(centre.x + (part.cb * 2).toFloat() * radius, centre.y - (part.cr * 2).toFloat() * radius)
             drawRect(ink, Offset(point.x - box / 2, point.y - box / 2), Size(box, box), style = Stroke(hairline))
             val text = measurer.measure(name, label)
-            // label outward of box
             val out = point - centre
             val length = max(1f, hypot(out.x, out.y))
             val away = 12.dp.toPx()

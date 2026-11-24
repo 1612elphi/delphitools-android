@@ -144,7 +144,6 @@ private fun rasterise(file: File, mode: PdfCompressEngine.Mode.Rasterise, out: j
             step(index)
             val size = renderer.openPage(index).use { PdfSize(it.width.toDouble(), it.height.toDouble()) }
             val bitmap = PdfDocuments.render(renderer, index, mode.dpi / 72) ?: return@open false
-            // rendered on white: opaque, so it encodes as a JPEG
             bitmap.setHasAlpha(false)
             val picture = PdfDocuments.picture(bitmap, quality) ?: return@open false
             bitmap.recycle()
@@ -156,7 +155,6 @@ private fun rasterise(file: File, mode: PdfCompressEngine.Mode.Rasterise, out: j
     if (written != true) error("rasterise")
 }
 
-/** An image's samples as a JPEG, cut to screen size when [downsample] and larger; null keeps the image as it is. */
 private fun encode(samples: PdfCompressEngine.ImageSamples, downsample: Boolean): PdfPicture? {
     var decoded: Bitmap? = null
     var bitmap: Bitmap? = null

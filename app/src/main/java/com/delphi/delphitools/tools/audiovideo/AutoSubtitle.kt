@@ -211,7 +211,7 @@ class AutoSubtitleModel(application: Application) : AndroidViewModel(application
         val loaded = whisper?.second ?: return
         whisper = null
         val running = task
-        // a cancelled task is no longer active but may still be inside a decoder pass
+        // cancelled task may linger
         if (running != null && !running.isCompleted) running.invokeOnCompletion { loaded.close() } else loaded.close()
     }
 
@@ -277,7 +277,6 @@ class AutoSubtitleModel(application: Application) : AndroidViewModel(application
         if (!canRun) return
         val chosen = whisperModel.takeIf { usesWhisper }
         if (chosen != null && WhisperModelStore.state(chosen) != WhisperState.Installed) {
-            // model gone; refresh adopts
             viewModelScope.launch { WhisperModelStore.refresh(getApplication()) }
             return
         }
@@ -417,7 +416,6 @@ fun AutoSubtitle(model: AutoSubtitleModel = viewModel()) {
                 else if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) model.run()
                 else ask.launch(Manifest.permission.RECORD_AUDIO)
             }
-            // greyed button explains it
             val failure = if (model.usesWhisper || model.available) model.problem else TranscribeFailure.Unavailable
             if (failure != null) CanonStatusRow(failure.message, CanonTone.Warn)
             CanonButton("Download models…", enabled = !busy, icon = Icons.Outlined.ChevronRight) { showModels = true }
@@ -477,7 +475,7 @@ fun AutoSubtitle(model: AutoSubtitleModel = viewModel()) {
     }
 }
 
-/** dt-ios AutoSubtitlePicture: the file's wave, lit up to the progress, over a lane of cue blocks, with the progress or cue count as a figure. */
+// dt-ios AutoSubtitlePicture
 @Composable
 private fun AutoSubtitlePicture(peaks: AVEditPeaks?, duration: Double, progress: Double?, cues: List<SubtitleCue>) {
     val c = LocalDelphiColours.current
@@ -519,7 +517,6 @@ private fun AutoSubtitlePicture(peaks: AVEditPeaks?, duration: Double, progress:
                     bars.addRect(Rect(Offset(bx, mid - high * half), Size(width, max(1f, (high - low) * half))))
                 }
                 drawPath(bars, c.mutedForeground.copy(alpha = 0.45f))
-                // reached part lit
                 val reached = progress?.let { x(duration * it) } ?: if (rightToLeft) size.width else 0f
                 val (litLeft, litRight) = if (rightToLeft) reached to size.width else 0f to reached
                 clipRect(litLeft, wave.top, litRight, wave.bottom) { drawPath(bars, c.primary) }
@@ -530,7 +527,6 @@ private fun AutoSubtitlePicture(peaks: AVEditPeaks?, duration: Double, progress:
                 for (cue in cues) {
                     val from = x(cue.start / 1000.0)
                     val to = x(cue.end / 1000.0)
-                    // gap between neighbours
                     blocks.addRect(Rect(Offset(min(from, to) + 0.5f, laneTop + 7.dp.toPx()), Size(max(1f, abs(to - from) - 1), lane - 14.dp.toPx())))
                 }
                 drawPath(blocks, c.primary)

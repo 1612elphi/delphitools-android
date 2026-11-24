@@ -88,7 +88,6 @@ private const val LISTED = 50
 private val editorFont = TextStyle(fontFamily = DelphiMono, fontSize = 16.sp)
 private val fieldFont = TextStyle(fontFamily = DelphiMono, fontSize = 16.sp)
 
-/** Find ranges for one text and one search. */
 private class FoundIn(val text: String, val find: String, val isRegex: Boolean, val ranges: List<TextSpan>?)
 
 /** dt-ios TextScratchpadViewModel: the draft, saved a second after the last edit, and the find state. */
@@ -117,7 +116,6 @@ class TextScratchpadModel(app: Application) : AndroidViewModel(app) {
     val marks: List<TextSpan>
         get() = current?.ranges ?: emptyList()
 
-    /** Null while pending; ranges null when the pattern fails. */
     private val current get() = found?.takeIf { it.text == text && it.find == find && it.isRegex == regex }
 
     val matchCount get() = current?.ranges?.size ?: 0
@@ -242,7 +240,7 @@ fun TextScratchpad(model: TextScratchpadModel = viewModel()) {
                     oversized = true,
                     flashesCopied = true,
                 ) {
-                    // a clip past the binder limit throws
+                    // clip past binder throws
                     runCatching { context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("", model.text)) }
                 }
             }
@@ -378,7 +376,7 @@ private fun FieldRow(icon: androidx.compose.ui.graphics.vector.ImageVector, valu
     }
 }
 
-/** dt-ios ScratchpadEditor: the counts above a full-height text field, find matches lit in the text. */
+// dt-ios ScratchpadEditor
 @Composable
 private fun ScratchpadEditor(model: TextScratchpadModel) {
     val c = LocalDelphiColours.current

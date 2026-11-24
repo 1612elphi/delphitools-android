@@ -75,7 +75,6 @@ internal fun AVEditTrimEditor(
         val span by rememberUpdatedState(duration)
         val stripWidth = max(1f, width - grip * 2)
         for (isStart in listOf(true, false)) {
-            // the start grip sits left of the selection unless right to left
             val onLeft = isStart != rightToLeft
             val barX = if (onLeft) left - grip else right
             val targetX = (if (onLeft) barX - (target - grip) else barX).coerceIn(0f, max(0f, width - target))

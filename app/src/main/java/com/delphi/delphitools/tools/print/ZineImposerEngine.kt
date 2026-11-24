@@ -209,7 +209,6 @@ object ZineImposerEngine {
                 if (fold.vertical) ops.append("${r(fold.pos * w)} 0 m ${r(fold.pos * w)} ${r(h)} l\n") else ops.append("0 ${r(h - fold.pos * h)} m ${r(w)} ${r(h - fold.pos * h)} l\n")
             }
             ops.append("S Q\n")
-            // cuts are a single-sided concept, drawn on the front only
             if (!side.back && layout.cutLines.isNotEmpty()) {
                 ops.append("q /Cut gs 1 0 0 RG 1 w\n")
                 for (cut in layout.cutLines) ops.append("${r(cut.x1 * w)} ${r(h - cut.y1 * h)} m ${r(cut.x2 * w)} ${r(h - cut.y2 * h)} l\n")

@@ -42,7 +42,6 @@ object RequestBuilderEngine {
         return out.toString()
     }
 
-    // escape posix quotes
     private fun quote(text: String) = "'" + text.replace("'", "'\\''") + "'"
 
     fun fullUrl(spec: RequestSpec): String {

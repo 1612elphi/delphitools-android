@@ -436,7 +436,7 @@ fun PdfPageNumberer(model: PdfPageNumbererModel = viewModel()) {
     )
 }
 
-/** dt-ios PageNumberPreview: the stamped page; a tap picks the anchor of the third it lands in. */
+// dt-ios PageNumberPreview
 @Composable
 private fun NumberPreview(picture: ImageBitmap?, anchor: PdfStampEngine.Anchor?, onAnchor: (PdfStampEngine.Anchor) -> Unit) {
     val c = LocalDelphiColours.current
@@ -492,7 +492,7 @@ private val trackIndexRow = 16.dp
 private val trackLane = 28.dp
 private val trackGap = 10.dp
 
-/** dt-ios PageSequenceTrack: pages in a row with their numbers drawn on, and a lane per section whose start is dragged. */
+// dt-ios PageSequenceTrack
 @Composable
 private fun SequenceTrack(
     sizes: List<PdfSize>,
@@ -553,7 +553,7 @@ private fun SequenceTrack(
             val reach = with(density) { 22.dp.toPx() }
             return sections.firstOrNull { it.from in frames.indices && abs(frames[it.from].left - gap / 2 - point.x) < reach }
         }
-        // one viewport-wide canvas: a canvas as wide as a long document passes Compose's 262,143 px limit
+        // compose 262,143 px limit
         Canvas(
             Modifier
                 .fillMaxSize()
@@ -663,7 +663,6 @@ private fun DrawScope.drawTrack(
         drawRect(fill, rect.topLeft, rect.size)
         val measured = measurer.measure(text, caption.copy(color = ink))
         val pad = 10.dp.toPx()
-        // label follows scrolled span
         val x = minOf(maxOf(rect.left + pad, visibleLeft + pad), rect.right - measured.size.width - pad)
         if (x < rect.left + 4.dp.toPx()) return
         clipRect(rect.left, rect.top, rect.right, rect.bottom) {

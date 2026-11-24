@@ -147,7 +147,7 @@ class WatermarkerModel(application: Application) : AndroidViewModel(application)
 
     private var loading: Job? = null
     private var task: Job? = null
-    // serialised renders: a full-size canvas each
+    // serialised: full canvas each
     private val renderer = Dispatchers.Default.limitedParallelism(1)
 
     val stem get() = sourceName.substringBeforeLast('.').ifEmpty { "image" }
@@ -257,7 +257,7 @@ class WatermarkerModel(application: Application) : AndroidViewModel(application)
     }
 }
 
-/** dt-ios WatermarkerViewModel.render: the source with the mark drawn once or tiled, at [WatermarkSettings.opacity] as one layer. */
+// dt-ios WatermarkerViewModel.render
 private fun renderWatermark(source: Bitmap, settings: WatermarkSettings): Bitmap {
     val width = source.width.toFloat()
     val height = source.height.toFloat()
@@ -407,7 +407,7 @@ fun Watermarker(model: WatermarkerModel = viewModel()) {
     CanonSplit(sidebar = listOf(canvas), main = listOf(input, mark, placement), halves = true, collapsesTo = 200.dp)
 }
 
-/** dt-ios WatermarkPicture: the result, or the source while it renders; a mark at each other spot, tapped to move there. */
+// dt-ios WatermarkPicture
 @Composable
 private fun WatermarkPicture(
     image: ImageBitmap?,

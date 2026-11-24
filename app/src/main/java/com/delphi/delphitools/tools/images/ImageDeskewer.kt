@@ -226,7 +226,7 @@ class ImageDeskewerModel(application: Application) : AndroidViewModel(applicatio
         sourceSize = IntSize.Zero
     }
 
-    // one render in flight; the last request wins
+    // last request wins
     private fun render() {
         val image = canvasImage ?: return
         val source = source ?: return
@@ -488,7 +488,6 @@ private fun DeskewBoard(
     }
 }
 
-/** Per-corner TalkBack elements, each nudged a hundredth of the image by its actions. */
 @Composable
 private fun CornerTargets(shown: List<Offset>, quad: List<QuadPoint>, pixels: IntSize, onMove: (List<QuadPoint>) -> Unit) {
     val density = LocalDensity.current
@@ -515,7 +514,6 @@ private fun CornerTargets(shown: List<Offset>, quad: List<QuadPoint>, pixels: In
     }
 }
 
-/** The "Drag the corners" chip, centred in the widest strip the quad leaves inside the image. */
 @Composable
 private fun DeskewHint(image: Rect, quad: List<Offset>, visible: Boolean) {
     val c = LocalDelphiColours.current
@@ -551,7 +549,7 @@ private fun DeskewHint(image: Rect, quad: List<Offset>, visible: Boolean) {
     }
 }
 
-/** dt-ios DeskewResultPicture: the corrected picture at its output proportions, measured, its grid flashing on a change. */
+// dt-ios DeskewResultPicture
 @Composable
 private fun DeskewResult(image: ImageBitmap?, size: IntSize, valid: Boolean, animates: Boolean, guidesKey: Any) {
     val c = LocalDelphiColours.current
@@ -586,7 +584,6 @@ private fun DeskewResult(image: ImageBitmap?, size: IntSize, valid: Boolean, ani
                     val ink = Color.White.copy(alpha = 0.6f * guides.value)
                     for (step in 1 until DIVISIONS) {
                         val share = step.toFloat() / DIVISIONS
-                        // visible on any picture
                         drawLine(ink, Offset(this.size.width * share, 0f), Offset(this.size.width * share, this.size.height), hair, blendMode = BlendMode.Difference)
                         drawLine(ink, Offset(0f, this.size.height * share), Offset(this.size.width, this.size.height * share), hair, blendMode = BlendMode.Difference)
                     }

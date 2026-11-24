@@ -53,7 +53,6 @@ class WhisperModelsTest {
         val model = WhisperModel.all.first()
         assertEquals(model.bytes, WhisperDownloadPlan.remaining(model) { 0 })
         assertEquals(0L, WhisperDownloadPlan.remaining(model) { it.bytes })
-        // an oversized leftover counts as nothing fetched beyond the file
         assertEquals(0L, WhisperDownloadPlan.remaining(model) { it.bytes * 2 })
         val encoder = model.files.first { it.name == WhisperModel.ENCODER }
         assertEquals(model.bytes - encoder.bytes, WhisperDownloadPlan.remaining(model) { if (it == encoder) it.bytes else 0 })

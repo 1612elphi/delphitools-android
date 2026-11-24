@@ -84,7 +84,7 @@ class DocConvertEngineTest {
 
     @Test
     fun ledger() {
-        // DocConvertLedger.selfCheck
+        // dt-ios DocConvertLedger.selfCheck
         val found = e.ledger(e.parseMarkdown("# A\n\nSome **b** and [c](https://x).\n\n- one\n- two\n\n# D"))
         assertEquals(listOf(DocElement.Heading, DocElement.Paragraph, DocElement.Bullets, DocElement.Bold, DocElement.Link), found.map { it.element })
         assertEquals(2, found[0].count)

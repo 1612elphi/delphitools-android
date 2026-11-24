@@ -123,7 +123,7 @@ data class TraceSettings(
 
         fun smoothing(value: Double): String = if (value < 0.05) "0.01" else String.format(Locale.ROOT, "%.1f", value)
 
-        // the preset keys dt-ios leaves to imagetracerjs
+        // left to imagetracerjs
         private fun presetOptions(preset: TracerPreset) = when (preset) {
             TracerPreset.Curvy -> TraceOptions(lineFilter = true, rightAngleEnhance = false)
             TracerPreset.Grayscale, TracerPreset.FixedPalette, TracerPreset.Artistic2 -> TraceOptions(colourQuantCycles = 1)
@@ -246,7 +246,7 @@ object ImageTraceEngine {
         doubleArrayOf(0.049692, 0.069304, 0.089767, 0.107988, 0.120651, 0.125194, 0.120651, 0.107988, 0.089767, 0.069304, 0.049692),
     )
 
-    // selective gaussian; the js skips index 0 of each row and column
+    // js skips index 0
     private fun blur(data: IntArray, width: Int, height: Int, blurRadius: Int, blurDelta: Int): IntArray {
         if (blurRadius < 1) return data
         val radius = minOf(blurRadius, 5)
@@ -363,7 +363,7 @@ object ImageTraceEngine {
                         parentBox = candidate.box
                     }
                 }
-                // js: a first path that is a hole is its own parent
+                // js: hole parents itself
                 (if (paths.isEmpty()) path else paths[parent]).holes.add(paths.size)
             }
             paths.add(path)
@@ -464,7 +464,7 @@ object ImageTraceEngine {
         var t3 = t * t
         val cpx = (t1 * points[start].x + t3 * points[end].x - points[fitPoint].x) / -t2
         val cpy = (t1 * points[start].y + t3 * points[end].y - points[fitPoint].y) / -t2
-        // js starts this walk unwrapped; an index past the end reads undefined, NaN, and changes nothing
+        // js reads undefined here
         p = start + 1
         while (p != end) {
             if (p < n) {
@@ -488,7 +488,7 @@ object ImageTraceEngine {
         return fit(points, ltres, qtres, start, split) + fit(points, ltres, qtres, split, end)
     }
 
-    /** JavaScript's `+value.toFixed(places)` printed as JavaScript prints a number. */
+    // js toFixed printing
     private fun js(value: Double, places: Int? = null): String {
         val rounded = if (places == null) value else BigDecimal(value).setScale(places, RoundingMode.HALF_UP).toDouble()
         if (rounded.isNaN()) return "NaN"
@@ -516,7 +516,7 @@ object ImageTraceEngine {
                     if (seg.type == 'Q') out.append("${js(seg.x3 * s, r)} ${js(seg.y3 * s, r)} ")
                 }
                 out.append("Z ")
-                // js rounds hole coordinates with toFixed(), no places
+                // js toFixed, no places
                 for (hole in path.holes) {
                     val segments = layer[hole].segments
                     if (segments.isEmpty()) continue
@@ -581,7 +581,7 @@ class TraceVectors(val width: Double, val height: Double, val layers: List<Layer
                 val fill = SvgMarkup.attribute("fill", tag) ?: continue
                 val data = SvgMarkup.attribute("d", tag) ?: continue
                 val opacityText = SvgMarkup.attribute("opacity", tag)
-                // palette entries can share an RGB and differ in alpha
+                // entries may share rgb
                 val builder = builders.getOrPut(fill + "|" + (opacityText ?: "1")) {
                     val rgb = Regex("\\d+").findAll(fill).map { it.value.toInt() }.toList()
                     Builder(

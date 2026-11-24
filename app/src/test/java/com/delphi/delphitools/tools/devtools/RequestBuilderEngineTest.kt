@@ -45,7 +45,7 @@ class RequestBuilderEngineTest {
 
     @Test
     fun wire() {
-        // RequestWire.selfCheck
+        // dt-ios RequestWire.selfCheck
         val (lines, bytes) = e.wireLines("POST /a HTTP/1.1\nHost: x.test\nContent-Length: 7\n\n{\"x\":1}")
         assertEquals(
             listOf(RequestPart.Start, RequestPart.Headers, RequestPart.Headers, RequestPart.Headers, RequestPart.Body),

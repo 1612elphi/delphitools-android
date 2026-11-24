@@ -67,7 +67,6 @@ object ImposedPdfWriter {
         return listOf(d / det, -b / det, -c / det, a / det, (c * f - d * e) / det, (b * e - a * f) / det)
     }
 
-    /** The page's content as one or more form XObjects drawn in display space, sized as viewed. */
     private class PageForm(val refs: List<PdfRef>, val width: Double, val height: Double)
 
     private fun form(file: PdfFile, index: Int, writer: PdfWriter, copier: PdfObjectCopier): PageForm {

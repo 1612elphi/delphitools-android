@@ -12,7 +12,7 @@ import java.io.File
 class PdfFileTest {
     private fun fixture(name: String) = javaClass.getResourceAsStream("/pdf/$name")!!.readBytes()
 
-    // pdf-out holds the written files for checking with pdfinfo or pdftoppm
+    // pdf-out: written files
     private fun keep(name: String, bytes: ByteArray) {
         File("build/pdf-out").apply { mkdirs() }.resolve(name).writeBytes(bytes)
     }
@@ -28,7 +28,6 @@ class PdfFileTest {
     private val tree = "<< /Type /Pages /Kids [3 0 R] /Count 1 >>"
     private val page = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 200] >>"
 
-    /** [objects] numbered from 1, then a classic table whose entry for object n points at the offset of [xref]`[n - 1]`, 0 for free. */
     private fun raw(objects: List<String>, xref: List<Int> = objects.indices.map { it + 1 }, root: Int = 1): ByteArray {
         val text = StringBuilder("%PDF-1.4\n")
         val at = objects.mapIndexed { index, body ->
@@ -53,7 +52,6 @@ class PdfFileTest {
 
     @Test
     fun rejectsAnObjectAtAnotherNumbersOffset() {
-        // every entry shifted by one object: 1 points at 2, 2 at 3, 3 at 1
         val file = PdfFile(raw(listOf(catalog, tree, page), xref = listOf(2, 3, 1)))
         assertTrue(file.rebuilt)
         assertEquals(listOf(PdfSize(100.0, 200.0)), sizes(file))
@@ -153,7 +151,7 @@ class PdfFileTest {
         val bytes = chain(3000)
         var pages = -1
         var error: Throwable? = null
-        // 256 KB, a worker thread's stack on a small device
+        // 256 kb worker stack
         val thread = Thread(null, { runCatching { pages = PdfFile(bytes).pages.size }.onFailure { error = it } }, "walk", 256L * 1024)
         thread.start()
         thread.join()

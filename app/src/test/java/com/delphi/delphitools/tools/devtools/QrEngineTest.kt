@@ -47,7 +47,7 @@ class QrEngineTest {
 
     @Test
     fun matrix() {
-        // version 1 is 21 modules; 23 bytes at H need version 3, 29
+        // 23 bytes at h: v3
         assertEquals(21, QrEngine.matrix("hello", QrCorrection.Quartile)?.size)
         assertEquals(29, QrEngine.matrix("https://delphi.tools/qr", QrCorrection.High)?.size)
         assertNull(QrEngine.matrix("", QrCorrection.Low))

@@ -168,7 +168,6 @@ private val measure = 680.dp
 private val fontNames = listOf("Sans", "Serif", "Mono")
 private val families = listOf(FontFamily.SansSerif, FontFamily.Serif, FontFamily.Monospace)
 
-// gutter: lead, labels, rule, then the gap before the text
 private val gutterLead = 12.dp
 private val gutterLabels = 40.dp
 private val ruleX = 60.dp
@@ -251,7 +250,6 @@ class TextEditorModel(application: Application) : AndroidViewModel(application) 
     }
 
     private fun changed(now: String) {
-        // the field highlights a short text itself
         if (now.length <= TextEditorEngine.LIVE_LIMIT) parsed(now, TextEditorEngine.spans(now), emptyList())
         settling?.cancel()
         settling = viewModelScope.launch {
@@ -430,7 +428,6 @@ fun TextEditor(model: TextEditorModel = viewModel()) {
     if (model.fullScreen) FullScreenEditor(model) { model.fullScreen = false }
 }
 
-/** The presets as swatches set in their own look; the chosen one is ringed. */
 @Composable
 private fun StylePicker(selected: Int?, onSelect: (Int) -> Unit) {
     val c = LocalDelphiColours.current
@@ -542,7 +539,7 @@ private fun Manuscript(
         val markStyle = CanonText.captionSemibold
         val countStyle = TextStyle(fontFamily = DelphiMono, fontSize = 10.sp)
         val focusMode = model.focus
-        // a scrolled parent measures the field at full height, past the 262,143 px constraint limit
+        // compose 262,143 px limit
         BasicTextField(
             model.state,
             Modifier
@@ -619,14 +616,14 @@ private fun Manuscript(
     }
 }
 
-/** The paragraph around `caret`, as NSString.paragraphRange: up to and including its line break. */
+// as NSString.paragraphRange
 private fun paragraph(text: String, caret: Int): IntRange {
     val start = text.lastIndexOf('\n', caret - 1).let { if (it < 0) 0 else it + 1 }
     val end = text.indexOf('\n', caret).let { if (it < 0) text.length else it + 1 }
     return start..end
 }
 
-/** ManuscriptPreview: the blocks set in the preview style, scrolled to the block being written. */
+// dt-ios ManuscriptPreview
 @Composable
 private fun ManuscriptPreview(blocks: List<DocBlock>, style: Style, anchor: Int?) {
     val list = rememberLazyListState()
@@ -689,7 +686,7 @@ private fun PreviewBlock(block: DocBlock, style: Style, body: Float) {
     }
 }
 
-/** DocConvert.pdfData: A4 with 48 pt margins, an 11 pt body, paginated by line. */
+// dt-ios DocConvert.pdfData
 private fun pdf(blocks: List<DocBlock>, style: Style, body: Float = 11f): ByteArray {
     val pageWidth = 595
     val pageHeight = 842
@@ -791,7 +788,6 @@ private fun pdf(blocks: List<DocBlock>, style: Style, body: Float = 11f): ByteAr
     }
 }
 
-/** The editor alone at a 20 pt body, the column held to a readable measure. The close button writes the text back. */
 @Composable
 private fun FullScreenEditor(model: TextEditorModel, onClose: () -> Unit) {
     val c = LocalDelphiColours.current

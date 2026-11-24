@@ -15,7 +15,6 @@ class WatermarkEngineTest {
         assertEquals(WatermarkPosition.TopLeft, WatermarkEngine.zone(Offset(11f, 21f), rect))
         assertEquals(WatermarkPosition.Centre, WatermarkEngine.zone(Offset(160f, 95f), rect))
         assertEquals(WatermarkPosition.BottomRight, WatermarkEngine.zone(Offset(309f, 169f), rect))
-        // outside: nearest zone
         assertEquals(WatermarkPosition.BottomLeft, WatermarkEngine.zone(Offset(-50f, 400f), rect))
         assertNull(WatermarkEngine.zone(Offset.Zero, Rect.Zero))
         val corner = WatermarkEngine.anchor(WatermarkPosition.BottomRight, rect)

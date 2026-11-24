@@ -480,7 +480,7 @@ private fun ToolPage(tool: Tool, isOpen: () -> Boolean) {
     val changingConfigurations = LocalActivity.current
     DisposableEffect(tool.id) {
         onDispose {
-            // a reopened tool shares the store with its closing page
+            // reopened tool shares store
             if (!isOpen() && changingConfigurations?.isChangingConfigurations != true) stores.clear(tool.id)
         }
     }

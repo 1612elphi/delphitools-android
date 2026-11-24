@@ -290,7 +290,6 @@ class CodeSheet(
                 upwards = !upwards
                 right -= 2
             }
-            // timing column 6 last
             for (row in 0 until n) {
                 if (n > 6 && !visited[row * n + 6]) {
                     table[row * n + 6] = index

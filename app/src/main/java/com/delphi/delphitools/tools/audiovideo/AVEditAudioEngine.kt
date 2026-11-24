@@ -146,7 +146,7 @@ object AVEditAudioEngine {
     fun audioDetail(scan: AudioScan): String =
         String.format(Locale.ROOT, "%.2f s · %d Hz · %d ch", scan.duration, scan.sampleRate, scan.channels)
 
-    // bs.1770-4: 400 ms blocks, 75 % overlap
+    // bs.1770-4 gating blocks
     fun gatedLoudness(subBlockSums: List<Double>, subBlockFrames: Int): Double? {
         if (subBlockSums.size < 4 || subBlockFrames <= 0) return null
         val blockFrames = subBlockFrames * 4.0
@@ -204,7 +204,7 @@ object AVEditAudioEngine {
         for (frame in 0 until count) {
             var scale = gain
             if (frame < fadeInEnd) scale *= (written + frame).toFloat() / inFrames
-            // a file can decode past its expected length
+            // decode may overrun length
             if (outFrames > 0 && frame >= fadeOutStart) scale *= max(0f, (total - 1 - written - frame).toFloat() / outFrames)
             if (scale == 1f) continue
             for (channel in 0 until channels) {

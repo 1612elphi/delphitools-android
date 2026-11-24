@@ -47,7 +47,6 @@ class AVEditEngineTest {
 
     @Test
     fun keptSamplesStopAtTheEnd() {
-        // closed GOP, no reordering, sync every 1 s at 10 fps
         val plain = (0 until 30).map { s(it * 100_000L, it % 10 == 0) }
         assertEquals(15, keptVideoSamples(plain, 1_500_000))
         assertEquals(10, keptVideoSamples(plain, 1_000_000))
@@ -56,14 +55,11 @@ class AVEditEngineTest {
 
     @Test
     fun keptSamplesKeepReferencesOfReorderedFrames() {
-        // decode order I P B B P B B, display 0 3 1 2 6 4 5
+        // decode ipbbpbb, display 0312645
         val reordered = listOf(s(0, true), s(3), s(1), s(2), s(6), s(4), s(5), s(7, true))
-        // end 3: B at 1 and 2 come after the P at 3, so the P stays in
         assertEquals(4, keptVideoSamples(reordered, 3))
-        // end 5: the B at 4 needs the P at 6
         assertEquals(6, keptVideoSamples(reordered, 5))
         assertEquals(1, keptVideoSamples(reordered, 1))
-        // the next sync at or after the end closes the scan
         assertEquals(7, keptVideoSamples(reordered, 7))
     }
 
@@ -88,7 +84,7 @@ class AVEditEngineTest {
 
     @Test
     fun wav() {
-        // AVEditAudio.selfCheck
+        // dt-ios AVEditAudio.selfCheck
         assertTrue(AVEditEngine.fitsWav(48000L * 3600 * 6, 2))
         assertFalse(AVEditEngine.fitsWav(48000L * 3600 * 7, 2))
         assertTrue(AVEditEngine.fitsWav(1, 0))
@@ -103,13 +99,13 @@ class AVEditEngineTest {
 
     @Test
     fun frames() {
-        // AVEditFrames.selfCheck
+        // dt-ios AVEditFrames.selfCheck
         assertEquals(listOf(1.5, 4.5, 7.5, 10.5), AVEditEngine.sheetTimes(12.0, 4))
         assertTrue(AVEditEngine.sheetTimes(12.0, 0).isEmpty())
         assertEquals(4 to 3, AVEditEngine.sheetGrid(12))
         assertEquals(2 to 1, AVEditEngine.sheetGrid(2))
         assertEquals(4 to 2, AVEditEngine.sheetGrid(5))
-        // AVEditFilmstrip.selfCheck
+        // dt-ios AVEditFilmstrip.selfCheck
         assertEquals(listOf(4, 12, 20), AVEditEngine.spread(3, 24))
         assertEquals((0 until 24).toList(), AVEditEngine.spread(24, 24))
         assertTrue(AVEditEngine.spread(5, 0).isEmpty())

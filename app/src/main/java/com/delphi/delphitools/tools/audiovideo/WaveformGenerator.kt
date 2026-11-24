@@ -210,7 +210,7 @@ fun WaveformGenerator(model: WaveformGeneratorModel = viewModel()) {
     )
 }
 
-/** dt-ios WaveformGeneratorPicture: the export, letterboxed, with its bars drawn in image pixels. */
+// dt-ios WaveformGeneratorPicture
 @Composable
 private fun WaveformPicture(peaks: AVEditPeaks?, width: Int, height: Int, wave: Rgb, background: Rgb) {
     val c = LocalDelphiColours.current

@@ -218,7 +218,7 @@ object QrEngine {
             QrContentType.Phone -> "tel:$trimmed"
             QrContentType.Wifi -> {
                 val encryption = if (wifiEncryption == "None") "nopass" else wifiEncryption
-                // a secured network without a password would encode an unjoinable code
+                // unjoinable without password
                 if (encryption != "nopass" && wifiPassword.isEmpty()) return ""
                 var wifi = "WIFI:T:$encryption;S:${escapeWifi(trimmed)}"
                 if (encryption != "nopass") wifi += ";P:${escapeWifi(wifiPassword)}"
@@ -281,7 +281,7 @@ object QrEngine {
     /** The module matrix for [payload], without its quiet zone; null when empty or too long. */
     fun matrix(payload: String, correction: QrCorrection): List<BooleanArray>? {
         if (payload.isEmpty()) return null
-        // byte mode carries the utf-8 bytes as core image does, without an eci header
+        // byte mode, no eci
         val bytes = String(payload.toByteArray(Charsets.UTF_8), Charsets.ISO_8859_1)
         val code = try {
             Encoder.encode(bytes, correction.level)

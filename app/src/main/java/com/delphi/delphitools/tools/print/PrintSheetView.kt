@@ -153,7 +153,7 @@ fun DrawScope.drawPrintSheet(
     drawRect(paper.border, Offset(rect.left + 0.5f, rect.top + 0.5f), Size(rect.width - 1, rect.height - 1), style = Stroke(1.dp.toPx()))
 }
 
-/** points² at scale 1, shared by all of a strip's pictures */
+// points² at scale 1
 private const val STRIP_BUDGET = 12_000_000.0
 private const val STRIP_HEIGHT = 140.0
 
@@ -214,7 +214,6 @@ private fun DrawScope.hatch(frame: Rect, colour: Color) {
     }
 }
 
-/** A small pair of blades on a white disc where the first cut starts. */
 private fun DrawScope.scissors(start: Offset, towards: Offset, colour: Color) {
     val angle = Math.toDegrees(kotlin.math.atan2((towards.y - start.y).toDouble(), (towards.x - start.x).toDouble())).toFloat()
     val r = 8.dp.toPx()

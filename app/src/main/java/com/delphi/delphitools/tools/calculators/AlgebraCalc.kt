@@ -140,7 +140,6 @@ class AlgebraCalcModel(application: Application) : AndroidViewModel(application)
     private var engine: Deferred<AlgebraEngine?>? = null
     private var started: AlgebraEngine? = null
     private var typing: Job? = null
-    // drops stale runs
     private var run = 0
 
     val variable get() = variableText.trim().ifEmpty { "x" }
@@ -155,7 +154,7 @@ class AlgebraCalcModel(application: Application) : AndroidViewModel(application)
     }
 
     fun typeVariable(name: String) {
-        // web caps it at two
+        // web caps at two
         variableText = name.take(2)
         later()
     }
@@ -353,7 +352,6 @@ fun AlgebraCalc(model: AlgebraCalcModel = viewModel()) {
     CanonSplit(sidebar = listOf(controls), main = listOf(results, examples, reference), banner = picture)
 }
 
-/** An example set as mathematics, its syntax beside it; a tap loads it. */
 @Composable
 private fun AlgebraExampleRow(expression: String, isCurrent: Boolean, onClick: () -> Unit) {
     val c = LocalDelphiColours.current
@@ -380,12 +378,10 @@ private class PictureLine(val row: CanonMathRow, val fallback: String, val size:
 
 private fun symbols(vararg symbols: String) = symbols.map { CanonMathItem.Symbol(it) }
 
-/** Items for [text]; text that does not parse is one run of plain text. */
 private fun itemsOf(text: String): List<CanonMathItem> =
     if (CanonMathNode.parse(text) == null) symbols(text) else CanonMathExpression.items(text)
 
 // ponytail: rows, not CanonMath.Node trees: no subscripted names (x₁ is a letter and a subscript digit) and no `present` reordering
-/** The input with its operation's notation, and the result under it. */
 private fun pictureLines(shown: AlgebraShown, approximate: Boolean): List<PictureLine> {
     val input = shown.expression.ifEmpty { shown.operation.placeholder }
     val result = if (shown.expression.isEmpty()) shown.ghost else shown.result
@@ -427,7 +423,7 @@ private fun pictureLines(shown: AlgebraShown, approximate: Boolean): List<Pictur
 
 private const val FAINT_ALPHA = 0.3f
 private const val LINE_GAP = 12f
-// largest the maths grows to fill a roomy band, as a share of its set size
+// max growth share
 private const val GROWTH = 1.25f
 private val relationSigns = setOf("=", "≈", "∈")
 
@@ -455,7 +451,6 @@ private fun AlgebraPicture(lines: List<PictureLine>, faint: Boolean, key: Algebr
         LaunchedEffect(key, width, height, top) {
             if (key.promote && promoted !== key) {
                 promoted = key
-                // result keys become input
                 morph.rename { if (it.startsWith("1|")) "0|" + it.drop(2) else if (it.startsWith("0|")) "gone|$it" else it }
             }
             val animated = !first
@@ -476,7 +471,6 @@ private fun arrange(lines: List<PictureLine>, faint: Boolean, width: Float, heig
     if (area.width <= 0 || area.height <= 0 || lines.isEmpty()) return emptyList()
     val boxes = lines.map { line ->
         val box = MathTypesetter(line.size, line.ink).layout(line.row)
-        // steady baselines while typing
         box.ascent = max(box.ascent, line.size * 0.72f)
         box.descent = max(box.descent, line.size * 0.24f)
         box

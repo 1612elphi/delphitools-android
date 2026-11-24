@@ -82,7 +82,7 @@ object BarcodeEngine {
     // ponytail: Core Image's PDF417 row height is read from its bitmap on iOS; 3 modules is the spec's least
     private const val PDF417_ROW_HEIGHT = 3
 
-    /** Core Image's default error correction for each 2D code. */
+    // core image default levels
     private const val PDF417_LEVEL = 2
     private const val AZTEC_PERCENT = 23
 
@@ -98,7 +98,7 @@ object BarcodeEngine {
             val bars = Ean13.bars(digits) ?: return BarcodeModules.Failure("Invalid EAN-13 code. Check the check digit.")
             return BarcodeModules.Code(listOf(bars), 1, digits)
         }
-        // core image takes latin-1 data
+        // core image takes latin-1
         if (content.any { it.code > 0xFF }) return BarcodeModules.Failure("Invalid characters for this barcode type.")
         val rows = try {
             when (kind) {
@@ -139,7 +139,6 @@ object BarcodeEngine {
                 val x = 3 + index * 7f + if (index >= 6) 5 else 0
                 marks += CodeSheet.Mark.Text(digit.toString(), SheetRect(x, BAR_HEIGHT, 7f, DIGIT_BAND), size, true, ink)
             }
-            // room for leading digit
             val left = max(pad, 9f)
             return CodeSheet(
                 rows, height, CodeSheet.Margin(left, pad, pad, pad), DIGIT_BAND, ink, paper, kind.quietZone, sweep, anchor,
@@ -152,7 +151,6 @@ object BarcodeEngine {
             )
         }
         val columns = rows.firstOrNull()?.size?.toFloat() ?: 0f
-        // text fits bar width
         val fitted = min(size, columns / max(1, text.length) / 0.62f)
         return CodeSheet(
             rows, height, CodeSheet.Margin(pad), DIGIT_BAND, ink, paper, kind.quietZone, sweep, anchor,

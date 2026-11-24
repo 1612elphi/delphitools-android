@@ -67,11 +67,11 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
 
-/** Seconds from the first module's turn to the last's, then one module's own turn. */
+// sweep seconds, then turn
 private const val SPREAD = 0.34
 private const val FLIP = 0.2
 
-/** Past this many modules a change swaps at once instead of sweeping. */
+// module cap for sweeping
 private const val SWEEP_LIMIT = 12_000
 private val captionRow = 36.dp
 private val cropGap = 5.dp
@@ -148,7 +148,6 @@ fun CodeSheet.png(context: Context, pixels: Float): ByteArray? {
     return ByteArrayOutputStream().also { image.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
 }
 
-/** What a sweep reads for every module on every frame, built once per sheet. */
 private class Swept(val sheet: CodeSheet) {
     val orders = DoubleArray(sheet.rows * sheet.columns).also { out ->
         for (row in 0 until sheet.rows) for (column in 0 until sheet.columns) out[row * sheet.columns + column] = sheet.order(row, column)
@@ -187,7 +186,6 @@ fun CodeSheetPicture(sheet: CodeSheet?, caption: String, pixels: Pair<Int, Int>?
         val animated = ValueAnimator.areAnimatorsEnabled() && before != null && sheet != null && moved &&
             max(before.rows, sheet.rows) * max(before.columns, sheet.columns) <= SWEEP_LIMIT
         if (animated) {
-            // resume in-flight sweep
             previous = current
             current = Swept(sheet!!)
             clock.snapTo(0f)
@@ -326,7 +324,6 @@ private fun DrawScope.drawCropMarks(frame: SheetRect, ink: Color) {
     }
 }
 
-/** A margin under the code's quiet zone: the zone it needs, dashed in red. */
 private fun DrawScope.drawQuietZone(sheet: CodeSheet, placement: SheetPlacement, colour: Color) {
     val m = sheet.margin
     if (minOf(m.left, m.right, m.top, m.bottom) >= sheet.quietZone - 0.01f) return

@@ -485,7 +485,6 @@ fun QrGenerator(model: QrGeneratorModel = viewModel()) {
         }
     }
 
-    // stacked: not full screen
     val canvas = CanonSection.canvas(CanonCanvasSize.Aspect(1f), background = c.card, maxHeight = 520.dp) {
         CodeSheetPicture(sheet, "QR code", sheet?.pixelSize(model.pixelsPerModule), Icons.Outlined.QrCode, model.payload.ifEmpty { null })
     }
@@ -493,7 +492,6 @@ fun QrGenerator(model: QrGeneratorModel = viewModel()) {
     CanonSplit(sidebar = listOf(canvas), main = listOf(contentBlock, styleBlock, logoBlock, outputBlock), halves = true, collapsesTo = 240.dp)
 }
 
-/** A date, or a date and time, that opens the system pickers. */
 @Composable
 private fun DateCell(value: Instant, dateOnly: Boolean, label: String, onChange: (Instant) -> Unit) {
     val c = LocalDelphiColours.current
@@ -528,7 +526,7 @@ private fun DateCell(value: Instant, dateOnly: Boolean, label: String, onChange:
 
 private class Swatch(val title: String, val paper: Rgb, val draw: DrawScope.(SheetRect) -> Unit)
 
-/** dt-ios QRStyleSwatches: looks as small drawings on their own paper over their names, three to six to a row. */
+// dt-ios QRStyleSwatches
 @Composable
 private fun Swatches(items: List<Swatch>, selected: Int?, onPick: (Int) -> Unit) {
     val c = LocalDelphiColours.current

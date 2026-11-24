@@ -140,7 +140,6 @@ class TailwindCheatsheetModel(application: Application) : AndroidViewModel(appli
         find("")
     }
 
-    /** Filters off the main thread and lights the first match, so the stage follows the search. */
     private fun find(text: String) {
         typing?.cancel()
         search?.cancel()
@@ -253,7 +252,6 @@ private fun Modifier.classButton(item: TailwindClass, isLit: Boolean, onSelect: 
         selected = isLit
     }
 
-/** The class drawn, its name and CSS; a tap puts it on the stage. The flush cell copies the class. */
 @Composable
 private fun ClassRow(item: TailwindClass, category: String, isLit: Boolean, inks: TailwindInks, measurer: TextMeasurer, symbols: Map<String, Painter>, onSelect: () -> Unit) {
     val c = LocalDelphiColours.current
@@ -287,7 +285,6 @@ private fun ClassRow(item: TailwindClass, category: String, isLit: Boolean, inks
     }
 }
 
-/** A class as a card: its drawing over its name and CSS, with a flush copy cell in the corner. */
 @Composable
 private fun ClassCard(
     item: TailwindClass,
@@ -375,7 +372,6 @@ private fun TailwindStage(item: TailwindClass, category: TailwindCategory, inks:
     }
 }
 
-/** The stage's specimen: drawn, with what the class animates moving above the drawing. */
 @Composable
 private fun StageSpecimen(item: TailwindClass, category: String, inks: TailwindInks, measurer: TextMeasurer, symbols: Map<String, Painter>, modifier: Modifier) {
     val moves = remember { ValueAnimator.areAnimatorsEnabled() }
@@ -393,7 +389,6 @@ private fun StageSpecimen(item: TailwindClass, category: String, inks: TailwindI
     }
 }
 
-/** The rest of the lit class's category as small specimens in a grid, the lit one framed. Not interactive. */
 @Composable
 private fun Siblings(
     category: TailwindCategory,
@@ -408,7 +403,6 @@ private fun Siblings(
     Canvas(modifier.clearAndSetSemantics {}) {
         val items = category.items
         val gap = 4.dp.toPx()
-        // columns and rows that fit every sibling at the largest cell
         var columns = items.size
         var cell = Size(1f, 1f)
         for (rows in 1..max(1, items.size)) {

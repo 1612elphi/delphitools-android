@@ -8,7 +8,7 @@ data class ScopeComponents(val luma: Double, val cb: Double, val cr: Double)
 
 /** dt-ios VideoAtlasModel, AVInfoProbe formatting and AVEditScopes maths, with no device in it. */
 object VideoAtlasEngine {
-    // MediaFormat COLOR_STANDARD_*, COLOR_TRANSFER_*, COLOR_RANGE_*
+    // MediaFormat colour constants
     private val standards = mapOf(1 to "BT.709", 2 to "BT.601 PAL", 4 to "BT.601 NTSC", 6 to "BT.2020")
     private val transfers = mapOf(1 to "Linear", 3 to "SDR", 6 to "PQ", 7 to "HLG")
     private val ranges = mapOf(1 to "Full range", 2 to "Limited range")
@@ -41,7 +41,7 @@ object VideoAtlasEngine {
         }
     }
 
-    // AVEditScopes: frame copy in pixels, plot cells, brightness one pixel adds of 255, share of the radius full saturation reaches
+    // dt-ios AVEditScopes constants
     const val SAMPLE_WIDTH = 160
     const val SAMPLE_HEIGHT = 90
     const val CELLS = 128

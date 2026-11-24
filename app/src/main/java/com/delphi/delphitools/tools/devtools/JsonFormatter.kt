@@ -132,7 +132,7 @@ private fun InputStream.readAtMost(limit: Long): ByteArray {
     return out.toByteArray()
 }
 
-// one node of a minified line stays far under the layout limit
+// stays under layout limit
 private const val PIECE = 1000
 private const val DASH = "—"
 
@@ -236,7 +236,7 @@ class JsonFormatterModel(application: Application) : AndroidViewModel(applicatio
                 runCatching {
                     val size = resolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { if (it.moveToFirst()) it.getLong(0) else null }
                     if (size != null && size > MAX_FILE_BYTES) return@runCatching null
-                    // providers often report no size, so stop reading one byte past the limit
+                    // providers may omit size
                     val bytes = resolver.openInputStream(uri)?.use { it.readAtMost(MAX_FILE_BYTES + 1) } ?: return@runCatching null
                     if (bytes.size > MAX_FILE_BYTES) null else decodeTextFile(bytes)
                 }.getOrNull()
@@ -248,7 +248,6 @@ class JsonFormatterModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    /** Opens every collapsed row above [path], so its row shows. */
     private fun expand(path: String) {
         val above = collapsed.filter { path.startsWith("$it.") }
         if (above.isEmpty()) return
@@ -409,7 +408,7 @@ fun JsonFormatter(model: JsonFormatterModel = viewModel()) {
                     flashesCopied = true,
                 ) {
                     val text = valid?.text ?: return@CanonButton
-                    // a clip past the binder limit throws
+                    // clip past binder throws
                     runCatching { context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("JSON", text)) }
                 }
             }
@@ -443,10 +442,9 @@ private fun jsonInks(): JsonInks {
     return remember(c, math) { JsonInks(c.primary, math.yellow, math.clay, math.blue, c.mutedForeground, c.foreground) }
 }
 
-/** One shown line of the listing; a long line breaks into pieces, numbered on the first. */
 private class ListingRow(val number: Int?, val start: Int, val end: Int)
 
-/** dt-ios JSONListing.text in a MarkedTextView: coloured, numbered lines, laid out a screen at a time. */
+// dt-ios JSONListing.text
 @Composable
 private fun JsonListingView(text: String, tokens: List<Pair<TextSpan, JsonToken>>, selectedLine: Int?, reveals: Int, inks: JsonInks) {
     val c = LocalDelphiColours.current
@@ -551,7 +549,7 @@ private fun kindOf(display: String) = when (display.firstOrNull()) {
     else -> JsonKind.Number
 }
 
-/** dt-ios JSONListing.tree: one row per value, a container's row folds it. */
+// dt-ios JSONListing.tree
 @Composable
 private fun JsonTree(rows: List<JsonTreeRow>, selected: String?, reveals: Int, inks: JsonInks, onToggle: (String) -> Unit) {
     val c = LocalDelphiColours.current
@@ -560,7 +558,6 @@ private fun JsonTree(rows: List<JsonTreeRow>, selected: String?, reveals: Int, i
     val shown = rows.take(TREE_LIMIT)
     val selectedIndex = shown.indexOfFirst { it.id == selected }
     val highlight = c.primary.copy(alpha = 0.16f)
-    // rows arrive after the expand a tap asks for
     LaunchedEffect(reveals, selectedIndex) {
         if (reveals > 0 && selectedIndex >= 0) list.animateScrollToItem(maxOf(0, selectedIndex - 3))
     }

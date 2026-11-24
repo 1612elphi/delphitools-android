@@ -82,7 +82,7 @@ object CropPresets {
     val instagram = all.first { it.id == "instagram" }
 }
 
-/** Swift's rounded(): halves away from zero. */
+// swift rounded() behaviour
 private fun rounded(value: Float) = if (value >= 0) floor(value + 0.5f) else -floor(-value + 0.5f)
 
 /** dt-ios SocialCropperViewModel: the largest crop of the ratio, its centre clamped inside the image, in image pixels. */

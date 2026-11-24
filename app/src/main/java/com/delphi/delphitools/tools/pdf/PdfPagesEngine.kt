@@ -78,7 +78,7 @@ object PdfPagesEngine {
 
     fun normaliseRotation(degrees: Int): Int {
         val steps = degrees / 90.0
-        // Swift rounded(): half away from zero
+        // swift rounded() behaviour
         val snapped = (if (steps >= 0) kotlin.math.floor(steps + 0.5) else kotlin.math.ceil(steps - 0.5)).toInt() * 90
         return ((snapped % 360) + 360) % 360
     }

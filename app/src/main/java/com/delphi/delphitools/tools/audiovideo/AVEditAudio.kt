@@ -218,7 +218,7 @@ object AVEditAudio {
                     val start = position
                     position += pcm.size / channels
                     val from = max(start, window.first)
-                    // without a range the file plays out past the expected length
+                    // decode may overrun length
                     val to = if (range == null) position else min(position, window.last + 1)
                     if (to > from) {
                         val slice = if (from == start && to == position) pcm else pcm.copyOfRange(((from - start) * channels).toInt(), ((to - start) * channels).toInt())

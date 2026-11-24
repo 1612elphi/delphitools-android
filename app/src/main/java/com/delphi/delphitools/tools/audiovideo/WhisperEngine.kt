@@ -34,7 +34,7 @@ object WhisperEngine {
             "oc ka be tg sd gu am yi lo uz fo ht ps tk nn mt sa lb my bo tl mg as tt haw ln ha ba jw su yue"
         ).split(' ')
 
-    // scripts written without spaces: each token is a word (openai split_tokens_on_unicode)
+    // openai split_tokens_on_unicode
     private val unspaced = setOf("zh", "ja", "th", "lo", "my", "yue")
 
     private fun hzToMel(hz: Double) = if (hz < 1000) 3 * hz / 200 else 15 + ln(hz / 1000) * 27 / ln(6.4)
@@ -68,13 +68,12 @@ object WhisperEngine {
         val out = FloatArray(mels * FRAMES)
         val length = min(samples.size, WINDOW_SAMPLES)
         fun sample(index: Int): Float {
-            // reflect padding at both ends of the 30 s window
+            // reflect padding, 30 s
             val i = if (index < 0) -index else if (index >= WINDOW_SAMPLES) 2 * WINDOW_SAMPLES - 2 - index else index
             return if (i < length) samples[i] else 0f
         }
         val frame = FloatArray(N_FFT)
         val power = FloatArray(BINS)
-        // frames past the audio see only padding
         val reached = min(FRAMES, (length + N_FFT / 2) / HOP + 1)
         val silent = log10(1e-10).toFloat()
         var peak = silent
@@ -109,7 +108,7 @@ object WhisperEngine {
         return out
     }
 
-    // GPT-2 bytes_to_unicode, reversed: each printable stand-in character to its byte
+    // gpt-2 bytes_to_unicode, reversed
     private val byteOf: Map<Char, Byte> = run {
         val direct = ('!'.code..'~'.code) + ('¡'.code..'¬'.code) + ('®'.code..'ÿ'.code)
         val map = HashMap<Char, Byte>()
@@ -136,7 +135,7 @@ object WhisperEngine {
      * [times] has one entry per token plus one for the end of the last, in seconds from [offset].
      */
     fun words(tokens: List<ByteArray>, times: FloatArray, language: String, offset: Double): List<SubtitleWord> {
-        // tokens joined until they decode, so a character split across tokens stays whole
+        // split characters stay whole
         class Unit(val text: String, val first: Int, val last: Int)
         val units = mutableListOf<Unit>()
         var pending = ByteArray(0)
@@ -200,7 +199,6 @@ object WhisperEngine {
         val times = FloatArray(timed)
         var row = -1
         for (step in textIndices.indices) {
-            // first frame each row reaches
             if (textIndices[step] != row && textIndices[step] >= 0) {
                 row = textIndices[step]
                 times[row] = (max(0, timeIndices[step]) * FRAME_SECONDS).toFloat()

@@ -31,7 +31,7 @@ class GraphCalcEngineTest {
 
     @Test
     fun syntax() {
-        // GraphSyntax.selfCheck: round trip evaluates the same
+        // dt-core GraphSyntax.selfCheck
         for (source in listOf("x^2", "2x + 1", "sin(x)*3", "sqrt(x)", "log(x)", "ln(x)", "abs(x-1)", "exp(x)", "tan(x)", "x^2/4", "1/x", "2pi x", "e^x", "asin(x/2)+floor(x)")) {
             val typed = CanonMathExpression(GraphSyntax.typed(source)).text
             val back = GraphSyntax.plotted(typed)
@@ -48,7 +48,7 @@ class GraphCalcEngineTest {
         assertEquals("log(x)", GraphSyntax.plotted("log10(x)"))
         assertEquals("ln(x)", GraphSyntax.plotted("log(x)"))
         assertEquals(2.0, MathExpression(GraphSyntax.plotted("nthroot(8,3)")!!).evaluate(0.0), 1e-12)
-        // MathExpression: -x^2 is (-x)^2, the keypad's is -(x^2)
+        // MathExpression: -x^2 differs
         assertEquals(-4.0, MathExpression(GraphSyntax.plotted("-x^2")!!).evaluate(2.0), 0.0)
         for (text in listOf("x^", "y+1", "diff(x^2,x)", "")) assertNull(text, GraphSyntax.plotted(text))
         assertTrue(GraphCurve(0, "x^", 0).isInvalid)
@@ -59,7 +59,7 @@ class GraphCalcEngineTest {
 
     @Test
     fun plotHelpers() {
-        // GraphPlot.selfCheck
+        // dt-core GraphPlot.selfCheck
         assertEquals(0.5, p.niceCeil(0.3), 0.0)
         assertEquals(1.0, p.niceCeil(1.0), 0.0)
         assertEquals(10.0, p.niceCeil(7.0), 0.0)
@@ -98,7 +98,6 @@ class GraphCalcEngineTest {
 
     @Test
     fun sampling() {
-        // tan: split at asymptotes
         val tanRuns = p.runs(400, 0f, 400f, 8.0, { -PI + it / 400.0 * 2 * PI }, { (-it).toFloat() }, -1e4f, 1e4f) { tan(it) }
         assertEquals(3, tanRuns.size)
         val square = p.runs(100, 0f, 100f, 20.0, { it / 10.0 - 5 }, { it.toFloat() }, -1e4f, 1e4f) { it * it }

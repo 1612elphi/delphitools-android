@@ -26,7 +26,6 @@ class ScrollGeneratorEngineTest {
             slices(fills),
         )
         assertFalse(geometry(3240, 1350, 0.8)!!.needsFill)
-        // rounds up: never crops
         val over = geometry(3600, 1350, 0.8)!!
         assertEquals(4, over.slideCount)
         assertEquals(360.0, over.imageStart, 0.0)

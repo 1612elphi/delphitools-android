@@ -126,17 +126,16 @@ import kotlin.math.roundToInt
 
 private val examples = listOf("x^2", "sin(x)", "sqrt(x)", "log(x)", "abs(x)", "2x + 1", "exp(x)", "tan(x)")
 
-/** Table steps run between these, 1, 2 and 5 times a power of ten. */
 private const val STEP_MIN = 1e-4
 private const val STEP_MAX = 1e4
 private const val RANGE_DELAY_MS = 600L
 private const val PLANE_MS = 500
 private const val TRACE_MS = 320
 
-/** Share of a coasting pan's speed left after one second. */
+// speed left per second
 private const val COAST_DECAY = 0.02
 
-// grid: target spacing of labelled lines along x and y, and the closest minor lines may get, in dp
+// grid spacings in dp
 private const val SPACING_X = 72.0
 private const val SPACING_Y = 48.0
 private const val SPACING_MINOR = 9.0
@@ -152,7 +151,6 @@ private val fieldFont = TextStyle(fontFamily = DelphiMono, fontSize = 17.sp, fon
 private val rangeFont = TextStyle(fontFamily = DelphiMono, fontSize = 17.sp)
 private val tableFont = TextStyle(fontFamily = DelphiMono, fontSize = 15.sp)
 
-/** The palette with the ink that reads on each colour. */
 private val palette: List<Pair<Color, Color>> = GraphPlot.palette.map { hex ->
     val rgb = Rgb(((hex shr 16) and 0xFF) / 255.0, ((hex shr 8) and 0xFF) / 255.0, (hex and 0xFF) / 255.0)
     Color(0xFF000000.toInt() or hex) to if (rgb.takesBlackInk) Color.Black else Color.White
@@ -313,7 +311,6 @@ class GraphCalcModel : ViewModel() {
     }
 }
 
-/** Window and trace tweens and a coasting pan, on the composition's frame clock. */
 private class GraphMotion(private val scope: CoroutineScope, private val model: GraphCalcModel) {
     private var window: Job? = null
     private var traceJob: Job? = null
@@ -469,7 +466,6 @@ fun GraphCalc(model: GraphCalcModel = viewModel()) {
     )
 }
 
-/** A typed range: animated to when it makes a span, else the fields go back to the plane's. */
 private fun commitRange(model: GraphCalcModel, motion: GraphMotion, axis: Int, low: String, high: String): Boolean {
     val plane = model.typedPlane(axis, low, high) ?: return false
     motion.window(plane)
@@ -505,12 +501,10 @@ private fun FunctionRow(curve: GraphCurve, name: String, removable: Boolean, edi
                 CanonButton("", Modifier.width(44.dp).fillMaxHeight(), icon = Icons.Outlined.Delete, contentDescription = "Remove") { model.remove(curve.id) }
             }
         }
-        // no error while editing
         if (curve.isInvalid && !editing) CanonStatusRow("Invalid expression", CanonTone.Warn)
     }
 }
 
-/** The curve's colour as a cell with its name on it; a tap opens the palette as a grid of swatches. */
 @Composable
 private fun SwatchCell(curve: GraphCurve, name: String, onPick: (Int) -> Unit) {
     val c = LocalDelphiColours.current
@@ -576,7 +570,6 @@ private fun RelationCell(relation: GraphRelation, onPick: (GraphRelation) -> Uni
     }
 }
 
-/** A typed number, committed after a typing pause or when it loses focus; it shows [value] whenever it is not focused. */
 @Composable
 private fun NumberField(
     value: String,
@@ -615,7 +608,7 @@ private fun NumberField(
     )
 }
 
-/** dt-ios CanonStepper with a typed centre: minus, the field, plus; minus and plus repeat while held. */
+// dt-ios CanonStepper, typed
 @Composable
 private fun Stepper(value: String, onCommit: (String) -> Unit, onStep: (Int) -> Unit, label: String, modifier: Modifier = Modifier, lead: String? = null) {
     val c = LocalDelphiColours.current
@@ -636,12 +629,10 @@ private fun Stepper(value: String, onCommit: (String) -> Unit, onStep: (Int) -> 
     }
 }
 
-/** Minimum and maximum of one axis, either side of "to"; [onCommit] says whether the typed pair was taken. */
 @Composable
 private fun RangePair(low: Double?, high: Double?, onCommit: (String, String) -> Boolean) {
     val c = LocalDelphiColours.current
     val (shownLow, shownHigh) = if (low != null && high != null) {
-        // rounded to about a thousandth of the span
         val grain = GraphPlot.niceFloor((high - low) / 1000)
         GraphPlot.format((low / grain).roundedAway() * grain) to GraphPlot.format((high / grain).roundedAway() * grain)
     } else {
@@ -673,7 +664,6 @@ private fun RangePair(low: Double?, high: Double?, onCommit: (String, String) ->
     }
 }
 
-/** Values around the trace: x and each plotted curve, the trace's row in a lit band while stepped rows slide through it. */
 @Composable
 private fun ValueTable(trace: Double, step: Double, curves: List<PlotCurve>, slides: Int, slide: Int) {
     val c = LocalDelphiColours.current
@@ -739,7 +729,6 @@ private fun androidx.compose.foundation.layout.RowScope.TableCell(text: String, 
     Text(text, Modifier.weight(1f), style = tableFont.copy(fontWeight = weight), color = colour, textAlign = TextAlign.Center, maxLines = 1, softWrap = false)
 }
 
-/** The plane with its curves: pan, pinch, a draggable trace line with a tag per curve. */
 @Composable
 private fun GraphPlotView(model: GraphCalcModel, motion: GraphMotion) {
     val c = LocalDelphiColours.current
@@ -859,7 +848,6 @@ private fun GraphPlotView(model: GraphCalcModel, motion: GraphMotion) {
     }
 }
 
-/** Where the x tag sits for a trace at [x] on screen, or null when the trace is off the plot. */
 private fun xTagRect(x: Float, plot: Rect, trace: Double, measurer: androidx.compose.ui.text.TextMeasurer, density: androidx.compose.ui.unit.Density): Rect? {
     if (x < plot.left || x > plot.right) return null
     with(density) {
@@ -892,7 +880,6 @@ private fun DrawScope.drawGrid(
         val major = Path()
         for (vertical in listOf(true, false)) {
             val step = if (vertical) stepX else stepY
-            // whole view, not plot
             val seen = if (vertical) planeX(0f, plane, plot) to planeX(size.width, plane, plot) else planeY(size.height, plane, plot) to planeY(0f, plane, plot)
             val divisions = GraphPlot.minorDivisions(step)
             val fine = step / divisions
@@ -986,7 +973,6 @@ private fun DrawScope.drawCurves(
         if (edge != null) drawPath(region, colour.copy(alpha = 0.14f))
         val strict = curve.relation == GraphRelation.LessThan || curve.relation == GraphRelation.GreaterThan
         val dash = if (strict) {
-            // dashes travel with plane
             val period = 12.dp.toPx()
             PathEffect.dashPathEffect(floatArrayOf(7.dp.toPx(), 5.dp.toPx()), -(screenX(0.0, plane, plot) % period))
         } else {
@@ -1016,7 +1002,6 @@ private fun DrawScope.drawTrace(
     val xTag = xTagRect(x, plot, traceX, measurer, this)
     val xTagHeight = tag
 
-    // tags away from line
     val leading = x > plot.center.x + plot.width * 0.2f
     class Placed(val curve: PlotCurve, val y: Float, val dotY: Float?)
     val placed = curves.map { curve ->

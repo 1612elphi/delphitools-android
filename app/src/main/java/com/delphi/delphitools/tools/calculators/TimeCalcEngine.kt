@@ -126,7 +126,6 @@ object TimeCalcAxis {
             TimeRung(TimeUnitRung.Month, 6, 6 * month, 11),
             TimeRung(TimeUnitRung.Year, 1, year, 11),
         )
-        // 1-2-5 years upwards
         var power = 1
         while (power <= 100_000) {
             for (mantissa in listOf(2, 5, 10)) {
@@ -214,7 +213,7 @@ object TimeCalcMath {
     /** [millis] read as a wall-clock time in [zone]: the instant whose [zone] wall clock reads what the device clock reads at [millis]. */
     fun instant(millis: Long, zone: String, local: String = TimeZone.getDefault().id): Long {
         val wall = Instant.ofEpochMilli(millis).atZone(ZoneId.of(local)).toLocalDateTime()
-        // atZone moves a time in a gap forward by the gap and takes the earlier offset in an overlap
+        // gap forward, overlap earlier
         return wall.atZone(ZoneId.of(zone)).toInstant().toEpochMilli()
     }
 }

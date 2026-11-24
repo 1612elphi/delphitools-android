@@ -62,7 +62,6 @@ object FaviconEngine {
             put16(value ushr 16 and 0xFFFF)
         }
         put16(0)
-        // icon type
         put16(1)
         put16(ordered.size)
         var offset = 6 + 16 * ordered.size

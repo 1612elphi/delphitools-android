@@ -384,7 +384,6 @@ private fun ClipBoard(preview: ImageBitmap?, pixels: IntSize?, kept: IntRect?) {
     }
 }
 
-/** Places the element centred on [centre], or leaves it out when [band] cannot hold it with 4 px to spare. */
 private fun Modifier.centredIfFits(band: Rect, centre: Offset): Modifier = layout { measurable, constraints ->
     val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
     layout(constraints.maxWidth, constraints.maxHeight) {

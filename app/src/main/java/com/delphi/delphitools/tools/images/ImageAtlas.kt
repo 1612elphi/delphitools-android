@@ -129,7 +129,6 @@ private const val LONG_VALUE = 22
 // png/jfif housekeeping excluded
 private val personalSections = setOf("Camera", "Capture", "Location", "Dates", "IPTC", "XMP")
 
-// coordinate line shows these
 private val coordinateLabels = setOf("Latitude", "Latitude Ref", "Longitude", "Longitude Ref")
 
 private val scopesPlate = Color(16 / 255f, 18 / 255f, 16 / 255f)
@@ -149,7 +148,7 @@ private val exifTags: List<String> by lazy {
     ExifInterface::class.java.fields.filter { it.name.startsWith("TAG_") }.mapNotNull { it.get(null) as? String }.distinct()
 }
 
-/** dt-ios ImageAtlasViewController.read: the file's metadata, a picture of it, its colour scan and palette. */
+// dt-ios ImageAtlasViewController.read
 private object AtlasFiles {
     fun read(data: ByteArray, name: String, sizeLabel: String): AtlasReading {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
@@ -195,7 +194,7 @@ private object AtlasFiles {
 
     private class Header(val model: String, val depth: Int, val alpha: Boolean?)
 
-    // imageio colour model and depth: png ihdr, jpeg sof
+    // png ihdr, jpeg sof
     private fun header(data: ByteArray): Header? {
         fun byte(at: Int) = data[at].toInt() and 0xFF
         if (PngChunkStrip.isPng(data) && data.size > 26) {
@@ -221,7 +220,7 @@ private object AtlasFiles {
         return null
     }
 
-    // copyPixelsToBuffer keeps the bitmap's own space; getPixels converts to srgb
+    // getPixels converts to srgb
     private fun scan(bitmap: Bitmap, hasAlpha: Boolean): ImageColourScan {
         val buffer = ByteBuffer.allocate(bitmap.byteCount)
         bitmap.copyPixelsToBuffer(buffer)
@@ -351,7 +350,6 @@ fun ImageAtlas(model: ImageAtlasModel = viewModel()) {
     val scan = model.scan
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        // CanonSplit's sidebar layout: the banner's scopes sit over the sidebar
         val beside = maxWidth >= stackingWidth && maxHeight <= maxWidth
 
         val controls = CanonSection.of {
@@ -682,7 +680,6 @@ private fun DrawScope.drawDiagram(square: Rect, scan: ImageColourScan, chroma: I
     drawCircle(scopesPlate.copy(alpha = 0.8f), ring, white, style = Stroke(2.5f.dp.toPx()))
     drawCircle(Color.White.copy(alpha = 0.85f), ring, white, style = Stroke(1.dp.toPx()))
 
-    // locus leaves corner empty
     val entries = buildList {
         if (own != null && !isSrgb && profile != null) add(profile to false)
         add("sRGB" to !isSrgb)

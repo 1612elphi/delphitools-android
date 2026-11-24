@@ -108,7 +108,6 @@ import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 
-/** Text and background for the display, with the colours that set digits and symbols apart. */
 private class LargeTypeTheme(val name: String, val text: Color, val background: Color, val digit: Color, val special: Color) {
     fun colour(kind: CharClass, colours: Boolean) = when {
         kind == CharClass.Space -> text.copy(alpha = 0.35f)
@@ -120,7 +119,6 @@ private class LargeTypeTheme(val name: String, val text: Color, val background: 
 
 private fun rgb(red: Float, green: Float, blue: Float) = Color(red, green, blue)
 
-/** The app's own colours first, then fixed pairs that read the same in light and dark. */
 @Composable
 private fun largeTypeThemes(): List<LargeTypeTheme> {
     val c = LocalDelphiColours.current
@@ -263,7 +261,6 @@ fun LargeType(model: LargeTypeModel = viewModel()) {
     if (model.fullScreen) FullScreen(settings, theme) { model.fullScreen = false }
 }
 
-/** The themes as swatches set in their own colours; the chosen one is ringed. */
 @Composable
 private fun ThemePicker(themes: List<LargeTypeTheme>, selected: Int, onSelect: (Int) -> Unit) {
     val c = LocalDelphiColours.current
@@ -296,7 +293,6 @@ private fun ThemePicker(themes: List<LargeTypeTheme>, selected: Int, onSelect: (
     }
 }
 
-/** A sample glyph of each class in the theme's colour, over the class name, on the theme's background. */
 @Composable
 private fun Legend(theme: LargeTypeTheme) {
     val items = listOf(
@@ -315,7 +311,6 @@ private fun Legend(theme: LargeTypeTheme) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
-                // faint space lost here
                 val ink = if (kind == CharClass.Space) theme.text.copy(alpha = 0.6f) else theme.colour(kind, true)
                 Text(glyph, style = TextStyle(fontFamily = DelphiMono, fontSize = 22.sp, fontWeight = FontWeight.SemiBold), color = ink, maxLines = 1)
                 Text(name, style = CanonText.captionSemibold, color = theme.text.copy(alpha = 0.7f), maxLines = 1, softWrap = false)
@@ -342,7 +337,7 @@ private fun LargeTypeDisplay(
     val density = LocalDensity.current
     val measurer = rememberTextMeasurer()
     val glyphs = remember(settings.text) { LargeTypeEngine.glyphs(settings.text) }
-    // sizes are dp; font sizes divide out the user's font scale
+    // dp; font scale divided
     val fontScale = density.fontScale
     val widest = remember(glyphs, density) {
         val reference = glyphStyle(100f / fontScale)
@@ -377,7 +372,6 @@ private fun LargeTypeDisplay(
 
         if (settings.marquee) {
             val band = max(0.0, height - padding * 2)
-            // upright: three characters minimum
             val fitted = floor(min(band / LargeTypeEngine.LINE_HEIGHT, width / (3 * LargeTypeEngine.ADVANCE_SHARE)))
             val size = max(1.0, min(settings.size ?: fitted, fitted))
             LaunchedEffect(size) { fit(size) }
@@ -400,7 +394,7 @@ private fun LargeTypeDisplay(
         val used = frames.maxOfOrNull { it.maxY } ?: 0.0
         val lead = padding + max(0.0, (inner - used) / 2)
         val cell = LargeTypeEngine.cell(size, widest, settings.positions)
-        // one item per row band keeps every node far under Compose's size limit
+        // under compose size limit
         val bands = frames.indices.groupBy { frames[it].y }.toList()
         val glyphSize = size.toFloat() / fontScale
         LazyColumn(Modifier.fillMaxSize().padding(top = top)) {
@@ -460,7 +454,6 @@ private fun GlyphCell(glyph: String, position: Int, frame: LargeTypeEngine.Frame
     }
 }
 
-/** One line of the text moving right to left in a loop, as on an LED sign; nothing is laid out per frame. */
 @Composable
 private fun Marquee(glyphs: List<String>, size: Float, theme: LargeTypeTheme, colours: Boolean, speed: Double, modifier: Modifier) {
     val measurer = rememberTextMeasurer()
@@ -474,14 +467,12 @@ private fun Marquee(glyphs: List<String>, size: Float, theme: LargeTypeTheme, co
         }
     }
     val pace by rememberUpdatedState(LargeTypeEngine.MARQUEE_PACE * speed * advance)
-    // distance moved in px: index g of the endless repeat sits at width + g × advance − scrolled
     var scrolled by remember { mutableDoubleStateOf(Double.NaN) }
     val place = remember { object { var glyphs: List<String>? = null; var advance = 0.0 } }
     LaunchedEffect(Unit) {
         var last = 0L
         while (true) {
             withFrameNanos { now ->
-                // stalls do not jump
                 val elapsed = if (last == 0L) 0.0 else min(0.1, (now - last) / 1e9)
                 last = now
                 if (!scrolled.isNaN()) scrolled += pace * elapsed
@@ -491,7 +482,6 @@ private fun Marquee(glyphs: List<String>, size: Float, theme: LargeTypeTheme, co
     Canvas(modifier.clipToBounds()) {
         val width = this.size.width.toDouble()
         if (place.glyphs != glyphs || scrolled.isNaN()) {
-            // new text enters leading
             scrolled = width - CanonMetrics.panelPadding.toPx()
         } else if (place.advance != advance && place.advance > 0) {
             scrolled = scrolled / place.advance * advance
@@ -508,7 +498,6 @@ private fun Marquee(glyphs: List<String>, size: Float, theme: LargeTypeTheme, co
     }
 }
 
-/** The vertical fold, in dp from the window's leading edge, on a wide unfolded screen; the rows keep off it. */
 @Composable
 private fun rememberVerticalCrease(): ClosedFloatingPointRange<Float>? {
     val activity = LocalActivity.current ?: return null
@@ -525,7 +514,6 @@ private fun rememberVerticalCrease(): ClosedFloatingPointRange<Float>? {
     return with(density) { crease.left.toDp().value..crease.right.toDp().value }
 }
 
-/** The display alone, edge to edge, bars hidden, screen kept awake. A tap anywhere closes it. */
 @Composable
 private fun FullScreen(settings: LargeTypeSettings, theme: LargeTypeTheme, onClose: () -> Unit) {
     val crease = rememberVerticalCrease()

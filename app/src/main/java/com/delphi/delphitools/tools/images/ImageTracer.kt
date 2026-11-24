@@ -91,7 +91,6 @@ private class TraceSource(val display: Bitmap, val grounded: ImageBitmap, val na
 
 private class TraceResult(val svg: String, val vectors: TraceVectors, val filled: ImageBitmap, val outlined: ImageBitmap)
 
-/** Light-ground colours for the outline drawing: the checks are always light. */
 private class TraceInk(val lines: Int, val curves: Int, val wash: Int)
 
 private fun checkerboard(canvas: android.graphics.Canvas, width: Int, height: Int) {
@@ -118,7 +117,7 @@ private fun grounded(image: Bitmap): Bitmap {
     return out
 }
 
-/** dt-core TraceVectors.render: filled as a browser draws it, or [ink] outlines over a washed-out fill with a square on every node. */
+// dt-core TraceVectors.render
 private fun TraceVectors.render(width: Int, height: Int, ink: TraceInk?): Bitmap? {
     if (width <= 0 || height <= 0 || this.width <= 0 || this.height <= 0) return null
     val out = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
@@ -215,7 +214,6 @@ class ImageTracerModel(application: Application) : AndroidViewModel(application)
     val vectors get() = result?.vectors
     val svg get() = result?.svg
 
-    // drops stale traces
     private var generation = 0
     private var loading: Job? = null
     private var scheduled: Job? = null
@@ -235,7 +233,6 @@ class ImageTracerModel(application: Application) : AndroidViewModel(application)
                 TraceSource(decoded.image, grounded(decoded.image).asImageBitmap(), name, decoded.width, decoded.height)
             }
             if (run != generation) return@launch
-            // invalidate traces during normalise
             generation++
             source = prepared
             result = null
@@ -258,7 +255,6 @@ class ImageTracerModel(application: Application) : AndroidViewModel(application)
         schedule()
     }
 
-    // preset no longer applies
     fun edit(change: (TraceSettings) -> TraceSettings) {
         val next = change(settings)
         if (next == settings) return
@@ -267,7 +263,6 @@ class ImageTracerModel(application: Application) : AndroidViewModel(application)
         schedule()
     }
 
-    // presets never set scale
     fun chooseScale(scale: Double) {
         if (scale == settings.scale) return
         settings = settings.copy(scale = scale)

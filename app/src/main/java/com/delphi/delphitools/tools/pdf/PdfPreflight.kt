@@ -275,7 +275,6 @@ fun PdfPreflight(model: PdfPreflightModel = viewModel()) {
             document?.pages.orEmpty().map { info ->
                 val media = info.mediaBox
                 val size = PdfCropEngine.displaySize(PdfRect.of(media), info.rotation)
-                // trim only when unrotated
                 val trim = info.effectiveTrimBox.takeIf { info.rotation % 360 == 0 }
                 val (errors, count) = issues[info.index] ?: (0 to 0)
                 val caption = listOfNotNull(if (errors > 0) "✕ $errors" else null, if (count > errors) "! ${count - errors}" else null)
@@ -305,7 +304,7 @@ fun PdfPreflight(model: PdfPreflightModel = viewModel()) {
     )
 }
 
-/** dt-ios PreflightResultRow. */
+// dt-ios PreflightResultRow
 @Composable
 private fun ResultRow(result: PdfPreflightEngine.Result) {
     val c = LocalDelphiColours.current

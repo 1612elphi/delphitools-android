@@ -202,7 +202,6 @@ class PaletteExtractorModel(application: Application) : AndroidViewModel(applica
         repaint()
     }
 
-    /** Newer paints cancel older ones. */
     private fun repaint() {
         val image = image ?: return
         val colours = palette.map { it.colour }
@@ -357,7 +356,7 @@ private fun percent(share: Double) = if (share > 0 && share < 0.01) "<1%" else S
 
 private val shareMono = CanonText.caption.copy(fontFamily = DelphiMono, fontSize = 12.sp)
 
-/** PaletteShareBand: the palette as one band, each colour as wide as its share of the image. */
+// dt-ios PaletteShareBand
 @Composable
 private fun PaletteShareBand(colours: List<Rgb>, shares: List<Double>, modifier: Modifier) {
     val view = LocalView.current
@@ -375,7 +374,6 @@ private fun PaletteShareBand(colours: List<Rgb>, shares: List<Double>, modifier:
         horizontalArrangement = Arrangement.spacedBy(CanonMetrics.hairline),
     ) {
         colours.forEachIndexed { index, colour ->
-            // min share keeps slivers
             val weight by animateFloatAsState(maxOf(shares.getOrElse(index) { 0.0 }, 0.012).toFloat(), spring(dampingRatio = 0.78f, stiffness = 200f))
             val label = percent(shares.getOrElse(index) { 0.0 })
             val ink = if (colour.takesBlackInk) Color.Black else Color.White

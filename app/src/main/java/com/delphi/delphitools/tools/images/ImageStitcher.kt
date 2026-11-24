@@ -141,7 +141,7 @@ private fun StitchRect.compose() = Rect(x.toFloat(), y.toFloat(), maxX.toFloat()
 
 private fun pixelSize(width: Number, height: Number) = "${width.toDouble().roundToInt()} × ${height.toDouble().roundToInt()} px"
 
-/** StitchLayoutEngine.render at the export size; null when the bitmap cannot be allocated. `opaque` mattes it white first. */
+// dt-core StitchLayoutEngine.render
 private fun render(layout: StitchLayout, images: Map<UUID, Bitmap>, opaque: Boolean): Bitmap? {
     val (width, height) = ImageStitcherEngine.exportSize(layout.width, layout.height)
     val scale = width / max(layout.width, 1.0)
@@ -167,7 +167,7 @@ private fun render(layout: StitchLayout, images: Map<UUID, Bitmap>, opaque: Bool
             }
             StitchFit.Match -> {
                 val s = op.source
-                // whole pixels, as CGRect.integral
+                // whole pixels, CGRect.integral
                 val crop = android.graphics.Rect(floor(s.x).toInt(), floor(s.y).toInt(), ceil(s.maxX).toInt().coerceAtMost(image.width), ceil(s.maxY).toInt().coerceAtMost(image.height))
                 canvas.drawBitmap(image, crop, dest, filtered)
             }
@@ -262,7 +262,6 @@ class ImageStitcherModel(application: Application) : AndroidViewModel(applicatio
             target is StitchTarget.Add -> root = current.wrapping(target.node, target.side, leaves)
             target is StitchTarget.Insert -> root = current.inserting(leaves, target.split, target.at)
         }
-        // the target left the tree meanwhile
         val now = root
         if (target !is StitchTarget.Batch && now != null && ids[0] !in now.leafSrcIds) root = now.wrapping(null, StitchSide.Right, leaves)
     }
@@ -342,7 +341,6 @@ class ImageStitcherModel(application: Application) : AndroidViewModel(applicatio
     private val stem: String
         get() = (if (batch) batchSources.firstOrNull()?.name else source(baseId)?.name)?.ifEmpty { null } ?: "image"
 
-    /** Renders off the main thread; a bitmap too large to allocate or encode sets `failed`. */
     private fun output(opaque: Boolean, encode: (Bitmap) -> ByteArray?, finish: suspend (ByteArray) -> Unit) {
         val layout = layout ?: return
         if (exporting) return
@@ -446,7 +444,7 @@ fun ImageStitcher(model: ImageStitcherModel = viewModel()) {
                     val w = source.width * scale
                     val h = source.height * scale
                     val top = -cover.y * scale
-                    // page placement has its origin at the bottom left
+                    // pdf origin bottom left
                     val bottom = cell.height - (top + h)
                     CanonPageStripPage(
                         Size(cell.width.toFloat(), cell.height.toFloat()),
@@ -492,7 +490,6 @@ fun ImageStitcher(model: ImageStitcherModel = viewModel()) {
                 val isBase = leaf.srcId == model.baseId
                 CanonRow(source.name, detail = pixelSize(source.width, source.height))
                 CanonHeading("Fit")
-                // the base's fit changes nothing
                 CanonSegmented(listOf("Match", "Cheese", "Matte"), leaf.fit.ordinal, enabled = !isBase) { model.fit(StitchFit.entries[it]) }
                 CanonGrid {
                     val cellModifier = Modifier.weight(1f).fillMaxHeight()
@@ -633,7 +630,6 @@ private fun StitcherPicture(model: ImageStitcherModel, layout: StitchLayout?, on
             }
         }
 
-        // the drag and tap surface sits under the buttons
         Box(
             Modifier
                 .fillMaxSize()
@@ -776,7 +772,6 @@ private fun StitcherPicture(model: ImageStitcherModel, layout: StitchLayout?, on
     }
 }
 
-/** The picture scaled to fill the box (cropped), or fitted inside it with `fits`. */
 private fun DrawScope.drawFitted(picture: ImageBitmap, fits: Boolean) {
     val scale = if (fits) min(size.width / picture.width, size.height / picture.height) else max(size.width / picture.width, size.height / picture.height)
     val w = picture.width * scale
@@ -838,7 +833,6 @@ private fun StitchTile(op: StitchOp, picture: ImageBitmap?, target: Rect, number
 
 private enum class AddStyle { Gutter, Plain, Filled }
 
-/** A plus button that offers Photos, Files and Paste for `target`. */
 @Composable
 private fun AddButton(style: AddStyle, rect: Rect, target: StitchTarget, onAdd: (StitchTarget, AddSource) -> Unit) {
     val c = LocalDelphiColours.current
@@ -894,7 +888,6 @@ private fun AddButton(style: AddStyle, rect: Rect, target: StitchTarget, onAdd: 
     }
 }
 
-/** Where a held tile would land: a tinted zone, a rule on the edge it joins, and a badge. */
 @Composable
 private fun DropMark(zone: Rect, edge: StitchSide?, symbol: ImageVector) {
     val c = LocalDelphiColours.current

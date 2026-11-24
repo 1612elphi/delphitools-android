@@ -130,7 +130,7 @@ class VideoToGifEncoderTest {
         val height = 3
         val argb = IntArray(width * height) { colours[it % colours.size] }
         val frame = VideoToGifEncoder.frame(argb, width, height, 40.0)
-        // gce (8) then descriptor (10); delay 4 cs
+        // gce 8, descriptor 10
         assertEquals(4, frame.u(4))
         val flags = frame.u(17)
         val tableSize = 2 shl (flags and 0x07)
@@ -145,7 +145,7 @@ class VideoToGifEncoderTest {
         for ((p, index) in indices.withIndex()) {
             val i = index.toInt() * 3
             val rgb = (palette.u(i) shl 16) or (palette.u(i + 1) shl 8) or palette.u(i + 2)
-            // rgb565 buckets: 255 reads back as 248 or 252
+            // rgb565: 255 reads 248
             val want = argb[p] and 0xffffff
             for (shift in listOf(16, 8, 0)) assertTrue(abs((rgb shr shift and 0xff) - (want shr shift and 0xff)) <= 7)
         }

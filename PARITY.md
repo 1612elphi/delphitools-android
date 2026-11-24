@@ -57,20 +57,20 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 
 | id | tool | iOS controller | iOS lines | status |
 |---|---|---|---:|---|
-| `audio-atlas` | Audio Atlas | `AudioAtlasViewController` | 667 | todo |
+| `audio-atlas` | Audio Atlas | `AudioAtlasViewController` | 667 | review |
 | `audio-extractor` | Audio Extractor | `AudioExtractorViewController` | 156 | review |
 | `audio-normaliser` | Audio Normaliser | `AudioNormaliserViewController` | 244 | review |
 | `audio-trimmer` | Audio Trimmer | `AudioTrimmerViewController` | 362 | review |
 | `auto-subtitle` | Auto Subtitle | `AutoSubtitleViewController` | 644 | todo |
 | `frame-extractor` | Frame Extractor | `FrameExtractorViewController` | 401 | review |
 | `subtitle-converter` | Subtitle Converter | `SubtitleConverterViewController` | 191 | done |
-| `subtitle-studio` | Subtitle Studio | `SubtitleStudioViewController` | 758 | todo |
+| `subtitle-studio` | Subtitle Studio | `SubtitleStudioViewController` | 758 | review |
 | `timecode-calc` | Timecode Calculator | `TimecodeCalcViewController` | 253 | done |
-| `video-atlas` | Video Atlas | `VideoAtlasViewController` | 280 | todo |
+| `video-atlas` | Video Atlas | `VideoAtlasViewController` | 280 | review |
 | `video-muter` | Video Muter | `VideoMuterViewController` | 210 | review |
 | `video-to-gif` | Video to GIF | `VideoToGIFViewController` | 321 | review |
 | `video-trimmer` | Video Trimmer | `VideoTrimmerViewController` | 257 | review |
-| `voice-recorder` | Voice Recorder | `VoiceRecorderViewController` | 570 | todo |
+| `voice-recorder` | Voice Recorder | `VoiceRecorderViewController` | 570 | review |
 | `waveform-genny` | Waveform Generator | `WaveformGeneratorViewController` | 263 | review |
 
 ## Typography

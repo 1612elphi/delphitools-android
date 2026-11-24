@@ -61,7 +61,7 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | `audio-extractor` | Audio Extractor | `AudioExtractorViewController` | 156 | review |
 | `audio-normaliser` | Audio Normaliser | `AudioNormaliserViewController` | 244 | review |
 | `audio-trimmer` | Audio Trimmer | `AudioTrimmerViewController` | 362 | review |
-| `auto-subtitle` | Auto Subtitle | `AutoSubtitleViewController` | 644 | todo |
+| `auto-subtitle` | Auto Subtitle | `AutoSubtitleViewController` | 644 | review |
 | `frame-extractor` | Frame Extractor | `FrameExtractorViewController` | 401 | review |
 | `subtitle-converter` | Subtitle Converter | `SubtitleConverterViewController` | 191 | done |
 | `subtitle-studio` | Subtitle Studio | `SubtitleStudioViewController` | 758 | review |

@@ -5,6 +5,7 @@ import com.delphi.delphitools.tools.audiovideo.AudioAtlas
 import com.delphi.delphitools.tools.audiovideo.AudioExtractor
 import com.delphi.delphitools.tools.audiovideo.AudioNormaliser
 import com.delphi.delphitools.tools.audiovideo.AudioTrimmer
+import com.delphi.delphitools.tools.audiovideo.AutoSubtitle
 import com.delphi.delphitools.tools.audiovideo.FrameExtractor
 import com.delphi.delphitools.tools.audiovideo.SubtitleConverter
 import com.delphi.delphitools.tools.audiovideo.SubtitleStudio
@@ -186,4 +187,5 @@ internal val toolPages: Map<String, @Composable () -> Unit> = mapOf(
     "zine-imposer" to { ZineImposer() },
     "artwork-enhancer" to { ArtworkEnhancer() },
     "document-scanner" to { DocumentScanner() },
+    "auto-subtitle" to { AutoSubtitle() },
 )

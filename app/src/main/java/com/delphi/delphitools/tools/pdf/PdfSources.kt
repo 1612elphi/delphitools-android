@@ -8,19 +8,29 @@ import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.text.format.Formatter
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import com.delphi.delphitools.canon.CanonButton
+import com.delphi.delphitools.canon.CanonGrid
 import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.canonDisplayName
+import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -203,14 +213,35 @@ class PdfSourceLoader(private val scope: CoroutineScope, private val context: Co
     }
 }
 
+/** dt-ios PDFPager: previous, "page / count", next. */
+@Composable
+fun PdfPager(page: Int, count: Int, onStep: (Int) -> Unit) {
+    val c = LocalDelphiColours.current
+    CanonGrid {
+        CanonButton("", Modifier.fillMaxHeight(), icon = Icons.AutoMirrored.Outlined.KeyboardArrowLeft, contentDescription = "Previous page", enabled = page > 0) {
+            onStep(-1)
+        }
+        Box(Modifier.weight(1f).fillMaxHeight().background(c.card), contentAlignment = Alignment.Center) {
+            Text(if (count == 0) "" else "${page + 1} / $count", style = CanonText.bodySemibold, color = c.foreground)
+        }
+        CanonButton("", Modifier.fillMaxHeight(), icon = Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = "Next page", enabled = page < count - 1) {
+            onStep(1)
+        }
+    }
+}
+
 /** dt-ios PDFSourceLoader.show(in:): the file's name over its page count and size, a Clear button beside. */
 @Composable
-fun PdfFileRow(source: PdfSource?, name: String, failed: Boolean, onClear: () -> Unit) {
+fun PdfFileRow(source: PdfSource?, name: String, failed: Boolean, onClear: () -> Unit) = PdfFileRow(source, name, failed, null, onClear)
+
+/** [suffix] follows the size in the detail line. */
+@Composable
+fun PdfFileRow(source: PdfSource?, name: String, failed: Boolean, suffix: String?, onClear: () -> Unit) {
     val c = LocalDelphiColours.current
     val context = LocalContext.current
     val detail = when {
         failed -> "Could not read $name"
-        source != null -> "${source.pageCount} pages · ${PdfDocuments.byteLabel(context, source.bytes)}"
+        source != null -> "${source.pageCount} pages · ${PdfDocuments.byteLabel(context, source.bytes)}" + (suffix?.let { " · $it" } ?: "")
         else -> " "
     }
     CanonRow(name, detail = detail, detailColour = if (failed) c.destructive else null, flush = true) {

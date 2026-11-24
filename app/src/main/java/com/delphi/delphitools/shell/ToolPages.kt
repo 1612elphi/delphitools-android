@@ -23,6 +23,8 @@ import com.delphi.delphitools.tools.devtools.RegexTester
 import com.delphi.delphitools.tools.devtools.TextDiff
 import com.delphi.delphitools.tools.devtools.UuidGenerator
 import com.delphi.delphitools.tools.images.Base64ImageEncoder
+import com.delphi.delphitools.tools.images.FaviconGenerator
+import com.delphi.delphitools.tools.images.ImageClipper
 import com.delphi.delphitools.tools.images.ImageCompressor
 import com.delphi.delphitools.tools.images.ImageConverter
 import com.delphi.delphitools.tools.images.ImageSplitter
@@ -31,6 +33,8 @@ import com.delphi.delphitools.tools.images.PasteImage
 import com.delphi.delphitools.tools.images.PlaceholderGenerator
 import com.delphi.delphitools.tools.images.SvgOptimiser
 import com.delphi.delphitools.tools.print.PaperSizes
+import com.delphi.delphitools.tools.socialmedia.SocialCropper
+import com.delphi.delphitools.tools.socialmedia.Watermarker
 import com.delphi.delphitools.tools.turbonerd.BrailleConverter
 import com.delphi.delphitools.tools.turbonerd.IPATranscriber
 import com.delphi.delphitools.tools.turbonerd.MorseCode
@@ -86,4 +90,8 @@ internal val toolPages: Map<String, @Composable () -> Unit> = mapOf(
     "metadata-stripper" to { MetadataStripper() },
     "image-converter" to { ImageConverter() },
     "base64-image-encoder" to { Base64ImageEncoder() },
+    "image-clipper" to { ImageClipper() },
+    "favicon-genny" to { FaviconGenerator() },
+    "watermarker" to { Watermarker() },
+    "social-cropper" to { SocialCropper() },
 )

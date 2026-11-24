@@ -10,8 +10,8 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 |---|---|---|---:|---|
 | `matte-generator` | Matte Generator | `MatteGeneratorViewController` | 600 | todo |
 | `scroll-generator` | Seamless Scroll Generator | `ScrollGeneratorViewController` | 579 | todo |
-| `social-cropper` | Social Media Cropper | `SocialCropperViewController` | 589 | todo |
-| `watermarker` | Watermarker | `WatermarkerViewController` | 528 | todo |
+| `social-cropper` | Social Media Cropper | `SocialCropperViewController` | 589 | review |
+| `watermarker` | Watermarker | `WatermarkerViewController` | 528 | review |
 
 ## Colour
 
@@ -38,9 +38,9 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | `background-remover` | Background Remover | `BackgroundRemoverViewController` | 348 | todo |
 | `base64-image-encoder` | Base64 Image Encoder | `Base` | 991 | review |
 | `document-scanner` | Document Scanner | `DocumentScannerViewController` | 654 | todo |
-| `favicon-genny` | Favicon Generator | `FaviconGeneratorViewController` | 665 | todo |
+| `favicon-genny` | Favicon Generator | `FaviconGeneratorViewController` | 665 | review |
 | `image-atlas` | Image Atlas | `ImageAtlasViewController` | 769 | todo |
-| `image-clipper` | Image Clipper | `ImageClipperViewController` | 412 | todo |
+| `image-clipper` | Image Clipper | `ImageClipperViewController` | 412 | review |
 | `image-compressor` | Image Compressor | `ImageCompressorViewController` | 199 | done |
 | `image-converter` | Image Converter | `ImageConverterViewController` | 754 | review |
 | `image-deskewer` | Image De-skewer | `ImageDeskewerViewController` | 778 | todo |

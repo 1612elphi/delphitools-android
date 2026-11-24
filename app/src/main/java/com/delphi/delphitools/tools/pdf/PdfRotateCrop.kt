@@ -146,10 +146,12 @@ class PdfRotateCropModel(application: Application) : AndroidViewModel(applicatio
     fun cropAllPages() {
         if (page !in edits.indices) return
         val size = displaySize(page)
+        if (size.width <= 0 || size.height <= 0) return
         val rect = cropRect(page)
         for (index in edits.indices) {
             if (index == page) continue
             val target = displaySize(index)
+            if (target.width <= 0 || target.height <= 0) continue
             if (target == size) papers[page]?.let { papers[index] = it } else papers.remove(index)
             val scaled = PdfRect(
                 rect.x / size.width * target.width, rect.y / size.height * target.height,

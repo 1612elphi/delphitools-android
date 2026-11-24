@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ClosedCaption
 import androidx.compose.material.icons.outlined.ContentCopy
@@ -28,9 +29,11 @@ import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,8 +72,10 @@ import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Locale
 import kotlin.math.abs
@@ -84,9 +89,14 @@ private val CUE_LANE = 26.dp
 
 private fun languageName(tag: String) = Locale.forLanguageTag(tag).getDisplayName(Locale.getDefault()).ifEmpty { tag }
 
-/** dt-ios AutoSubtitleModel, system speech only: a file, the language it is spoken in, and the cues heard. */
+private const val SAVED_MODEL_KEY = "delphitools.autoSubtitleModel"
+private const val OFFER_SEEN_KEY = "delphitools.whisperOfferSeen"
+private val MODE_LABELS = listOf("Tiny", "Base", "Small", "Large")
+
+/** dt-ios AutoSubtitleModel: a file, the engine and language to read it with, and the cues heard. */
 class AutoSubtitleModel(application: Application) : AndroidViewModel(application) {
     val source = AVEditAudioSource(application, viewModelScope)
+    private val prefs = application.getSharedPreferences("delphitools", Context.MODE_PRIVATE)
     var languages by mutableStateOf<List<String>>(emptyList())
         private set
     var language by mutableStateOf<String?>(null)
@@ -94,6 +104,26 @@ class AutoSubtitleModel(application: Application) : AndroidViewModel(application
     private var installed = emptySet<String>()
     var available by mutableStateOf(true)
         private set
+    /** The system recogniser exists on this device, whatever its languages. */
+    var systemSupported by mutableStateOf(true)
+        private set
+    /** Even without an installed model. */
+    var usesWhisper by mutableStateOf(false)
+        private set
+    var whisperModel by mutableStateOf<WhisperModel?>(null)
+        private set
+    /** null: detect the language. */
+    var whisperLanguage by mutableStateOf<String?>(null)
+    val whisperLanguages = AutoSubtitleEngine.mostSpokenFirst(WhisperEngine.languages, { it }, ::languageName)
+    private var whisper: Pair<String, WhisperRuntime>? = null
+    val actions = WhisperActions(
+        download = { WhisperModelStore.download(application, it, viewModelScope) },
+        cancel = WhisperModelStore::cancel,
+        remove = { model ->
+            if (whisper?.first == model.id) release()
+            viewModelScope.launch { WhisperModelStore.remove(application, model) }
+        },
+    )
     var target by mutableStateOf(SubtitleFormat.Srt)
     /** One line per line of speech: no numbers, no timecodes, no header. Overrides [target]. */
     var plainText by mutableStateOf(false)
@@ -116,6 +146,8 @@ class AutoSubtitleModel(application: Application) : AndroidViewModel(application
             val found = AutoSubtitleRecogniser.languages(application)
             if (found == null) {
                 available = false
+                systemSupported = false
+                adoptModel()
                 return@launch
             }
             installed = found.second
@@ -133,6 +165,61 @@ class AutoSubtitleModel(application: Application) : AndroidViewModel(application
     fun selectLanguage(tag: String?) {
         language = tag
         available = tag != null && tag in installed
+    }
+
+    private fun save(choice: String) = prefs.edit().putString(SAVED_MODEL_KEY, choice).apply()
+
+    fun selectEngine(whisper: Boolean) {
+        usesWhisper = whisper
+        if (whisper && whisperModel == null) whisperModel = WhisperModelStore.installed.lastOrNull()
+        if (!whisper) whisperModel = null
+        save(if (whisper) whisperModel?.id ?: "whisper" else "system")
+    }
+
+    fun selectWhisperModel(model: WhisperModel) {
+        whisperModel = model
+        save(model.id)
+    }
+
+    /** dt-ios adoptModel: the saved choice, else the largest installed model; Whisper when the system recogniser is missing. */
+    fun adoptModel() {
+        val installed = WhisperModelStore.installed
+        val saved = prefs.getString(SAVED_MODEL_KEY, null) ?: ""
+        if (whisperModel != null && whisperModel !in installed) whisperModel = null
+        if (whisperModel == null && saved != "system") whisperModel = installed.firstOrNull { it.id == saved } ?: installed.lastOrNull()
+        usesWhisper = !systemSupported || saved != "system" && (whisperModel != null || saved == "whisper" || installed.isEmpty())
+        if (usesWhisper && whisperModel == null) whisperModel = installed.lastOrNull()
+    }
+
+    /** dt-ios WhisperTip: once, while no model is installed. */
+    val offersWhisper get() = WhisperModelStore.installed.isEmpty() && !prefs.getBoolean(OFFER_SEEN_KEY, false)
+
+    fun offerSeen() = prefs.edit().putBoolean(OFFER_SEEN_KEY, true).apply()
+
+    val canRun get() = source.uri != null && !busy && if (usesWhisper) whisperModel != null else available && language != null
+
+    private suspend fun runtime(model: WhisperModel): WhisperRuntime {
+        whisper?.takeIf { it.first == model.id }?.let { return it.second }
+        whisper?.second?.close()
+        whisper = null
+        val dir = WhisperModelStore.folder(getApplication(), model)
+        return withContext(Dispatchers.Default) { WhisperRuntime(dir) }.also { whisper = model.id to it }
+    }
+
+    /** Frees the loaded model; a transcription in flight keeps it until it ends. */
+    fun release() {
+        val loaded = whisper?.second ?: return
+        whisper = null
+        val running = task
+        // a cancelled task is no longer active but may still be inside a decoder pass
+        if (running != null && !running.isCompleted) running.invokeOnCompletion { loaded.close() } else loaded.close()
+    }
+
+    /** The page closed: the file, the downloads and the model go. */
+    fun close() {
+        clear()
+        WhisperModelStore.cancelAll()
+        release()
     }
 
     val output: String
@@ -187,15 +274,30 @@ class AutoSubtitleModel(application: Application) : AndroidViewModel(application
 
     fun run() {
         val uri = source.uri ?: return
-        val language = language ?: return
-        if (busy || !available || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (!canRun) return
+        val chosen = whisperModel.takeIf { usesWhisper }
+        if (chosen != null && WhisperModelStore.state(chosen) != WhisperState.Installed) {
+            // model gone; refresh adopts
+            viewModelScope.launch { WhisperModelStore.refresh(getApplication()) }
+            return
+        }
+        val language = language
+        if (chosen == null && (language == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)) return
         reset()
         busy = true
         val app = getApplication<Application>()
         val dir = avEditRoot(app, "auto-subtitle").also { scratch = it }
+        val spoken = whisperLanguage
         task = viewModelScope.launch {
             try {
-                val result = AutoSubtitleRecogniser.transcribe(app, uri, language, File(dir, "speech.pcm")) { progress = it.toFloat() }
+                val pcm = File(dir, "speech.pcm")
+                val result = if (chosen != null) {
+                    AutoSubtitleRecogniser.transcribe(app, uri, runtime(chosen), spoken, pcm) { progress = it.toFloat() }
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && language != null) {
+                    AutoSubtitleRecogniser.transcribe(app, uri, language, pcm) { progress = it.toFloat() }
+                } else {
+                    emptyList()
+                }
                 cues = result
                 original = result
                 finished = true
@@ -217,7 +319,7 @@ class AutoSubtitleModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { FileExport.share(context, text.toByteArray(), downloadName, mime) }
     }
 
-    override fun onCleared() = clear()
+    override fun onCleared() = close()
 }
 
 @Composable
@@ -225,7 +327,16 @@ fun AutoSubtitle(model: AutoSubtitleModel = viewModel()) {
     val c = LocalDelphiColours.current
     val context = LocalContext.current
     val source = model.source
-    AVEditPageEffects(null, model::clear)
+    AVEditPageEffects(null, model::close)
+    var showModels by remember { mutableStateOf(false) }
+    var showOffer by remember { mutableStateOf(false) }
+    val installedIds = WhisperModelStore.installed.map { it.id }
+    LaunchedEffect(Unit) {
+        WhisperModelStore.refresh(context)
+        model.adoptModel()
+        showOffer = model.offersWhisper
+    }
+    LaunchedEffect(installedIds) { model.adoptModel() }
     val loaded = source.uri != null
     val busy = model.busy
     val cues = model.cues
@@ -247,17 +358,44 @@ fun AutoSubtitle(model: AutoSubtitleModel = viewModel()) {
             } else {
                 AVEditFileRow(source.name, source.scan?.let(AVEditAudioEngine::audioDetail) ?: "", null, model::clear)
             }
-            // ponytail: no Model row; iOS hides it where Whisper is unsupported, and Android has no Whisper engine
+            CanonHeading("Model")
+            CanonRow("Model", flush = true) {
+                CanonSegmented(
+                    listOf("System", "Whisper"),
+                    if (model.usesWhisper) 1 else 0,
+                    enabled = !busy,
+                    disabledIndices = if (model.systemSupported) emptySet() else setOf(0),
+                ) { model.selectEngine(it == 1) }
+            }
+            if (model.usesWhisper) {
+                val installed = WhisperModelStore.installed
+                CanonSegmented(
+                    MODE_LABELS,
+                    WhisperModel.all.indexOf(model.whisperModel),
+                    enabled = !busy,
+                    disabledIndices = WhisperModel.all.indices.filter { WhisperModel.all[it] !in installed }.toSet(),
+                ) { model.selectWhisperModel(WhisperModel.all[it]) }
+            }
             CanonHeading("Language")
             CanonRow("Language", flush = true) {
-                CanonMenuCell(
-                    model.languages.map(::languageName),
-                    model.languages.indexOf(model.language).takeIf { it >= 0 },
-                    { model.selectLanguage(model.languages[it]) },
-                    Modifier.fillMaxSize(),
-                    placeholder = "…",
-                    enabled = !busy,
-                )
+                if (model.usesWhisper) {
+                    CanonMenuCell(
+                        listOf("Auto") + model.whisperLanguages.map(::languageName),
+                        model.whisperLanguages.indexOf(model.whisperLanguage) + 1,
+                        { model.whisperLanguage = model.whisperLanguages.getOrNull(it - 1) },
+                        Modifier.fillMaxSize(),
+                        enabled = !busy,
+                    )
+                } else {
+                    CanonMenuCell(
+                        model.languages.map(::languageName),
+                        model.languages.indexOf(model.language).takeIf { it >= 0 },
+                        { model.selectLanguage(model.languages[it]) },
+                        Modifier.fillMaxSize(),
+                        placeholder = "…",
+                        enabled = !busy,
+                    )
+                }
             }
             CanonHeading("Format")
             CanonSegmented(
@@ -271,16 +409,18 @@ fun AutoSubtitle(model: AutoSubtitleModel = viewModel()) {
             CanonButton(
                 "Transcribe",
                 kind = CanonButtonKind.Primary,
-                enabled = loaded && !busy && model.available && model.language != null,
+                enabled = model.canRun,
                 icon = Icons.Outlined.ClosedCaption,
                 oversized = true,
             ) {
-                if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) model.run()
+                if (model.usesWhisper) model.run()
+                else if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) model.run()
                 else ask.launch(Manifest.permission.RECORD_AUDIO)
             }
             // greyed button explains it
-            val failure = if (model.available) model.problem else TranscribeFailure.Unavailable
+            val failure = if (model.usesWhisper || model.available) model.problem else TranscribeFailure.Unavailable
             if (failure != null) CanonStatusRow(failure.message, CanonTone.Warn)
+            CanonButton("Download models…", enabled = !busy, icon = Icons.Outlined.ChevronRight) { showModels = true }
         }
     }
 
@@ -328,6 +468,13 @@ fun AutoSubtitle(model: AutoSubtitleModel = viewModel()) {
         main = if (busy || model.finished) listOf(result) else emptyList(),
         banner = picture,
     )
+    if (showModels) WhisperModelsPage(model.actions) { showModels = false }
+    if (showOffer) {
+        WhisperOffer(model.actions) {
+            showOffer = false
+            model.offerSeen()
+        }
+    }
 }
 
 /** dt-ios AutoSubtitlePicture: the file's wave, lit up to the progress, over a lane of cue blocks, with the progress or cue count as a figure. */

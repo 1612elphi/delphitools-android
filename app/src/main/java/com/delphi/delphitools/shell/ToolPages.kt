@@ -23,6 +23,7 @@ import com.delphi.delphitools.tools.calculators.TimeCalc
 import com.delphi.delphitools.tools.calculators.UnitConverter
 import com.delphi.delphitools.tools.colour.ColourAtlas
 import com.delphi.delphitools.tools.colour.ColourBlindnessSimulator
+import com.delphi.delphitools.tools.colour.ColourCamera
 import com.delphi.delphitools.tools.colour.ColourConverter
 import com.delphi.delphitools.tools.colour.ContrastChecker
 import com.delphi.delphitools.tools.colour.GradientGenerator
@@ -83,6 +84,7 @@ import com.delphi.delphitools.tools.turbonerd.BrailleConverter
 import com.delphi.delphitools.tools.turbonerd.IPATranscriber
 import com.delphi.delphitools.tools.turbonerd.MorseCode
 import com.delphi.delphitools.tools.turbonerd.NATOPhonetic
+import com.delphi.delphitools.tools.turbonerd.NfcReaderWriter
 import com.delphi.delphitools.tools.turbonerd.ShavianTransliterator
 import com.delphi.delphitools.tools.typography.DocConverter
 import com.delphi.delphitools.tools.typography.FontExplorer
@@ -188,4 +190,6 @@ internal val toolPages: Map<String, @Composable () -> Unit> = mapOf(
     "artwork-enhancer" to { ArtworkEnhancer() },
     "document-scanner" to { DocumentScanner() },
     "auto-subtitle" to { AutoSubtitle() },
+    "nfc-reader-writer" to { NfcReaderWriter() },
+    "colour-camera" to { ColourCamera() },
 )

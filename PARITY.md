@@ -19,7 +19,7 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 |---|---|---|---:|---|
 | `colour-atlas` | Colour Atlas | `ColourAtlasViewController` | 318 | done |
 | `colorblind-sim` | Colour Blindness Simulator | `ColourBlindnessSimulatorViewController` | 334 | done |
-| `colour-camera` | Colour Camera | `ColourCameraViewController` | 949 | todo |
+| `colour-camera` | Colour Camera | `ColourCameraViewController` | 949 | review |
 | `colour-converter` | Colour Converter | `ColourConverterViewController` | 734 | review |
 | `contrast-checker` | Contrast Checker | `ContrastCheckerViewController` | 708 | review |
 | `gradient-genny` | Gradient Generator | `GradientGeneratorViewController` | 1724 | review |
@@ -147,7 +147,7 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | `ipa-transcriber` | IPA Transcription | `IPATranscriberViewController` | 249 | done |
 | `morse-code` | Morse Code | `MorseCodeViewController` | 278 | done |
 | `nato-phonetic` | NATO Phonetic | `NATOPhoneticViewController` | 333 | done |
-| `nfc-reader-writer` | NFC Reader/Writer | `NFCReaderWriterViewController` | 595 | todo |
+| `nfc-reader-writer` | NFC Reader/Writer | `NFCReaderWriterViewController` | 595 | review |
 | `shavian-transliterator` | Shavian Transliterator | `ShavianTransliteratorViewController` | 545 | review |
 
 ## Extensions

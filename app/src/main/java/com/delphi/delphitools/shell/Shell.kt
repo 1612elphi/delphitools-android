@@ -4,6 +4,7 @@ import android.os.Build
 import android.view.RoundedCorner
 import android.view.View
 import androidx.activity.BackEventCompat
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -56,6 +57,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -95,6 +97,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.HasDefaultViewModelProviderFactory
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.delphi.delphitools.canon.CanonHeading
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.LocalCanonPatternSymbol
@@ -245,7 +253,7 @@ private fun ShellFrame(startTool: String?) {
                         .statusBarsPadding()
                         .padding(bottom = if (vertical) navigation else 0.dp)
                 ) {
-                    if (page == null) ToolLattice(lattice, open, onFavour = { favourOpen = true }) else ToolPage(page)
+                    if (page == null) ToolLattice(lattice, open, onFavour = { favourOpen = true }) else ToolPage(page, isOpen = { toolId == page.id })
                 }
             }
             if (!vertical && !previewing) Box(
@@ -444,9 +452,39 @@ private fun Pill(icon: ImageVector, name: String, nameRoom: Dp) {
     }
 }
 
+/** One ViewModelStore per open tool, kept across a configuration change and cleared when the tool closes. */
+internal class ToolStores : ViewModel() {
+    private val stores = HashMap<String, ViewModelStore>()
+
+    fun of(id: String) = stores.getOrPut(id) { ViewModelStore() }
+
+    fun clear(id: String) {
+        stores.remove(id)?.clear()
+    }
+
+    override fun onCleared() {
+        stores.values.forEach { it.clear() }
+        stores.clear()
+    }
+}
+
 @Composable
-private fun ToolPage(tool: Tool) {
-    CompositionLocalProvider(LocalCanonPatternSymbol provides tool.icon) {
+private fun ToolPage(tool: Tool, isOpen: () -> Boolean) {
+    val activity = checkNotNull(LocalViewModelStoreOwner.current)
+    val stores: ToolStores = viewModel()
+    val owner = remember(tool.id, activity) {
+        object : ViewModelStoreOwner, HasDefaultViewModelProviderFactory by (activity as HasDefaultViewModelProviderFactory) {
+            override val viewModelStore get() = stores.of(tool.id)
+        }
+    }
+    val changingConfigurations = LocalActivity.current
+    DisposableEffect(tool.id) {
+        onDispose {
+            // a reopened tool shares the store with its closing page
+            if (!isOpen() && changingConfigurations?.isChangingConfigurations != true) stores.clear(tool.id)
+        }
+    }
+    CompositionLocalProvider(LocalCanonPatternSymbol provides tool.icon, LocalViewModelStoreOwner provides owner) {
         toolPages[tool.id]?.invoke() ?: if (tool.id == canonGallery.id && galleryPages.isNotEmpty()) GalleryPages() else EmptyPage(tool)
     }
 }

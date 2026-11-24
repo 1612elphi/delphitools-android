@@ -8,6 +8,8 @@ import androidx.activity.enableEdgeToEdge
 import com.delphi.delphitools.shell.Shell
 import com.delphi.delphitools.shell.ShellStores
 import com.delphi.delphitools.ui.theme.DelphitoolsTheme
+import java.io.File
+import kotlin.concurrent.thread
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,11 +21,20 @@ class MainActivity : ComponentActivity() {
         }
         // debug builds: `am start --es tool <id>` opens on that tool
         val startTool = if (debuggable) intent.getStringExtra("tool") else null
+        if (savedInstanceState == null) sweepCache()
         enableEdgeToEdge()
         setContent {
             DelphitoolsTheme {
                 Shell(startTool)
             }
         }
+    }
+
+    // renamed first: a tool opened meanwhile writes to fresh folders
+    private fun sweepCache() {
+        val stale = File(cacheDir, "stale-${System.nanoTime()}")
+        val moved = listOf("pdf-sources", "jobs", "media").count { File(cacheDir, it).renameTo(File(stale.apply { mkdirs() }, it)) }
+        thread { cacheDir.listFiles { file -> file.name.startsWith("stale-") }?.forEach { it.deleteRecursively() } }
+        if (moved == 0) stale.delete()
     }
 }

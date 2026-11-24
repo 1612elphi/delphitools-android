@@ -22,6 +22,11 @@ class ShellDataTest {
     }
 
     @Test
+    fun everyRouteNamesARegisteredTool() {
+        assertEquals(emptySet<String>(), toolPages.keys - allTools.map { it.id }.toSet())
+    }
+
+    @Test
     fun favourEmphasisTurnsItalic() {
         val text = favourText("I'd *love* to")
         assertEquals("I'd love to", text.text)

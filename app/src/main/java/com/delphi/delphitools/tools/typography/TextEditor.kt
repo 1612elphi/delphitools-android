@@ -457,10 +457,10 @@ private fun StylePicker(selected: Int?, onSelect: (Int) -> Unit) {
  * TextEditorHighlighter as an output transformation: Markdown syntax styled in place, offsets unchanged.
  * A short text is highlighted as it is typed; a long one takes [marks], which apply only to [parsed].
  */
-private fun highlight(parsed: String, marks: List<TextEditorEngine.Mark>, base: Float, family: FontFamily, muted: Color, primary: Color, codeBackground: Color) = OutputTransformation {
+private fun highlight(parsed: () -> String, marks: List<TextEditorEngine.Mark>, base: Float, family: FontFamily, muted: Color, primary: Color, codeBackground: Color) = OutputTransformation {
     val shown = when {
         length <= TextEditorEngine.LIVE_LIMIT -> TextEditorEngine.highlight(asCharSequence().toString())
-        asCharSequence().contentEquals(parsed) -> marks
+        asCharSequence().contentEquals(parsed()) -> marks
         else -> return@OutputTransformation
     }
     for (mark in shown) {
@@ -513,8 +513,9 @@ private fun Manuscript(
         val leading = base + shift
         val topPad = 16.dp
 
-        val styled = remember(model.parsedText, model.marks, family, c, baseSize) {
-            highlight(model.parsedText, model.marks, baseSize, family, c.mutedForeground, c.primary, c.muted)
+        // a new instance restarts input
+        val styled = remember(model.marks, family, c, baseSize) {
+            highlight({ model.parsedText }, model.marks, baseSize, family, c.mutedForeground, c.primary, c.muted)
         }
         val caret = selection.start
         val active = if (!focused) null else TextEditorEngine.block(caret, spans)?.takeIf { spans[it].end >= caret }

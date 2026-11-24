@@ -19,6 +19,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -93,9 +94,11 @@ object AutoSubtitleRecogniser {
         }
     }
 
-    /** Decodes [uri] to 16 kHz mono, then recognises it chunk by chunk; [progress] runs 0 to 1. */
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    suspend fun transcribe(context: Context, uri: Uri, language: String, scratch: File, progress: (Double) -> Unit): List<SubtitleCue> {
+    /**
+     * Decodes [uri] into [scratch] as 16 kHz mono 16-bit PCM; [progress] gets the share decoded.
+     * Returns the mean square of each [AutoSubtitleEngine.FRAME_SAMPLES] frame.
+     */
+    suspend fun decode(context: Context, uri: Uri, scratch: File, progress: (Double) -> Unit): FloatArray {
         val durationUs = runCatching { AVEditAudio.durationUs(context, uri) }.getOrDefault(0L)
         var speech: SpeechPcm? = null
         try {
@@ -108,7 +111,7 @@ object AutoSubtitleRecogniser {
                         val bytes = ByteBuffer.allocate(mono.size * 2).order(ByteOrder.LITTLE_ENDIAN)
                         bytes.asShortBuffer().put(mono)
                         out.write(bytes.array())
-                        if (durationUs > 0) progress(DECODE_SHARE * (ptsUs.toDouble() / durationUs).coerceIn(0.0, 1.0))
+                        if (durationUs > 0) progress((ptsUs.toDouble() / durationUs).coerceIn(0.0, 1.0))
                     }
                 }
             }
@@ -117,7 +120,23 @@ object AutoSubtitleRecogniser {
         } catch (_: Exception) {
             throw TranscribeException(TranscribeFailure.Unreadable)
         }
-        val energy = speech?.energy() ?: throw TranscribeException(TranscribeFailure.Unreadable)
+        return speech?.energy() ?: throw TranscribeException(TranscribeFailure.Unreadable)
+    }
+
+    /** The PCM bytes of [chunk], a frame range of [decode]'s output. */
+    suspend fun read(file: RandomAccessFile, chunk: IntRange): ByteArray = withContext(Dispatchers.IO) {
+        val from = chunk.first.toLong() * AutoSubtitleEngine.FRAME_SAMPLES * 2
+        val length = (minOf(file.length(), (chunk.last + 1L) * AutoSubtitleEngine.FRAME_SAMPLES * 2) - from).toInt()
+        ByteArray(length.coerceAtLeast(0)).also {
+            file.seek(from)
+            file.readFully(it)
+        }
+    }
+
+    /** Decodes [uri] to 16 kHz mono, then recognises it chunk by chunk; [progress] runs 0 to 1. */
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    suspend fun transcribe(context: Context, uri: Uri, language: String, scratch: File, progress: (Double) -> Unit): List<SubtitleCue> {
+        val energy = decode(context, uri, scratch) { progress(DECODE_SHARE * it) }
         val chunks = AutoSubtitleEngine.chunks(energy)
         val total = energy.size.toDouble().coerceAtLeast(1.0)
         val frameSeconds = AutoSubtitleEngine.FRAME_SAMPLES.toDouble() / AutoSubtitleEngine.RATE
@@ -126,14 +145,7 @@ object AutoSubtitleRecogniser {
         try {
             RandomAccessFile(scratch, "r").use { file ->
                 for (chunk in chunks) {
-                    val bytes = withContext(Dispatchers.IO) {
-                        val from = chunk.first.toLong() * AutoSubtitleEngine.FRAME_SAMPLES * 2
-                        val length = (minOf(file.length(), (chunk.last + 1L) * AutoSubtitleEngine.FRAME_SAMPLES * 2) - from).toInt()
-                        ByteArray(length.coerceAtLeast(0)).also {
-                            file.seek(from)
-                            file.readFully(it)
-                        }
-                    }
+                    val bytes = read(file, chunk)
                     val heard = session(recogniser, language, bytes) { fed ->
                         progress(DECODE_SHARE + (1 - DECODE_SHARE) * (chunk.first + fed * chunk.count()) / total)
                     }
@@ -146,6 +158,33 @@ object AutoSubtitleRecogniser {
             withContext(NonCancellable + Dispatchers.Main) { recogniser.destroy() }
         }
         progress(1.0)
+        return AutoSubtitleEngine.cues(words)
+    }
+
+    /**
+     * dt-ios SubtitleWhisper.transcribe: decodes [uri] to 16 kHz mono, then reads it window by window
+     * with [whisper]; a null [language] is detected from the first window and kept.
+     */
+    suspend fun transcribe(context: Context, uri: Uri, whisper: WhisperRuntime, language: String?, scratch: File, progress: (Double) -> Unit): List<SubtitleCue> {
+        val energy = decode(context, uri, scratch) { progress(DECODE_SHARE * it) }
+        val total = energy.size.toDouble().coerceAtLeast(1.0)
+        val frameSeconds = AutoSubtitleEngine.FRAME_SAMPLES.toDouble() / AutoSubtitleEngine.RATE
+        val words = mutableListOf<SubtitleWord>()
+        var spoken = language
+        RandomAccessFile(scratch, "r").use { file ->
+            // windows of 15 to 25 s, under Whisper's 30 s
+            for (chunk in AutoSubtitleEngine.chunks(energy)) {
+                val pcm = ByteBuffer.wrap(read(file, chunk)).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer()
+                val samples = FloatArray(pcm.remaining()) { pcm.get(it) / 32768f }
+                val (heard, read) = withContext(Dispatchers.Default) {
+                    val job = coroutineContext.job
+                    whisper.words(samples, spoken, chunk.first * frameSeconds) { job.ensureActive() }
+                }
+                spoken = read
+                words += heard
+                progress(DECODE_SHARE + (1 - DECODE_SHARE) * (chunk.last + 1) / total)
+            }
+        }
         return AutoSubtitleEngine.cues(words)
     }
 

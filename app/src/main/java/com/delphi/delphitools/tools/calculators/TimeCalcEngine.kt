@@ -48,7 +48,7 @@ object TimeCalcZones {
         if (seconds == 0) return "0"
         val hours = abs(seconds) / 3600
         val minutes = abs(seconds) % 3600 / 60
-        return (if (seconds < 0) "−" else "+") + if (minutes == 0) "$hours" else "%d:%02d".format(hours, minutes)
+        return (if (seconds < 0) "−" else "+") + if (minutes == 0) "$hours" else "%d:%02d".format(Locale.ROOT, hours, minutes)
     }
 
     /** The zone's name in the user's language and its offset. */

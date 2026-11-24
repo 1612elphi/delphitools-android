@@ -36,6 +36,9 @@ class AudioScanner(
     private var sampleCount = 0L
     private var frames = 0L
     private val filters = if (measureLoudness) List(channels) { KWeighting(rate.toDouble()) } else emptyList()
+
+    // bs.1770-4 table 3 for 5.1 in Android order (FL FR FC LFE BL BR): no LFE, surrounds +1.5 dB
+    private val weights = if (channels == 6) doubleArrayOf(1.0, 1.0, 1.0, 0.0, 1.41, 1.41) else DoubleArray(channels) { 1.0 }
     private val subBlockFrames = (0.1 * rate).roundToInt()
     private val subBlockSums = mutableListOf<Double>()
     private var subBlockEnergy = 0.0
@@ -59,7 +62,7 @@ class AudioScanner(
                 mono += sample
                 if (filters.isNotEmpty()) {
                     val weighted = filters[channel].process(sample.toDouble())
-                    energy += weighted * weighted
+                    energy += weights[channel] * weighted * weighted
                 }
             }
             sampleCount += channels
@@ -88,7 +91,7 @@ class AudioScanner(
             AVEditPeaks(low, high),
             if (peak == 0f) Double.NEGATIVE_INFINITY else 20 * log10(peak.toDouble()),
             if (rms == 0.0) Double.NEGATIVE_INFINITY else 20 * log10(rms),
-            if (filters.isNotEmpty()) AudioAtlasEngine.gatedLoudness(subBlockSums, subBlockFrames) else null,
+            if (filters.isNotEmpty()) AVEditAudioEngine.gatedLoudness(subBlockSums, subBlockFrames) else null,
             rate,
             channels,
             if (open) frames.toDouble() / rate else spanFrames.toDouble() / rate,
@@ -131,7 +134,6 @@ class SpectrogramBuilder(private val columns: Int, private val rows: Int, spanFr
 object AudioAtlasEngine {
     const val FFT_SIZE = 1024
     const val FLOOR_DB = -90.0
-    const val LEVEL_FLOOR = -60.0
 
     internal val hann = DoubleArray(FFT_SIZE) { 0.5 * (1 - cos(2 * PI * it / (FFT_SIZE - 1))) }
 
@@ -149,23 +151,6 @@ object AudioAtlasEngine {
             val b = (from.third + (to.third - from.third) * local).toInt()
             (0xFF shl 24) or (r shl 16) or (g shl 8) or b
         }
-    }
-
-    /** Share of a level bar, 0 to 1, for decibels between [LEVEL_FLOOR] and full scale. */
-    fun levelShare(decibels: Double): Float = (1 - decibels / LEVEL_FLOOR).coerceIn(0.0, 1.0).toFloat()
-
-    // bs.1770-4: 400 ms blocks, 75 % overlap
-    fun gatedLoudness(subBlockSums: List<Double>, subBlockFrames: Int): Double? {
-        if (subBlockSums.size < 4 || subBlockFrames <= 0) return null
-        val blockFrames = (subBlockFrames * 4).toDouble()
-        val energies = (0..subBlockSums.size - 4).map { start -> (start until start + 4).sumOf { subBlockSums[it] } / blockFrames }
-        fun loudness(energy: Double) = -0.691 + 10 * log10(energy)
-        val aboveAbsolute = energies.filter { loudness(it) > -70 }
-        if (aboveAbsolute.isEmpty()) return null
-        val gate = loudness(aboveAbsolute.sum() / aboveAbsolute.size) - 10
-        val gated = energies.filter { loudness(it) > gate }
-        if (gated.isEmpty()) return null
-        return loudness(gated.sum() / gated.size)
     }
 
     /** Radix-2 FFT; magnitudes of the first half only, empty unless the count is a power of two. */
@@ -213,18 +198,14 @@ object AudioAtlasEngine {
         return DoubleArray(n / 2) { sqrt(re[it] * re[it] + im[it] * im[it]) / n }
     }
 
-    /** dt-ios AVEditExport.audioDetail. */
-    fun detail(scan: AudioScan): String =
-        String.format(Locale.ROOT, "%.2f s · %d Hz · %d ch", scan.duration, scan.sampleRate, scan.channels)
-
     private fun decibels(value: Double) = if (value.isFinite()) String.format(Locale.ROOT, "%.1f dBFS", value) else "-∞ dBFS"
 
     fun loudnessSection(scan: AudioScan): AVEditProbeSection = AVEditProbeSection(
         "Loudness",
         buildList {
-            add(CanonTile("Peak", decibels(scan.peakDb), levelShare(scan.peakDb)))
-            add(CanonTile("RMS", decibels(scan.rmsDb), levelShare(scan.rmsDb)))
-            scan.lufs?.let { add(CanonTile("Loudness", String.format(Locale.ROOT, "%.1f LUFS", it), levelShare(it))) }
+            add(CanonTile("Peak", decibels(scan.peakDb), AVEditAudioEngine.levelShare(scan.peakDb)))
+            add(CanonTile("RMS", decibels(scan.rmsDb), AVEditAudioEngine.levelShare(scan.rmsDb)))
+            scan.lufs?.let { add(CanonTile("Loudness", String.format(Locale.ROOT, "%.1f LUFS", it), AVEditAudioEngine.levelShare(it))) }
         },
     )
 

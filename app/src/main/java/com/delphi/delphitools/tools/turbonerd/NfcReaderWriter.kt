@@ -127,13 +127,17 @@ class NfcReaderWriterModel(application: Application) : AndroidViewModel(applicat
     var available by mutableStateOf(adapter?.isEnabled == true)
         private set
 
+    /** The scan waiting for a tag; its record is what to write, null to read. */
+    private class Scan(val record: NdefRecordBytes?)
+
     @Volatile
-    private var pending: NdefRecordBytes? = null
+    private var scan: Scan? = null
     private var typing: Job? = null
 
     val language: String = Locale.getDefault().language.ifEmpty { "en" }
 
     fun selectMode(index: Int) {
+        if (writing != (index == 1)) cancel()
         writing = index == 1
     }
 
@@ -152,7 +156,7 @@ class NfcReaderWriterModel(application: Application) : AndroidViewModel(applicat
 
     fun refreshAvailability() {
         available = adapter?.isEnabled == true
-        if (!available) scanning = false
+        if (!available) cancel()
     }
 
     fun start() {
@@ -163,33 +167,34 @@ class NfcReaderWriterModel(application: Application) : AndroidViewModel(applicat
             error = UNAVAILABLE
             return
         }
-        if (writing) {
+        scan = if (writing) {
             written = null
             writeFailure = null
-            pending = NfcReaderWriterEngine.build(form, language) ?: run {
+            Scan(NfcReaderWriterEngine.build(form, language) ?: run {
                 error = "Please fill in the required fields."
                 return
-            }
+            })
         } else {
-            pending = null
+            Scan(null)
         }
         scanning = true
     }
 
     fun cancel() {
+        scan = null
         scanning = false
     }
 
     /** Reader mode's callback, on a binder thread. */
     fun onTag(tag: Tag) {
-        val record = pending
-        val write = writing
-        val result = runCatching { if (write && record != null) write(tag, record) else read(tag) }
+        val current = scan ?: return
+        val record = current.record
+        val result = runCatching { if (record != null) write(tag, record) else read(tag) }
         viewModelScope.launch(Dispatchers.Main) {
-            if (!scanning) return@launch
-            scanning = false
+            if (scan !== current) return@launch
+            cancel()
             val failure = result.exceptionOrNull()?.let { it.message ?: it.javaClass.simpleName }
-            if (write) {
+            if (record != null) {
                 written = failure == null
                 writeFailure = failure
             } else if (failure != null) {

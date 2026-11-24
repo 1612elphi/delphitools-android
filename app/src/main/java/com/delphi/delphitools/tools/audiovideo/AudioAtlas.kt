@@ -3,7 +3,7 @@ package com.delphi.delphitools.tools.audiovideo
 import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.media.AudioFormat
 import android.media.MediaCodec
 import android.media.MediaExtractor
@@ -85,6 +85,7 @@ import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.canonDisplayName
 import com.delphi.delphitools.canon.canonSidewaysPan
+import com.delphi.delphitools.tools.images.ImageFiles
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiMono
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -95,7 +96,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.nio.ByteOrder
+import java.nio.ByteBuffer
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.max
@@ -108,6 +109,7 @@ private const val MINIMUM_SPAN = 0.05
 private const val SETTLE_MS = 200L
 private const val SPECTROGRAM_COLUMNS = 512
 private const val SPECTROGRAM_ROWS = 256
+private const val ARTWORK_EDGE = 512
 private val WAVEFORM_HEIGHT_SHEET = 120.dp
 private val RULER_HEIGHT = 24.dp
 private val SPECTROGRAM_HEIGHT = 160.dp
@@ -146,7 +148,7 @@ internal object AudioAtlasMedia {
             fun MediaFormat.int(key: String, fallback: Int) = if (containsKey(key)) getInteger(key) else fallback
             var rate = format.int(MediaFormat.KEY_SAMPLE_RATE, 44100)
             var channels = format.int(MediaFormat.KEY_CHANNEL_COUNT, 2)
-            var float = false
+            var encoding = AudioFormat.ENCODING_PCM_16BIT
             var started = false
             var next = -1L
             val info = MediaCodec.BufferInfo()
@@ -171,18 +173,12 @@ internal object AudioAtlasMedia {
                     val out = decoder.outputFormat
                     rate = out.int(MediaFormat.KEY_SAMPLE_RATE, rate)
                     channels = out.int(MediaFormat.KEY_CHANNEL_COUNT, channels)
-                    float = out.int(MediaFormat.KEY_PCM_ENCODING, AudioFormat.ENCODING_PCM_16BIT) == AudioFormat.ENCODING_PCM_FLOAT
+                    encoding = out.int(MediaFormat.KEY_PCM_ENCODING, AudioFormat.ENCODING_PCM_16BIT)
                 } else if (index >= 0) {
-                    val data = decoder.getOutputBuffer(index)!!.order(ByteOrder.LITTLE_ENDIAN)
+                    val data = decoder.getOutputBuffer(index)!!
                     data.position(info.offset)
                     data.limit(info.offset + info.size)
-                    val samples = if (float) {
-                        val floats = data.asFloatBuffer()
-                        FloatArray(floats.remaining()).also(floats::get)
-                    } else {
-                        val shorts = data.asShortBuffer()
-                        FloatArray(shorts.remaining()) { shorts.get(it) / 32768f }
-                    }
+                    val samples = AVEditAudioEngine.pcmFloats(data, encoding) ?: error("pcm encoding $encoding")
                     decoder.releaseOutputBuffer(index, false)
                     val frames = samples.size / max(1, channels)
                     if (frames > 0) {
@@ -276,6 +272,7 @@ class AudioAtlasModel(application: Application) : AndroidViewModel(application) 
     private var work: Job? = null
     private var settle: Job? = null
     private var rangeSettle: Job? = null
+    private var fullSpectrogram: ImageBitmap? = null
 
     val span get() = max(viewEnd - viewStart, 0.0)
     val isZoomed get() = viewStart > 0 || viewEnd < duration - 1e-6
@@ -301,15 +298,18 @@ class AudioAtlasModel(application: Application) : AndroidViewModel(application) 
             }
             duration = scan.duration
             sampleRate = scan.sampleRate
-            detail = AudioAtlasEngine.detail(scan)
+            detail = AVEditAudioEngine.audioDetail(scan)
             viewStart = 0.0
             viewEnd = scan.duration
             overview = scan.peaks
             window = scan.peaks
             tags = probe?.tags ?: AtlasTags()
-            artwork = withContext(Dispatchers.IO) { tags.artwork?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }?.asImageBitmap() }
+            artwork = withContext(Dispatchers.IO) {
+                tags.artwork?.let { ImageFiles.decode(ImageDecoder.createSource(ByteBuffer.wrap(it)), ARTWORK_EDGE) }?.image?.asImageBitmap()
+            }
             sections = (probe?.sections ?: emptyList()) + AudioAtlasEngine.loudnessSection(scan)
-            spectrogram = pixels?.let(::image)
+            fullSpectrogram = pixels?.let(::image)
+            spectrogram = fullSpectrogram
             spectrogramRange = 0.0..scan.duration
             playback.open(uri, playRange)
         }
@@ -331,6 +331,7 @@ class AudioAtlasModel(application: Application) : AndroidViewModel(application) 
         overview = null
         window = null
         spectrogram = null
+        fullSpectrogram = null
         sampleRate = 0
         detail = ""
         duration = 0.0
@@ -340,19 +341,24 @@ class AudioAtlasModel(application: Application) : AndroidViewModel(application) 
         busy = false
     }
 
-    // unzoomed window equals overview
+    // unzoomed window and spectrogram are the load's
     private fun refreshWindow() {
         work?.cancel()
         val uri = uri ?: return
         if (duration <= 0) return
+        if (!isZoomed) {
+            window = overview
+            spectrogram = fullSpectrogram
+            spectrogramRange = 0.0..duration
+            rendering = false
+            return
+        }
         val range = viewStart..max(viewStart + MINIMUM_SPAN, viewEnd)
-        val zoomed = isZoomed
         val fallback = overview
-        if (!zoomed) window = overview
         rendering = true
         work = viewModelScope.launch {
             val scanned = AudioAtlasMedia.scan(getApplication(), uri, range, OVERVIEW_BUCKETS, columns = SPECTROGRAM_COLUMNS)
-            if (zoomed) window = scanned?.first?.peaks ?: fallback
+            window = scanned?.first?.peaks ?: fallback
             spectrogram = scanned?.second?.let(::image)
             spectrogramRange = range
             rendering = false

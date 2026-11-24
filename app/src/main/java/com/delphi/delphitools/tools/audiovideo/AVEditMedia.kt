@@ -51,11 +51,11 @@ data class AVEditProbeSection(val title: String, val tiles: List<CanonTile>)
 
 typealias AVEditProgress = (Double) -> Unit
 
-private fun MediaFormat.long(key: String): Long? = if (containsKey(key)) getLong(key) else null
+internal fun MediaFormat.long(key: String): Long? = if (containsKey(key)) runCatching { getLong(key) }.getOrNull() else null
 
-private fun MediaFormat.int(key: String): Int? = if (containsKey(key)) runCatching { getInteger(key) }.getOrNull() else null
+internal fun MediaFormat.int(key: String): Int? = if (containsKey(key)) runCatching { getInteger(key) }.getOrNull() else null
 
-private fun MediaFormat.fps(): Double? =
+internal fun MediaFormat.fps(): Double? =
     if (!containsKey(MediaFormat.KEY_FRAME_RATE)) null
     else runCatching { getInteger(MediaFormat.KEY_FRAME_RATE).toDouble() }.getOrElse { runCatching { getFloat(MediaFormat.KEY_FRAME_RATE).toDouble() }.getOrNull() }
 
@@ -146,8 +146,8 @@ object AVEditMedia {
         }
     }
 
-    /** dt-ios AVEditFrames.contactSheet: [count] frames 320 px wide, four to a row, each over its timestamp. */
-    suspend fun contactSheet(context: Context, uri: Uri, duration: Double, count: Int, output: File, progress: AVEditProgress) = withContext(Dispatchers.IO) {
+    /** dt-ios AVEditFrames.contactSheet: [count] frames 320 px wide, four to a row, each over its timestamp; written and returned. */
+    suspend fun contactSheet(context: Context, uri: Uri, duration: Double, count: Int, output: File, progress: AVEditProgress): Bitmap = withContext(Dispatchers.IO) {
         val (columns, rows) = AVEditEngine.sheetGrid(count)
         val width = AVEditEngine.SHEET_THUMB_WIDTH
         val seconds = AVEditEngine.sheetTimes(duration, count)
@@ -186,7 +186,7 @@ object AVEditMedia {
                 canvas.drawText(AVEditEngine.timestamp(seconds[index]), left + 8, baseline, text)
             }
             writePng(sheet, output)
-            sheet.recycle()
+            sheet
         } finally {
             thumbs.forEach(Bitmap::recycle)
             retriever.release()
@@ -308,7 +308,7 @@ object AVEditMedia {
             decoder.start()
             var rate = format.int(MediaFormat.KEY_SAMPLE_RATE) ?: 44100
             var channels = format.int(MediaFormat.KEY_CHANNEL_COUNT) ?: 2
-            var float = false
+            var encoding = AudioFormat.ENCODING_PCM_16BIT
             val info = MediaCodec.BufferInfo()
             var inputDone = false
             while (true) {
@@ -331,16 +331,16 @@ object AVEditMedia {
                     val out = decoder.outputFormat
                     rate = out.int(MediaFormat.KEY_SAMPLE_RATE) ?: rate
                     channels = out.int(MediaFormat.KEY_CHANNEL_COUNT) ?: channels
-                    float = out.int(MediaFormat.KEY_PCM_ENCODING) == AudioFormat.ENCODING_PCM_FLOAT
+                    encoding = out.int(MediaFormat.KEY_PCM_ENCODING) ?: AudioFormat.ENCODING_PCM_16BIT
                 } else if (index >= 0) {
                     val data = decoder.getOutputBuffer(index)!!.order(ByteOrder.LITTLE_ENDIAN)
                     data.position(info.offset)
                     data.limit(info.offset + info.size)
-                    val pcm = if (float) {
-                        val floats = data.asFloatBuffer()
-                        ShortArray(floats.remaining()) { (floats.get(it).coerceIn(-1f, 1f) * Short.MAX_VALUE).roundToInt().toShort() }
-                    } else {
+                    val pcm = if (encoding == AudioFormat.ENCODING_PCM_16BIT) {
                         ShortArray(info.size / 2).also { data.asShortBuffer().get(it) }
+                    } else {
+                        val floats = AVEditAudioEngine.pcmFloats(data, encoding) ?: error("pcm encoding $encoding")
+                        ShortArray(floats.size) { (floats[it].coerceIn(-1f, 1f) * Short.MAX_VALUE).roundToInt().toShort() }
                     }
                     decoder.releaseOutputBuffer(index, false)
                     if (pcm.isNotEmpty()) chunk(pcm, rate, channels, info.presentationTimeUs)

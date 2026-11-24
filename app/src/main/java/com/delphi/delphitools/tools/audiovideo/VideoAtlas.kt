@@ -31,11 +31,14 @@ import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.IntState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -83,7 +86,7 @@ import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import com.delphi.delphitools.ui.theme.selectedTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.PI
@@ -148,6 +151,7 @@ fun VideoAtlas(model: VideoAtlasModel = viewModel()) {
     val context = LocalContext.current
     AVEditPageEffects(playback, model::clear)
     var texture by remember { mutableStateOf<TextureView?>(null) }
+    val frames = remember { mutableIntStateOf(0) }
     var fullScreen by remember { mutableStateOf(false) }
 
     val facts = source.facts
@@ -182,10 +186,10 @@ fun VideoAtlas(model: VideoAtlasModel = viewModel()) {
         boxing = CanonCanvasBoxing.UnlessWide,
     ) {
         // the full screen view holds the player's surface while it is open
-        if (!fullScreen) AVEditPlayerView(playback, aspect, onTexture = { texture = it })
+        if (!fullScreen) AVEditPlayerView(playback, aspect, onTexture = { texture = it }, onFrame = { frames.intValue++ })
     }
     val scopes = CanonSection.canvas(CanonCanvasSize.Fixed(SCOPES_HEIGHT), background = SCOPE_PLATE, boxing = CanonCanvasBoxing.UnlessWide) {
-        VideoScopes(texture.takeIf { !fullScreen })
+        VideoScopes(texture.takeIf { !fullScreen }, frames)
     }
     val info = CanonSection.of { CanonRows { AVEditDetails(model.sections) } }
     val banner = CanonSection.canvas(CanonCanvasSize.Fixed(STRIP_HEIGHT + CanonReadoutRowHeight)) {
@@ -291,39 +295,39 @@ private fun VideoAtlasFullScreen(model: VideoAtlasModel, aspect: Float, format: 
 
 /**
  * dt-ios AVEditScopes: a vectorscope (Cb across, Cr up) beside a luma waveform (picture column across, brightness up),
- * from a 160 × 90 copy of the frame on [texture], 15 times a second.
+ * from a 160 × 90 copy of the frame on [texture] each time [frames] counts a new one, at most 15 times a second.
  */
 @Composable
-private fun VideoScopes(texture: TextureView?) {
-    var vector by remember { mutableStateOf<ImageBitmap?>(null) }
-    var wave by remember { mutableStateOf<ImageBitmap?>(null) }
+private fun VideoScopes(texture: TextureView?, frames: IntState) {
+    val width = VideoAtlasEngine.SAMPLE_WIDTH
+    val height = VideoAtlasEngine.SAMPLE_HEIGHT
+    val cells = VideoAtlasEngine.CELLS
+    val vectorBitmap = remember { Bitmap.createBitmap(cells, cells, Bitmap.Config.ARGB_8888) }
+    val waveBitmap = remember { Bitmap.createBitmap(width, cells, Bitmap.Config.ARGB_8888) }
+    val vector = remember { vectorBitmap.asImageBitmap() }
+    val wave = remember { waveBitmap.asImageBitmap() }
+    var plotted by remember { mutableIntStateOf(0) }
     LaunchedEffect(texture) {
-        vector = null
-        wave = null
+        plotted = 0
         if (texture == null) return@LaunchedEffect
-        val width = VideoAtlasEngine.SAMPLE_WIDTH
-        val height = VideoAtlasEngine.SAMPLE_HEIGHT
-        val cells = VideoAtlasEngine.CELLS
         val frame = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val pixels = IntArray(width * height)
         val vectorCells = IntArray(cells * cells)
         val waveCells = IntArray(width * cells)
-        while (isActive) {
-            if (texture.isAvailable) {
-                texture.getBitmap(frame)
-                frame.getPixels(pixels, 0, width, 0, 0, width, height)
-                val (v, w) = withContext(Dispatchers.Default) {
-                    VideoAtlasEngine.plot(pixels, width, height, vectorCells, waveCells)
-                    val vectorOut = IntArray(vectorCells.size)
-                    val waveOut = IntArray(waveCells.size)
-                    VideoAtlasEngine.image(vectorCells, VideoAtlasEngine.vectorInk, vectorOut)
-                    VideoAtlasEngine.image(waveCells, null, waveOut)
-                    Bitmap.createBitmap(vectorOut, cells, cells, Bitmap.Config.ARGB_8888).asImageBitmap() to
-                        Bitmap.createBitmap(waveOut, width, cells, Bitmap.Config.ARGB_8888).asImageBitmap()
-                }
-                vector = v
-                wave = w
+        val vectorOut = IntArray(vectorCells.size)
+        val waveOut = IntArray(waveCells.size)
+        snapshotFlow { frames.intValue }.conflate().collect {
+            if (!texture.isAvailable) return@collect
+            texture.getBitmap(frame)
+            frame.getPixels(pixels, 0, width, 0, 0, width, height)
+            withContext(Dispatchers.Default) {
+                VideoAtlasEngine.plot(pixels, width, height, vectorCells, waveCells)
+                VideoAtlasEngine.image(vectorCells, VideoAtlasEngine.vectorInk, vectorOut)
+                VideoAtlasEngine.image(waveCells, null, waveOut)
             }
+            vectorBitmap.setPixels(vectorOut, 0, cells, 0, 0, cells, cells)
+            waveBitmap.setPixels(waveOut, 0, width, 0, 0, width, cells)
+            plotted++
             delay(66)
         }
     }
@@ -335,8 +339,10 @@ private fun VideoScopes(texture: TextureView?) {
         val square = Rect(Offset(if (flipped) size.width - side else 0f, (size.height - side) / 2), Size(side, side))
         val inset = 12.dp.toPx()
         val rest = Rect(if (flipped) inset else side + inset, inset, if (flipped) size.width - side - inset else size.width - inset, size.height - inset)
-        vector?.let { plotImage(it, square) }
-        if (rest.width > 0) wave?.let { plotImage(it, rest) }
+        if (plotted > 0) {
+            plotImage(vector, square)
+            if (rest.width > 0) plotImage(wave, rest)
+        }
 
         val ink = Color.White.copy(alpha = 0.28f)
         val hairline = CanonMetrics.hairline.toPx()

@@ -1,11 +1,14 @@
 package com.delphi.delphitools.tools.audiovideo
 
+import android.media.AudioFormat
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import kotlin.math.PI
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -22,6 +25,33 @@ class AVEditAudioEngineTest {
         assertArrayEquals(floatArrayOf(1f, 0.25f), halved.max, 0f)
         assertEquals(4, AVEditAudioEngine.resample(peaks, 8).min.size)
         assertEquals(0, AVEditAudioEngine.resample(peaks, 0).min.size)
+    }
+
+    @Test
+    fun pcmResamplerHalvesWithoutSeams() {
+        val source = sine(96000, 0.1, 0.5, channels = 2, hz = 1000.0)
+        val whole = PcmResampler(96000, 48000, 2).process(source)
+        val split = PcmResampler(96000, 48000, 2).let { r -> source.toList().chunked(998).flatMap { r.process(it.toShortArray()).toList() } }
+        assertArrayEquals(whole, split.toShortArray())
+        val expected = sine(48000, 0.1, 0.5, channels = 2, hz = 1000.0)
+        assertEquals(expected.size, whole.size)
+        whole.forEachIndexed { i, s -> assertEquals(expected[i].toFloat(), s.toFloat(), 2f) }
+        // 88.2 kHz to 48 kHz, interpolated between source frames
+        val ramp = ShortArray(882) { it.toShort() }
+        val down = PcmResampler(88200, 48000, 1).process(ramp)
+        assertEquals(480, down.size)
+        assertEquals((100 * 88200 / 48000.0).toFloat(), down[100].toFloat(), 0.5f)
+    }
+
+    @Test
+    fun pcmFloatsReadsEachEncoding() {
+        fun buffer(vararg bytes: Int) = ByteBuffer.wrap(ByteArray(bytes.size + 1) { if (it == 0) 99 else bytes[it - 1].toByte() }).apply { position(1) }
+        assertArrayEquals(floatArrayOf(0.5f, -1f), AVEditAudioEngine.pcmFloats(buffer(0x00, 0x40, 0x00, 0x80), AudioFormat.ENCODING_PCM_16BIT), 0f)
+        assertArrayEquals(floatArrayOf(0.5f, -1f), AVEditAudioEngine.pcmFloats(buffer(0, 0, 0x40, 0, 0, 0x80), AudioFormat.ENCODING_PCM_24BIT_PACKED), 0f)
+        assertArrayEquals(floatArrayOf(-0.5f), AVEditAudioEngine.pcmFloats(buffer(0, 0, 0, 0xC0), AudioFormat.ENCODING_PCM_32BIT), 0f)
+        val float = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putFloat(0, 0.25f)
+        assertArrayEquals(floatArrayOf(0.25f), AVEditAudioEngine.pcmFloats(float, AudioFormat.ENCODING_PCM_FLOAT), 0f)
+        assertNull(AVEditAudioEngine.pcmFloats(buffer(0x80), AudioFormat.ENCODING_PCM_8BIT))
     }
 
     @Test

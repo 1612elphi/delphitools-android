@@ -120,6 +120,9 @@ class FrameExtractorModel(application: Application) : AndroidViewModel(applicati
     var sheetImage by mutableStateOf<ImageBitmap?>(null)
         private set
     private var shownSheet: File? = null
+
+    @Volatile
+    private var built: Pair<File, ImageBitmap>? = null
     private var marksTask: Job? = null
     private var grabTask: Job? = null
 
@@ -136,6 +139,7 @@ class FrameExtractorModel(application: Application) : AndroidViewModel(applicati
     fun clear() {
         playback.release()
         sheetJob.reset()
+        built = null
         source.clear()
         grabTask?.cancel()
         grabbing = false
@@ -201,16 +205,20 @@ class FrameExtractorModel(application: Application) : AndroidViewModel(applicati
         val duration = source.duration
         val count = sheetCount.toInt()
         sheetJob.start("${source.baseName}-contact-sheet.png") { output, progress ->
-            AVEditMedia.contactSheet(context, uri, duration, count, output, progress)
+            built = output to AVEditMedia.contactSheet(context, uri, duration, count, output, progress).asImageBitmap()
         }
     }
 
-    // png decode off main
+    // the sheet just built, else a png decode off main
     fun showSheet(output: File?) {
         if (output == shownSheet) return
         shownSheet = output
         sheetImage = null
         if (output == null) return
+        built?.takeIf { it.first == output }?.let {
+            sheetImage = it.second
+            return
+        }
         viewModelScope.launch {
             val image = withContext(Dispatchers.IO) { BitmapFactory.decodeFile(output.path)?.asImageBitmap() }
             if (shownSheet == output) sheetImage = image

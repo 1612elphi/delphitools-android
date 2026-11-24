@@ -1,8 +1,10 @@
 package com.delphi.delphitools.tools.audiovideo
 
+import android.media.AudioFormat
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.Locale
 import kotlin.math.PI
-import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.log10
@@ -11,7 +13,6 @@ import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
-import kotlin.math.sqrt
 import kotlin.math.tan
 
 /** dt-ios AVInfoAudioDSP.Scan: peaks, levels and loudness of a decoded file. */
@@ -82,80 +83,62 @@ internal class KWeighting(rate: Double) {
 /**
  * dt-ios AVInfoAudioDSP.scan, fed chunk by chunk: 16-bit interleaved PCM in, an [AudioScan] out.
  * [spanFrames] is the expected length, which places frames in [buckets]; frames past it go in the last bucket.
+ * The measuring is [AudioScanner]'s over the whole file.
  */
-class AudioMeter(
-    private val rate: Int,
-    private val channels: Int,
-    spanFrames: Long,
-    private val buckets: Int,
-    private val loudness: Boolean,
-) {
-    private val span = max(1L, spanFrames)
-    private val low = FloatArray(buckets) { Float.POSITIVE_INFINITY }
-    private val high = FloatArray(buckets) { Float.NEGATIVE_INFINITY }
-    private var peak = 0f
-    private var squareSum = 0.0
+class AudioMeter(rate: Int, private val channels: Int, spanFrames: Long, buckets: Int, loudness: Boolean) {
+    private val scanner = AudioScanner(rate, channels, 0, max(1L, spanFrames), buckets, open = true, measureLoudness = loudness)
     var frames = 0L
         private set
-    private val filters = if (loudness) List(channels) { KWeighting(rate.toDouble()) } else emptyList()
-    private val subBlockFrames = (0.1 * rate).roundToInt()
-    private val subBlockSums = ArrayList<Double>()
-    private var subBlockEnergy = 0.0
-    private var subBlockFilled = 0
 
     fun feed(pcm: ShortArray) {
         val count = pcm.size / channels
-        for (frame in 0 until count) {
-            val bucket = min(buckets - 1L, (frames + frame) * buckets / span).toInt()
-            var energy = 0.0
-            for (channel in 0 until channels) {
-                val sample = pcm[frame * channels + channel] / 32768f
-                if (sample < low[bucket]) low[bucket] = sample
-                if (sample > high[bucket]) high[bucket] = sample
-                val magnitude = abs(sample)
-                if (magnitude > peak) peak = magnitude
-                squareSum += sample.toDouble() * sample
-                if (loudness) {
-                    val weighted = filters[channel].process(sample.toDouble())
-                    energy += weighted * weighted
-                }
-            }
-            if (loudness && subBlockFrames > 0) {
-                subBlockEnergy += energy
-                if (++subBlockFilled == subBlockFrames) {
-                    subBlockSums += subBlockEnergy
-                    subBlockEnergy = 0.0
-                    subBlockFilled = 0
-                }
-            }
-        }
+        scanner.feed(FloatArray(count * channels) { pcm[it] / 32768f }, count, frames)
         frames += count
     }
 
-    fun finish(): AudioScan {
-        for (bucket in 0 until buckets) {
-            if (low[bucket] == Float.POSITIVE_INFINITY) {
-                low[bucket] = 0f
-                high[bucket] = 0f
+    fun finish(): AudioScan = scanner.finish()
+}
+
+/**
+ * Interleaved 16-bit PCM from [from] to [to] Hz by linear interpolation, fed chunk by chunk; the last frame of each chunk
+ * carries over, so the output is the same however the input is split.
+ */
+// ponytail: no anti-alias filter, content above the new Nyquist folds back; add a windowed-sinc low pass if that is heard
+class PcmResampler(from: Int, to: Int, private val channels: Int) {
+    private val step = from.toDouble() / to
+    private val previous = ShortArray(channels)
+    private var consumed = 0L
+    private var produced = 0L
+
+    fun process(pcm: ShortArray): ShortArray {
+        val end = consumed + pcm.size / channels
+        val out = ShortArray(((end - consumed) / step + 2).toInt() * channels)
+        var frames = 0
+        while (true) {
+            val position = produced * step
+            val index = position.toLong()
+            if (index + 1 >= end) break
+            val fraction = position - index
+            for (channel in 0 until channels) {
+                fun at(frame: Long) = if (frame < consumed) previous[channel] else pcm[((frame - consumed) * channels).toInt() + channel]
+                val a = at(index)
+                out[frames * channels + channel] = (a + (at(index + 1) - a) * fraction).roundToInt().toShort()
             }
+            frames++
+            produced++
         }
-        val samples = frames.toDouble() * channels
-        val rms = if (samples > 0) sqrt(squareSum / samples) else 0.0
-        return AudioScan(
-            AVEditPeaks(low, high),
-            if (peak == 0f) Double.NEGATIVE_INFINITY else 20 * log10(peak.toDouble()),
-            if (rms == 0.0) Double.NEGATIVE_INFINITY else 20 * log10(rms),
-            if (loudness) AVEditAudioEngine.gatedLoudness(subBlockSums, subBlockFrames) else null,
-            rate,
-            channels,
-            if (rate > 0) frames.toDouble() / rate else 0.0,
-        )
+        if (end > consumed) pcm.copyInto(previous, 0, pcm.size - channels, pcm.size)
+        consumed = end
+        return out.copyOf(frames * channels)
     }
 }
 
 /** dt-ios AVEditAudio, AVInfoAudioDSP and AVInfoWaveformRender arithmetic, with no device in it. */
 object AVEditAudioEngine {
     const val LEVEL_FLOOR = -60.0
+
+    /** The highest rate the platform AAC encoder takes. */
+    const val AAC_MAX_RATE = 48_000
 
     /** dt-ios AVInfoProbe.levelShare: a level bar's share, 0 to 1, for decibels between [LEVEL_FLOOR] and full scale. */
     fun levelShare(decibels: Double): Float = (1 - decibels / LEVEL_FLOOR).coerceIn(0.0, 1.0).toFloat()
@@ -285,4 +268,20 @@ object AVEditAudioEngine {
     fun signedGain(db: Double): String = String.format(Locale.ROOT, "%s%.1f dB", if (db >= 0) "+" else "", db)
 
     fun micros(frames: Long, rate: Int): Long = if (rate > 0) (frames * 1e6 / rate).roundToLong() else 0
+
+    /** A decoder output buffer, from its position to its limit, as samples from -1 to 1; null for an encoding not handled. */
+    fun pcmFloats(data: ByteBuffer, encoding: Int): FloatArray? {
+        val bytes = data.slice().order(ByteOrder.LITTLE_ENDIAN)
+        return when (encoding) {
+            AudioFormat.ENCODING_PCM_16BIT -> bytes.asShortBuffer().let { s -> FloatArray(s.remaining()) { s.get(it) / 32768f } }
+            AudioFormat.ENCODING_PCM_FLOAT -> bytes.asFloatBuffer().let { f -> FloatArray(f.remaining()).also(f::get) }
+            AudioFormat.ENCODING_PCM_32BIT -> bytes.asIntBuffer().let { s -> FloatArray(s.remaining()) { s.get(it) / 2147483648f } }
+            AudioFormat.ENCODING_PCM_24BIT_PACKED -> FloatArray(bytes.remaining() / 3) {
+                val at = it * 3
+                val sample = (bytes.get(at).toInt() and 0xFF) or (bytes.get(at + 1).toInt() and 0xFF shl 8) or (bytes.get(at + 2).toInt() shl 16)
+                sample / 8388608f
+            }
+            else -> null
+        }
+    }
 }

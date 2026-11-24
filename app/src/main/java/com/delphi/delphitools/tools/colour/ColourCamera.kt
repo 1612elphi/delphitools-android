@@ -185,7 +185,8 @@ class ColourCameraModel(application: Application) : AndroidViewModel(application
     /** Camera thread. */
     fun receive(frame: YuvFrame) {
         viewModelScope.launch {
-            if (!live) return@launch
+            // a frame queued before close lands after stopped()
+            if (!live || device?.isOpen != true) return@launch
             latest = frame
             streaming = true
             if (!palette) {

@@ -201,18 +201,19 @@ object PdfStampEngine {
             val (ops, usesAlpha) = operators(labels[index], file.pages.size, PdfCropEngine.displaySize(box, rotation), options)
             if (ops.isEmpty()) return@forEachIndexed
             stamped++
-            val matrix = displayMatrix(box, rotation).joinToString(" ") { r(it) }
-            val content = PdfFilters.deflate("\nQ\nq $matrix cm\n${ops}Q\n".toByteArray(Charsets.ISO_8859_1))
-            val stream = add(PdfStream(linkedMapOf("Filter" to PdfName("FlateDecode")), content))
-            val resources = LinkedHashMap(file.dict(page.attribute("Resources")) ?: emptyMap())
-            resources["Font"] = LinkedHashMap(file.dict(resources["Font"]) ?: emptyMap()).apply { put(FONT, font) }
-            if (usesAlpha) resources["ExtGState"] = LinkedHashMap(file.dict(resources["ExtGState"]) ?: emptyMap()).apply { put(ALPHA, alpha) }
             val old = when (val contents = page.dict["Contents"]) {
                 null -> emptyList()
                 is PdfRef -> if (file.resolve(contents) is List<*>) file.resolve(contents) as List<*> else listOf(contents)
                 is List<*> -> contents
                 else -> listOf(contents)
             }
+            val restores = "Q\n".repeat(openSaves(old.map { file.resolve(it) }) + 1)
+            val matrix = displayMatrix(box, rotation).joinToString(" ") { r(it) }
+            val content = PdfFilters.deflate("\n${restores}q $matrix cm\n${ops}Q\n".toByteArray(Charsets.ISO_8859_1))
+            val stream = add(PdfStream(linkedMapOf("Filter" to PdfName("FlateDecode")), content))
+            val resources = LinkedHashMap(file.dict(page.attribute("Resources")) ?: emptyMap())
+            resources["Font"] = LinkedHashMap(file.dict(resources["Font"]) ?: emptyMap()).apply { put(FONT, font) }
+            if (usesAlpha) resources["ExtGState"] = LinkedHashMap(file.dict(resources["ExtGState"]) ?: emptyMap()).apply { put(ALPHA, alpha) }
             val dict = LinkedHashMap(page.dict)
             dict["Resources"] = resources
             dict["Contents"] = listOf(save) + old + stream
@@ -221,6 +222,46 @@ object PdfStampEngine {
         if (stamped == 0) return file.bytes
         return file.update(changes)
     }
+
+    /** `q` left unmatched by the content [streams] in order; a stream that cannot be decoded counts none. */
+    fun openSaves(streams: List<Any?>): Int {
+        var depth = 0
+        for (stream in streams) {
+            val data = (stream as? PdfStream)?.let { runCatching { PdfFilters.decode(it) }.getOrNull() } ?: continue
+            val lexer = PdfLexer(data, 0)
+            while (true) {
+                lexer.skipWhite()
+                if (lexer.pos >= data.size) break
+                val at = lexer.pos
+                if ("()<>[]{}/%".indexOf((data[at].toInt() and 0xff).toChar()) < 0) {
+                    when (lexer.token()) {
+                        "q" -> depth++
+                        "Q" -> if (depth > 0) depth--
+                        "ID" -> lexer.pos = inlineImageEnd(data, lexer.pos)
+                    }
+                } else {
+                    runCatching { lexer.value() }
+                    if (lexer.pos == at) lexer.pos++
+                }
+            }
+        }
+        return depth
+    }
+
+    /** Past the `EI` that ends inline image data starting at [from]. */
+    private fun inlineImageEnd(data: ByteArray, from: Int): Int {
+        var at = from
+        while (true) {
+            val found = indexOf(data, "EI".toByteArray(), at)
+            if (found < 0) return data.size
+            val before = if (found > 0) data[found - 1].toInt() else 32
+            val after = if (found + 2 < data.size) data[found + 2].toInt() else 32
+            if (before.isContentWhite() && after.isContentWhite()) return found + 2
+            at = found + 1
+        }
+    }
+
+    private fun Int.isContentWhite() = this == 0 || this == 9 || this == 10 || this == 12 || this == 13 || this == 32
 }
 
 // URW Nimbus Sans and Roman advance widths per 1000 em for WinAnsiEncoding codes 32 to 255, metric twins of Helvetica and Times-Roman

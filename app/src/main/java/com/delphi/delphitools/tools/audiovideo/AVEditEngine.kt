@@ -54,6 +54,8 @@ object AVEditEngine {
 
     fun videoTracks(mimes: List<String?>): List<Int> = mimes.indices.filter { mimes[it]?.startsWith("video/") == true }
 
+    fun mediaTracks(mimes: List<String?>): List<Int> = mimes.indices.filter { mimes[it]?.startsWith("video/") == true || mimes[it]?.startsWith("audio/") == true }
+
     fun firstAudioTrack(mimes: List<String?>): Int? = mimes.indices.firstOrNull { mimes[it]?.startsWith("audio/") == true }
 
     fun micros(seconds: Double): Long = (seconds * 1e6).roundToLong()

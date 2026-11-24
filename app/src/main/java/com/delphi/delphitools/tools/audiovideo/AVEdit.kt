@@ -433,7 +433,7 @@ private fun Modifier.scrubs(at: (Float) -> Double?, onScrub: ((Double) -> Unit)?
         }
 
 /** Time axis of a strip [width] px wide with [inset] px either side, mirrored right to left. */
-private class AVEditAxis(val duration: Double, val width: Float, val inset: Float, val rightToLeft: Boolean) {
+internal class AVEditAxis(val duration: Double, val width: Float, val inset: Float, val rightToLeft: Boolean) {
     val strip get() = max(1f, width - inset * 2)
 
     fun x(seconds: Double): Float {

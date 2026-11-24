@@ -40,6 +40,7 @@ class AVEditEngineTest {
     fun tracks() {
         val mimes = listOf("audio/mp4a-latm", "video/avc", null, "video/hevc", "audio/opus")
         assertEquals(listOf(1, 3), AVEditEngine.videoTracks(mimes))
+        assertEquals(listOf(0, 1, 3, 4), AVEditEngine.mediaTracks(mimes))
         assertEquals(0, AVEditEngine.firstAudioTrack(mimes))
         assertNull(AVEditEngine.firstAudioTrack(listOf("video/avc")))
     }

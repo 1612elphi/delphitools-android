@@ -84,7 +84,7 @@ internal val LocalCanonSymbolOnly = compositionLocalOf<CanonSymbolOnly?> { null 
 
 /**
  * [oversized] draws [icon] large and faint behind the title, turned, cut off by the trailing and bottom edges.
- * [repeats]: holding repeats [onClick]. [flashesCopied]: the title shows "Copied" for 1.5 s after a click.
+ * [repeats]: holding repeats [onClick]. [flashesCopied]: the title shows [flashTitle] for 1.5 s after a click.
  * [contentDescription] is read by TalkBack when the button shows its symbol alone.
  * [textStyle] replaces the title's size and family; the weight still follows [kind].
  */
@@ -99,6 +99,7 @@ fun CanonButton(
     oversized: Boolean = false,
     repeats: Boolean = false,
     flashesCopied: Boolean = false,
+    flashTitle: String = "Copied",
     contentDescription: String? = null,
     textStyle: TextStyle? = null,
     onClick: () -> Unit,
@@ -110,7 +111,7 @@ fun CanonButton(
         delay(COPIED_MS)
         flashes = 0
     }
-    val title = if (flashes > 0) "Copied" else text
+    val title = if (flashes > 0) flashTitle else text
     val symbol = if (flashes > 0) Icons.Rounded.Check else icon
     val fills = kind == CanonButtonKind.Primary || kind == CanonButtonKind.Secondary
     val filled = kind == CanonButtonKind.Primary ||

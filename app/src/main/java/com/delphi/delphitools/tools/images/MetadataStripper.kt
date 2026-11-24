@@ -80,7 +80,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
 
 private class Stripped(
     val read: MetadataFiles.Read,
@@ -119,7 +118,7 @@ class MetadataStripperModel(application: Application) : AndroidViewModel(applica
     init {
         val assets = getApplication<Application>().assets
         viewModelScope.launch {
-            land = withContext(Dispatchers.IO) { runCatching { parseLand(assets.open("world-land.json").use { String(it.readBytes()) }) }.getOrDefault(emptyList()) }
+            land = withContext(Dispatchers.IO) { WorldMap.land(assets) }
         }
     }
 
@@ -189,21 +188,6 @@ class MetadataStripperModel(application: Application) : AndroidViewModel(applica
         val data = stripped ?: return
         val type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(exportName.substringAfterLast('.').lowercase()) ?: "image/*"
         viewModelScope.launch { FileExport.share(context, data, exportName, type) }
-    }
-}
-
-private fun parseLand(json: String): List<FloatArray> {
-    val rings = JSONArray(json)
-    return (0 until rings.length()).mapNotNull { r ->
-        val ring = rings.getJSONArray(r)
-        if (ring.length() <= 2) return@mapNotNull null
-        FloatArray(ring.length() * 2).also { points ->
-            for (i in 0 until ring.length()) {
-                val point = ring.getJSONArray(i)
-                points[i * 2] = (point.getDouble(0) + 180).toFloat()
-                points[i * 2 + 1] = (WorldMap.NORTH - point.getDouble(1)).toFloat()
-            }
-        }
     }
 }
 

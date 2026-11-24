@@ -1,5 +1,7 @@
 package com.delphi.delphitools.tools.images
 
+import android.content.res.AssetManager
+import org.json.JSONArray
 import java.io.ByteArrayOutputStream
 import java.util.Locale
 import kotlin.math.abs
@@ -206,6 +208,25 @@ object WorldMap {
         val clamped = latitude.coerceIn(SOUTH, NORTH)
         return ((longitude + 180) / 360 * width).toFloat() to ((NORTH - clamped) / (NORTH - SOUTH) * height).toFloat()
     }
+
+    private var land: List<FloatArray>? = null
+
+    /** Natural Earth 110 m land rings in map units, x 0 to 360, y 0 to 140; read once per process, empty when unreadable. */
+    @Synchronized
+    internal fun land(assets: AssetManager): List<FloatArray> = land ?: runCatching {
+        val rings = JSONArray(assets.open("world-land.json").use { String(it.readBytes()) })
+        (0 until rings.length()).mapNotNull { r ->
+            val ring = rings.getJSONArray(r)
+            if (ring.length() <= 2) return@mapNotNull null
+            FloatArray(ring.length() * 2).also { points ->
+                for (i in 0 until ring.length()) {
+                    val point = ring.getJSONArray(i)
+                    points[i * 2] = (point.getDouble(0) + 180).toFloat()
+                    points[i * 2 + 1] = (NORTH - point.getDouble(1)).toFloat()
+                }
+            }
+        }
+    }.getOrDefault(emptyList()).also { land = it }
 }
 
 /** dt-core PNGChunkStrip: drops a PNG's ancillary chunks byte for byte; a re-encode would add chunks of its own. */

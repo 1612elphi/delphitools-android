@@ -160,7 +160,7 @@ private fun encode(samples: PdfCompressEngine.ImageSamples, downsample: Boolean)
     var bitmap: Bitmap? = null
     try {
         decoded = samples.jpeg?.let { jpeg ->
-            val options = BitmapFactory.Options()
+            val options = BitmapFactory.Options().apply { inSampleSize = 1 }
             if (downsample) {
                 val long = maxOf(samples.width, samples.height)
                 while (long / (options.inSampleSize * 2) >= SCREEN_EDGE) options.inSampleSize *= 2

@@ -58,6 +58,11 @@ class PdfJob(private val scope: CoroutineScope, private val context: Context) {
     private var task: Job? = null
     private var run = 0
 
+    private fun failed(name: String, cause: Throwable): Boolean {
+        android.util.Log.w("PdfJob", "export failed: $name", cause)
+        return false
+    }
+
     /** [work] writes the file it is given and reports progress from 0 to 1 from any thread. */
     fun start(name: String, work: suspend (File, (Float) -> Unit) -> Unit) {
         reset()
@@ -71,12 +76,12 @@ class PdfJob(private val scope: CoroutineScope, private val context: Context) {
             } catch (e: CancellationException) {
                 PdfDocuments.discard(file)
                 throw e
-            } catch (_: Exception) {
-                false
-            } catch (_: OutOfMemoryError) {
-                false
-            } catch (_: StackOverflowError) {
-                false
+            } catch (e: Exception) {
+                failed(name, e)
+            } catch (e: OutOfMemoryError) {
+                failed(name, e)
+            } catch (e: StackOverflowError) {
+                failed(name, e)
             }
             busy = false
             if (done) output = file else PdfDocuments.discard(file)

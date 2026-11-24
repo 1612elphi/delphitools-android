@@ -225,7 +225,6 @@ val allTools: List<Tool> = with(Icons.Outlined) {
 
         Tool("doc-converter", "Document Converter", "Convert documents between Markdown, HTML, Word, LaTeX, EPUB and more", Description, ToolCategory.Typography),
         Tool("font-explorer", "Font File Explorer", "Explore font file contents", FontDownload, ToolCategory.Typography),
-        Tool("font-installer", "Font Installer", "Preview and install fonts system-wide", TextFields, ToolCategory.Typography),
         Tool("glyph-browser", "Glyph Browser", "Browse unicode glyphs", Abc, ToolCategory.Typography),
         Tool("large-type", "Large Type", "Text, but big", FormatSize, ToolCategory.Typography),
         Tool("line-height-calc", "Line Height Calculator", "Calculate optimal line heights", FormatLineSpacing, ToolCategory.Typography),
@@ -269,7 +268,6 @@ private val searchKeywords: Map<String, List<String>> = mapOf(
     "placeholder-genny" to listOf("dummy image", "wireframe"),
     "svg-optimiser" to listOf("minify", "compress", "vector"),
     "social-cropper" to listOf("instagram", "twitter", "facebook", "resize"),
-    "font-installer" to listOf("ttf", "otf", "profile", "mobileconfig"),
     "px-to-rem" to listOf("pixel", "em", "css", "web"),
     "code-genny" to listOf("barcode", "EAN", "UPC", "Code 128"),
     "base-converter" to listOf("binary", "octal", "decimal", "hexadecimal"),

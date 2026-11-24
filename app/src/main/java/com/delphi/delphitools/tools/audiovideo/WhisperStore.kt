@@ -37,9 +37,9 @@ object WhisperModelStore {
 
     fun folder(context: Context, model: WhisperModel) = File(File(context.filesDir, "whisper"), model.id)
 
-    suspend fun refresh(context: Context) {
+    suspend fun refresh(context: Context, models: List<WhisperModel> = WhisperModel.all) {
         val found = withContext(Dispatchers.IO) {
-            WhisperModel.all.associateWith { model ->
+            models.associateWith { model ->
                 val dir = folder(context, model)
                 WhisperDownloadPlan.settled(model, { File(dir, it.name).takeIf(File::isFile)?.length() }, states[model.id])
             }

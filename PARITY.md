@@ -35,7 +35,7 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 | id | tool | iOS controller | iOS lines | status |
 |---|---|---|---:|---|
 | `artwork-enhancer` | Artwork Enhancer | `ArtworkEnhancerViewController` | 381 | review |
-| `background-remover` | Background Remover | `BackgroundRemoverViewController` | 348 | todo |
+| `background-remover` | Background Remover | `BackgroundRemoverViewController` | 348 | review |
 | `base64-image-encoder` | Base64 Image Encoder | `Base` | 991 | review |
 | `document-scanner` | Document Scanner | `DocumentScannerViewController` | 654 | review |
 | `favicon-genny` | Favicon Generator | `FaviconGeneratorViewController` | 665 | review |
@@ -79,7 +79,6 @@ Status: `todo`, `wip`, `review` (ported, opens on device, awaiting Ruby), `done`
 |---|---|---|---:|---|
 | `doc-converter` | Document Converter | `DocConverterViewController` | 1136 | review |
 | `font-explorer` | Font File Explorer | `FontExplorerViewController` | 364 | review |
-| `font-installer` | Font Installer | `FontInstallerViewController` | 721 | todo |
 | `glyph-browser` | Glyph Browser | `GlyphBrowserViewController` | 389 | review |
 | `large-type` | Large Type | `LargeTypeViewController` | 921 | review |
 | `line-height-calc` | Line Height Calculator | `LineHeightCalcViewController` | 447 | done |

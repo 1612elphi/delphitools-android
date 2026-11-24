@@ -51,6 +51,7 @@ import com.delphi.delphitools.tools.devtools.TextDiff
 import com.delphi.delphitools.tools.devtools.TextScratchpad
 import com.delphi.delphitools.tools.devtools.UuidGenerator
 import com.delphi.delphitools.tools.images.ArtworkEnhancer
+import com.delphi.delphitools.tools.images.BackgroundRemover
 import com.delphi.delphitools.tools.images.Base64ImageEncoder
 import com.delphi.delphitools.tools.images.DocumentScanner
 import com.delphi.delphitools.tools.images.FaviconGenerator
@@ -139,6 +140,7 @@ internal val toolPages: Map<String, @Composable () -> Unit> = mapOf(
     "metadata-stripper" to { MetadataStripper() },
     "image-converter" to { ImageConverter() },
     "base64-image-encoder" to { Base64ImageEncoder() },
+    "background-remover" to { BackgroundRemover() },
     "image-clipper" to { ImageClipper() },
     "favicon-genny" to { FaviconGenerator() },
     "watermarker" to { Watermarker() },

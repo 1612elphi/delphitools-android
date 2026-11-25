@@ -46,10 +46,7 @@ import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.rememberCanonTextFilePicker
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 
-// ∑CG: prompt in the gallery's drop zones, under the picture icon
-//   spec: tells the user to drop an image on the area; one short line, under 24 characters, plain imperative, no full stop
-//   sample: "Drop an image here"
-private const val DROP_PROMPT = "∑CG"
+private const val DROP_PROMPT = "Drop an image here"
 
 private const val CSS = ".button {\n    border-radius: 0;\n    color: oklch(0.45 0.12 145);\n}"
 private val long = (1..400).joinToString("\n") { "line $it: ${"lorem ipsum ".repeat(12)}" }

@@ -93,15 +93,9 @@ fun WhisperModelsList(actions: WhisperActions, heading: Boolean = true) {
             val reason = (state as? WhisperState.Failed)?.reason
             val message = when (reason) {
                 WhisperFailure.Checksum ->
-                    // ∑CG: status under a model row when its downloaded file failed the SHA-256 check and was deleted
-                    //   spec: one sentence, ≤ 70 chars, plain and calm, says the download was damaged and Retry starts it again
-                    //   sample: "The download was damaged. Retry to start it again."
-                    "∑CG"
+                    "Download damaged, please retry"
                 WhisperFailure.Space ->
-                    // ∑CG: status under a model row when the device lacks free space for the download
-                    //   spec: one sentence, ≤ 70 chars, says there is not enough storage and to free some up, no figures
-                    //   sample: "Not enough storage. Free up some space and retry."
-                    "∑CG"
+                    "Not enough storage. Clear some and retry"
                 WhisperFailure.Network, null -> null
             }
             if (message != null) CanonStatusRow(message, CanonTone.Warn)

@@ -135,10 +135,7 @@ fun VideoMuter(model: VideoMuterModel = viewModel()) {
                 job,
                 "Mute",
                 Icons.AutoMirrored.Outlined.VolumeOff,
-                // ∑CG: warning row under the Mute button when the copy fails; iOS says to try another container, which Android does not offer
-                //   spec: ≤ 50 chars, plain statement of the failure, no container advice, ends with a full stop
-                //   sample: "Couldn't copy the video tracks."
-                "∑CG",
+                "Couldn't copy video tracks",
                 enabled = (tracks ?: 0) > 0,
                 onStart = model::mute,
             )

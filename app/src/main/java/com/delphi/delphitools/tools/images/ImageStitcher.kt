@@ -537,10 +537,7 @@ fun ImageStitcher(model: ImageStitcherModel = viewModel()) {
             }
             if (model.failed) {
                 CanonStatusRow(
-                    // ∑CG: warning under Output when the stitched image is too large for this device's memory
-                    //   spec: one line, at most 48 characters, plain statement of what failed, no blame, no period needed
-                    //   sample: "Too large to stitch on this device"
-                    "∑CG",
+                    "Too large to stitch on this device",
                     CanonTone.Warn,
                 )
             }

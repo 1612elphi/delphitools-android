@@ -47,10 +47,7 @@ import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.launch
 
-// ∑CG: shown over the dimmed original when the result could not be encoded
-//   spec: one short sentence, centred in the picture, plain and factual, no blame, under 45 characters
-//   sample: "This format couldn't encode this image"
-private const val ENCODE_FAILED = "∑CG"
+private const val ENCODE_FAILED = "Encode failed. Try a different format?"
 
 /**
  * One picture: the original on the leading side of a draggable divider, the result on the other.

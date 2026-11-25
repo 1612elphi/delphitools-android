@@ -23,6 +23,9 @@ android {
         release {
             optimization {
                 enable = true
+                keepRules {
+                    files.add(file("proguard-rules.pro"))
+                }
             }
         }
         // release code signed with the debug key, for judging performance on a device

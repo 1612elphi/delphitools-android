@@ -24,6 +24,10 @@ own licences, which continue to apply to them:
   app/src/main/assets/nerdamer-all.min.js
       nerdamer 1.1.13 (Martin Donk), MIT.
 
+  app/src/main/cpp/minimp3/minimp3.h, minimp3_ex.h
+      minimp3 at commit 48e3a08 (lieff), CC0-1.0; see
+      app/src/main/cpp/minimp3/LICENSE.
+
   app/src/main/assets/svgo.browser.js
       SVGO 4.0.0 browser build (Kir Belevich and SVGO contributors), MIT.
 

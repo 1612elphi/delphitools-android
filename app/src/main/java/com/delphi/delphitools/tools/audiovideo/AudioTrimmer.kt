@@ -5,9 +5,11 @@ import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LastPage
 import androidx.compose.material.icons.filled.FirstPage
@@ -20,6 +22,7 @@ import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
@@ -42,6 +45,7 @@ import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonDecimalField
 import com.delphi.delphitools.canon.CanonGrid
 import com.delphi.delphitools.canon.CanonHeading
+import com.delphi.delphitools.canon.CanonLoader
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.CanonReadoutBand
 import com.delphi.delphitools.canon.CanonRow
@@ -79,7 +83,7 @@ class AudioTrimmerModel(application: Application) : AndroidViewModel(application
 
     fun load(uri: Uri) {
         clear()
-        source.load(uri, PEAK_BUCKETS) { scan ->
+        source.load(uri, PEAK_BUCKETS, live = true, sampled = true) { scan ->
             start = 0.0
             end = floor(scan.duration * 100) / 100
             playback.open(uri, start..end)
@@ -231,8 +235,15 @@ fun AudioTrimmer(model: AudioTrimmerModel = viewModel()) {
     }
     val banner = CanonSection.canvas(CanonCanvasSize.Fixed(BAND_HEIGHT)) {
         CanonReadoutBand(playback.transport, Modifier.fillMaxSize(), idle = if (ready) max(0.0, model.end - model.start) else null) {
-            AudioTrimWaveform(scan?.peaks, duration, model.start, model.end, model.fadeIn, model.fadeOut, { playback.playhead }, 0.dp) {
-                if (ready) playback.scrub(it)
+            Box(Modifier.fillMaxSize()) {
+                AudioTrimWaveform(scan?.peaks, duration, model.start, model.end, model.fadeIn, model.fadeOut, { playback.playhead }, 0.dp) {
+                    if (ready) playback.scrub(it)
+                }
+                if (source.scanning) {
+                    Box(Modifier.align(Alignment.TopEnd).padding(10.dp)) {
+                        CanonLoader(cell = 5.dp, gap = 1.dp, colour = LocalDelphiColours.current.mutedForeground)
+                    }
+                }
             }
         }
     }

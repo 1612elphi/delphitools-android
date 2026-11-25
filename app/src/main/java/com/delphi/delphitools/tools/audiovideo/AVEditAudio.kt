@@ -143,17 +143,21 @@ internal class AacSink(output: File, sourceRate: Int, private val channels: Int)
 /** dt-ios AVInfoAudioDSP.scan and AVEditAudio.render over MediaCodec PCM; every call runs on Dispatchers.IO. */
 object AVEditAudio {
     /** The first audio track's duration, from the container or, failing that, the retriever. */
-    suspend fun durationUs(context: Context, uri: Uri): Long = withContext(Dispatchers.IO) {
+    suspend fun durationUs(context: Context, uri: Uri): Long = durationUs(context, uri, format(context, uri))
+
+    private suspend fun format(context: Context, uri: Uri): MediaFormat? = withContext(Dispatchers.IO) {
         val extractor = MediaExtractor()
-        val fromTrack = try {
+        try {
             extractor.setDataSource(context, uri, null)
             (0 until extractor.trackCount).map(extractor::getTrackFormat)
                 .firstOrNull { it.getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true }
-                ?.takeIf { it.containsKey(MediaFormat.KEY_DURATION) }
-                ?.getLong(MediaFormat.KEY_DURATION)
         } finally {
             extractor.release()
         }
+    }
+
+    private suspend fun durationUs(context: Context, uri: Uri, format: MediaFormat?): Long = withContext(Dispatchers.IO) {
+        val fromTrack = format?.takeIf { it.containsKey(MediaFormat.KEY_DURATION) }?.getLong(MediaFormat.KEY_DURATION)
         fromTrack ?: MediaMetadataRetriever().run {
             try {
                 setDataSource(context, uri)
@@ -167,16 +171,32 @@ object AVEditAudio {
     private const val PARALLEL_FROM_US = 30_000_000L
     private const val WARM_UP_US = 200_000L
 
+    /** Sampling starts where a waveform bucket spans this much; below it most packets are decoded anyway. */
+    private const val SAMPLE_FROM_STEP_US = 250_000L
+
     private fun expectedFrames(durationUs: Long, rate: Int) = (durationUs * rate / 1e6).roundToLong()
 
-    suspend fun scan(context: Context, uri: Uri, buckets: Int, loudness: Boolean, progress: AVEditProgress = {}): AudioScan {
-        val durationUs = durationUs(context, uri)
-        if (!loudness && durationUs >= PARALLEL_FROM_US) {
-            return scanParts(context, uri, durationUs, buckets, min(4, Runtime.getRuntime().availableProcessors()), progress)
+    /** [partial] gets the scan so far at each step of [progress], from a decoding thread; never when the container has no duration. */
+    suspend fun scan(
+        context: Context,
+        uri: Uri,
+        buckets: Int,
+        loudness: Boolean,
+        partial: ((AudioScan) -> Unit)? = null,
+        sampled: Boolean = false,
+        progress: AVEditProgress = {},
+    ): AudioScan {
+        val format = format(context, uri)
+        val durationUs = durationUs(context, uri, format)
+        val mime = format?.getString(MediaFormat.KEY_MIME)
+        // mp3 decodes in process
+        if (!loudness && durationUs >= PARALLEL_FROM_US && mime != MediaFormat.MIMETYPE_AUDIO_MPEG) {
+            val stepUs = if (sampled && mime in AVEditMedia.sampledMimes) durationUs / buckets else 0L
+            return scanParts(context, uri, durationUs, buckets, min(4, Runtime.getRuntime().availableProcessors()), if (stepUs >= SAMPLE_FROM_STEP_US) stepUs else 0L, partial, progress)
         }
         var meter: AudioMeter? = null
         var span = 1L
-        var reported = 0.0
+        var reported = -1.0
         AVEditMedia.decode(context, uri) { pcm, rate, channels, _ ->
             val current = meter ?: AudioMeter(rate, channels, expectedFrames(durationUs, rate), buckets, loudness).also {
                 meter = it
@@ -187,6 +207,7 @@ object AVEditAudio {
             if (fraction - reported >= 0.01) {
                 reported = fraction
                 progress(fraction)
+                if (durationUs > 0) partial?.invoke(current.snapshot())
             }
         }
         return checkNotNull(meter).finish()
@@ -194,11 +215,22 @@ object AVEditAudio {
 
     /** [scan] without loudness, over [parts] time segments decoded at once. */
     // ponytail: positions after a seek come from packet times, off by up to one packet; a vbr mp3 with no seek table gets estimated times. scan in one part if a waveform is seen misaligned
-    private suspend fun scanParts(context: Context, uri: Uri, durationUs: Long, buckets: Int, parts: Int, progress: AVEditProgress): AudioScan = coroutineScope {
+    private suspend fun scanParts(
+        context: Context,
+        uri: Uri,
+        durationUs: Long,
+        buckets: Int,
+        parts: Int,
+        stepUs: Long,
+        partial: ((AudioScan) -> Unit)?,
+        progress: AVEditProgress,
+    ): AudioScan = coroutineScope {
         val lock = Any()
         var scanner: AudioScanner? = null
         var fed = 0L
-        var reported = 0.0
+        var reported = -1.0
+        // progress estimate, 25 ms packets
+        val share = if (stepUs > 0) min(1.0, AVEditMedia.SAMPLE_BURST * 25_000.0 / stepUs) else 1.0
         (0 until parts).map { part ->
             val fromUs = durationUs * part / parts
             val toUs = durationUs * (part + 1) / parts
@@ -207,8 +239,9 @@ object AVEditAudio {
                 // first part counts from zero
                 var next = if (part == 0) 0L else -1L
                 // decoder drops packets after seek
-                AVEditMedia.decode(context, uri, max(0L, fromUs - WARM_UP_US)..if (last) Long.MAX_VALUE else toUs) { pcm, rate, channels, ptsUs ->
-                    val first = if (next >= 0) next else expectedFrames(ptsUs, rate)
+                val range = if (stepUs > 0) fromUs + stepUs / 4..toUs else max(0L, fromUs - WARM_UP_US)..if (last) Long.MAX_VALUE else toUs
+                AVEditMedia.decode(context, uri, range, stepUs) { pcm, rate, channels, ptsUs ->
+                    val first = if (stepUs == 0L && next >= 0) next else expectedFrames(ptsUs, rate)
                     val count = pcm.size / channels
                     next = first + count
                     val skip = (expectedFrames(fromUs, rate) - first).coerceIn(0L, count.toLong()).toInt()
@@ -221,16 +254,17 @@ object AVEditAudio {
                         val current = scanner ?: AudioScanner(rate, channels, 0, span, buckets, open = true, measureLoudness = false).also { scanner = it }
                         current.feed(samples, keep, first + skip)
                         fed += keep
-                        val fraction = min(1.0, fed.toDouble() / span)
+                        val fraction = min(1.0, fed.toDouble() / (span * share))
                         if (fraction - reported >= 0.01) {
                             reported = fraction
                             progress(fraction)
+                            partial?.invoke(current.snapshot())
                         }
                     }
                 }
             }
         }.awaitAll()
-        checkNotNull(scanner).finish()
+        checkNotNull(scanner).run { if (stepUs > 0) snapshot() else finish() }
     }
 
     /** The first audio track, [range] of it when given, with [gainDb] then linear fades, as WAV or AAC in M4A. */
@@ -307,32 +341,47 @@ class AVEditAudioSource(private val context: Context, private val scope: Corouti
         private set
     var progress by mutableFloatStateOf(0f)
         private set
+    var scanning by mutableStateOf(false)
+        private set
     private var task: Job? = null
 
     val baseName get() = AVEditEngine.baseName(name, "audio")
     val duration get() = scan?.duration ?: 0.0
 
-    fun load(uri: Uri, buckets: Int, loudness: Boolean = false, then: (AudioScan) -> Unit = {}) {
+    /**
+     * [live] publishes the scan while it fills, with the container's duration, and calls [then] on the first of those.
+     * [sampled] decodes a few packets per bucket of a long file: peaks, levels and duration are then approximate.
+     */
+    fun load(uri: Uri, buckets: Int, loudness: Boolean = false, live: Boolean = false, sampled: Boolean = false, then: (AudioScan) -> Unit = {}) {
         clear()
         this.uri = uri
+        scanning = true
         task = scope.launch {
             name = withContext(Dispatchers.IO) { context.contentResolver.canonDisplayName(uri) ?: "" }
+            var started = false
+            val show = { partial: AudioScan ->
+                scan = partial
+                if (!started) then(partial)
+                started = true
+            }
             val result = try {
-                AVEditAudio.scan(context, uri, buckets, loudness) { progress = it.toFloat() }
+                AVEditAudio.scan(context, uri, buckets, loudness, if (live) { partial -> launch { show(partial) } } else null, sampled) { progress = it.toFloat() }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (_: Exception) {
                 null
             }
             scan = result
+            scanning = false
             failed = result == null
-            result?.let(then)
+            if (!started) result?.let(then)
         }
     }
 
     fun clear() {
         task?.cancel()
         task = null
+        scanning = false
         uri = null
         name = ""
         scan = null

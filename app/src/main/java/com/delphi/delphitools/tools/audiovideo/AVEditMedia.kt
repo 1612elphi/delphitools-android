@@ -20,6 +20,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import com.delphi.delphitools.canon.CanonTile
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
@@ -284,14 +285,25 @@ object AVEditMedia {
         }
     }
 
+    /** Packets decoded at each sampled position. */
+    const val SAMPLE_BURST = 3
+
+    /**
+     * Decoders that take each packet's time from its input and keep little state between packets. Sampled mp3 and opus
+     * came out corrupt on c2.android decoders: they time output from their first input and need the packets before.
+     */
+    val sampledMimes = setOf(MediaFormat.MIMETYPE_AUDIO_AAC, MediaFormat.MIMETYPE_AUDIO_FLAC, MediaFormat.MIMETYPE_AUDIO_RAW)
+
     /**
      * Decodes the first audio track to 16-bit interleaved PCM: [chunk] gets each buffer with its sample rate,
      * channel count and start time. Returns the track's duration in microseconds.
+     * With [stepUs], [SAMPLE_BURST] packets are decoded every [stepUs] of [rangeUs] and the rest skipped; for [sampledMimes] only.
      */
     internal suspend fun decode(
         context: Context,
         uri: Uri,
         rangeUs: LongRange? = null,
+        stepUs: Long = 0,
         chunk: (pcm: ShortArray, rate: Int, channels: Int, ptsUs: Long) -> Unit,
     ) = withContext(Dispatchers.IO) {
         val extractor = MediaExtractor()
@@ -302,8 +314,12 @@ object AVEditMedia {
             val track = AVEditEngine.firstAudioTrack(formats.mimes()) ?: error("no audio")
             val format = formats[track]
             extractor.selectTrack(track)
+            val mime = format.getString(MediaFormat.KEY_MIME)!!
+            if (rangeUs == null && mime == MediaFormat.MIMETYPE_AUDIO_MPEG && decodeMp3(context, uri, chunk)) {
+                return@withContext format.long(MediaFormat.KEY_DURATION) ?: 0L
+            }
             rangeUs?.let { extractor.seekTo(it.first, MediaExtractor.SEEK_TO_PREVIOUS_SYNC) }
-            val decoder = MediaCodec.createDecoderByType(format.getString(MediaFormat.KEY_MIME)!!)
+            val decoder = MediaCodec.createDecoderByType(mime)
             codec = decoder
             decoder.configure(format, null, null, 0)
             decoder.start()
@@ -312,19 +328,27 @@ object AVEditMedia {
             var encoding = AudioFormat.ENCODING_PCM_16BIT
             val info = MediaCodec.BufferInfo()
             var inputDone = false
+            var target = rangeUs?.first ?: 0L
+            var burst = 0
             while (true) {
                 ensureActive()
                 if (!inputDone) {
                     val index = decoder.dequeueInputBuffer(10_000)
                     if (index >= 0) {
+                        if (stepUs > 0 && burst == 0) extractor.seekTo(target, MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
                         val size = extractor.readSampleData(decoder.getInputBuffer(index)!!, 0)
                         val time = extractor.sampleTime
-                        if (size < 0 || (rangeUs != null && time > rangeUs.last)) {
+                        if (size < 0 || (rangeUs != null && max(time, target) > rangeUs.last)) {
                             decoder.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
                             inputDone = true
                         } else {
                             decoder.queueInputBuffer(index, 0, size, time, 0)
-                            extractor.advance()
+                            if (stepUs > 0 && ++burst == SAMPLE_BURST) {
+                                burst = 0
+                                target += stepUs
+                            } else {
+                                extractor.advance()
+                            }
                         }
                     }
                 }
@@ -356,6 +380,33 @@ object AVEditMedia {
             extractor.release()
         }
     }
+
+    /** The whole file through [Mp3Native]; false, with [chunk] not called, when it is not a seekable mp3 file. */
+    private fun CoroutineScope.decodeMp3(context: Context, uri: Uri, chunk: (pcm: ShortArray, rate: Int, channels: Int, ptsUs: Long) -> Unit): Boolean {
+        val descriptor = runCatching { context.contentResolver.openFileDescriptor(uri, "r") }.getOrNull() ?: return false
+        var frames = 0L
+        descriptor.use {
+            val handle = Mp3Native.open(it.fd)
+            if (handle == 0L) return false
+            try {
+                val rate = Mp3Native.rate(handle)
+                val channels = Mp3Native.channels(handle)
+                val buffer = ShortArray(MP3_CHUNK)
+                while (true) {
+                    ensureActive()
+                    val count = Mp3Native.read(handle, buffer)
+                    if (count <= 0) break
+                    chunk(buffer.copyOf(count), rate, channels, frames * 1_000_000L / rate)
+                    frames += count / channels
+                }
+            } finally {
+                Mp3Native.close(handle)
+            }
+        }
+        return frames > 0
+    }
+
+    private const val MP3_CHUNK = 1 shl 16
 
     /** The first audio track as 16-bit PCM WAV; fails past the 4 GB RIFF limit. */
     suspend fun wav(context: Context, uri: Uri, output: File, duration: Double, progress: AVEditProgress) {

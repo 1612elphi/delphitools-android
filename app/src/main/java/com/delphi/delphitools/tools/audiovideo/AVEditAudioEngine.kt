@@ -96,6 +96,8 @@ class AudioMeter(rate: Int, private val channels: Int, spanFrames: Long, buckets
         frames += count
     }
 
+    fun snapshot(): AudioScan = scanner.snapshot()
+
     fun finish(): AudioScan = scanner.finish()
 }
 

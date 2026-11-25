@@ -77,6 +77,13 @@ class AudioScanner(
         }
     }
 
+    /** The scan so far over the whole span: buckets not reached yet are flat. */
+    fun snapshot(): AudioScan = result(
+        FloatArray(buckets) { if (low[it] == Float.POSITIVE_INFINITY) 0f else low[it] },
+        FloatArray(buckets) { if (high[it] == Float.NEGATIVE_INFINITY) 0f else high[it] },
+        spanFrames.toDouble() / rate,
+    )
+
     fun finish(): AudioScan {
         for (bucket in 0 until buckets) {
             if (low[bucket] == Float.POSITIVE_INFINITY) {
@@ -84,6 +91,10 @@ class AudioScanner(
                 high[bucket] = 0f
             }
         }
+        return result(low, high, if (open) frames.toDouble() / rate else spanFrames.toDouble() / rate)
+    }
+
+    private fun result(low: FloatArray, high: FloatArray, duration: Double): AudioScan {
         val rms = if (sampleCount > 0) sqrt(squareSum / sampleCount) else 0.0
         return AudioScan(
             AVEditPeaks(low, high),
@@ -92,7 +103,7 @@ class AudioScanner(
             if (filters.isNotEmpty()) AVEditAudioEngine.gatedLoudness(subBlockSums, subBlockFrames) else null,
             rate,
             channels,
-            if (open) frames.toDouble() / rate else spanFrames.toDouble() / rate,
+            duration,
         )
     }
 }

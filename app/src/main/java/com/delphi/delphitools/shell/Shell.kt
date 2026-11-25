@@ -8,6 +8,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
@@ -221,10 +222,14 @@ private fun ShellFrame(startTool: String?) {
                 .fillMaxSize()
                 .background(if (previewing) Color.Transparent else c.background)
         ) {
+            val pageFrame = Modifier.fillMaxSize().background(c.background).statusBarsPadding().padding(bottom = if (vertical) navigation else 0.dp)
+            if (previewing && tool != null) Box(pageFrame) { ToolLattice(lattice, open, onFavour = { favourOpen = true }) }
             AnimatedContent(
                 tool,
                 transitionSpec = {
-                    (fadeIn(tween(SWAP_MS, easing = EaseOut)) + slideInVertically(tween(SWAP_MS, easing = EaseOut)) { travel })
+                    // the home is already drawn behind the preview
+                    if (back.value > 0f) (EnterTransition.None togetherWith fadeOut(tween(SWAP_MS, easing = EaseOut))).apply { targetContentZIndex = -1f }
+                    else (fadeIn(tween(SWAP_MS, easing = EaseOut)) + slideInVertically(tween(SWAP_MS, easing = EaseOut)) { travel })
                         .togetherWith(fadeOut(tween(SWAP_MS, easing = EaseOut)) + slideOutVertically(tween(SWAP_MS, easing = EaseOut)) { travel })
                 },
                 contentKey = { it?.id },
@@ -232,7 +237,6 @@ private fun ShellFrame(startTool: String?) {
             ) { page ->
                 Box(
                     Modifier
-                        .fillMaxSize()
                         .graphicsLayer {
                             if (page == null) return@graphicsLayer
                             // the system back-to-home preview: 90 % scale, a sideways shift of width / 20 - 8 dp
@@ -249,9 +253,7 @@ private fun ShellFrame(startTool: String?) {
                             shape = RoundedCornerShape(previewCorner * progress)
                             clip = progress > 0f
                         }
-                        .background(c.background)
-                        .statusBarsPadding()
-                        .padding(bottom = if (vertical) navigation else 0.dp)
+                        .then(pageFrame)
                 ) {
                     if (page == null) ToolLattice(lattice, open, onFavour = { favourOpen = true }) else ToolPage(page, isOpen = { toolId == page.id })
                 }

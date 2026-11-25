@@ -1,0 +1,73 @@
+BSD Zero Clause License
+
+Copyright (C) 2026 by Ruby Morgan Voigt
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+
+Third-party works in this repository
+------------------------------------
+
+The 0BSD grant above covers the code and data written for delphitools. The
+files below are the work of others, carried in this repository under their
+own licences, which continue to apply to them:
+
+  app/src/main/assets/nerdamer-all.min.js
+      nerdamer 1.1.13 (Martin Donk), MIT.
+
+  app/src/main/assets/svgo.browser.js
+      SVGO 4.0.0 browser build (Kir Belevich and SVGO contributors), MIT.
+
+  app/src/main/assets/colour-names.json
+      The "bestof" list of color-names (David Aerne and contributors), MIT.
+
+  app/src/main/assets/shavian-dictionary-core.json,
+  app/src/main/assets/shavian-dictionary-full.json
+      Derived from the CMU Pronouncing Dictionary (Carnegie Mellon
+      University), BSD-2-Clause.
+
+  app/src/main/assets/password-eff-wordlist.txt
+      EFF long wordlist (Electronic Frontier Foundation), CC BY 3.0.
+
+  app/src/main/assets/world-land.json
+      Derived from the Natural Earth 110 m land polygons
+      (naturalearthdata.com), public domain.
+
+  app/src/main/assets/unicode-blocks.json
+      Derived from Blocks.txt of the Unicode Character Database
+      (Unicode, Inc.), Unicode License v3.
+
+  app/src/main/res/font/fluo_write.otf
+      FluoWrite (Speak the Sky, https://speakthesky.com), proprietary;
+      free for print and digital use, not for redistribution as a font.
+
+  app/src/main/res/font/iosevka_regular.ttf, iosevka_semibold.ttf,
+  iosevka_bold.ttf
+      Iosevka (Renzhi Li), SIL Open Font License 1.1; see
+      app/src/main/assets/licenses/iosevka.txt.
+
+  app/src/main/res/font/roboto_flex.ttf
+      Roboto Flex (The Roboto Flex Project Authors), SIL Open Font
+      License 1.1.
+
+  app/src/main/java/com/delphi/delphitools/tools/images/ImageTracerEngine.kt
+      Contains a Kotlin port of imagetracerjs 1.2.6 (Andras Jankovics),
+      The Unlicense.
+
+Artwork is not covered by this licence: the stickers in
+app/src/main/assets/stickers/ and app/src/main/assets/tool-stickers/ and
+the delphi mark remain the property of their artists and are used with
+their permission.
+
+Gradle dependencies and models fetched at run time (the
+background-removal model, speech-recognition models) are not part of this
+repository and keep their own licences.

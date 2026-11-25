@@ -19,6 +19,9 @@ import com.delphi.delphitools.canon.canonDisplayName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -161,10 +164,16 @@ object AVEditAudio {
         }
     }
 
+    private const val PARALLEL_FROM_US = 30_000_000L
+    private const val WARM_UP_US = 200_000L
+
     private fun expectedFrames(durationUs: Long, rate: Int) = (durationUs * rate / 1e6).roundToLong()
 
     suspend fun scan(context: Context, uri: Uri, buckets: Int, loudness: Boolean, progress: AVEditProgress = {}): AudioScan {
         val durationUs = durationUs(context, uri)
+        if (!loudness && durationUs >= PARALLEL_FROM_US) {
+            return scanParts(context, uri, durationUs, buckets, min(4, Runtime.getRuntime().availableProcessors()), progress)
+        }
         var meter: AudioMeter? = null
         var span = 1L
         var reported = 0.0
@@ -181,6 +190,47 @@ object AVEditAudio {
             }
         }
         return checkNotNull(meter).finish()
+    }
+
+    /** [scan] without loudness, over [parts] time segments decoded at once. */
+    // ponytail: positions after a seek come from packet times, off by up to one packet; a vbr mp3 with no seek table gets estimated times. scan in one part if a waveform is seen misaligned
+    private suspend fun scanParts(context: Context, uri: Uri, durationUs: Long, buckets: Int, parts: Int, progress: AVEditProgress): AudioScan = coroutineScope {
+        val lock = Any()
+        var scanner: AudioScanner? = null
+        var fed = 0L
+        var reported = 0.0
+        (0 until parts).map { part ->
+            val fromUs = durationUs * part / parts
+            val toUs = durationUs * (part + 1) / parts
+            val last = part == parts - 1
+            async {
+                // first part counts from zero
+                var next = if (part == 0) 0L else -1L
+                // decoder drops packets after seek
+                AVEditMedia.decode(context, uri, max(0L, fromUs - WARM_UP_US)..if (last) Long.MAX_VALUE else toUs) { pcm, rate, channels, ptsUs ->
+                    val first = if (next >= 0) next else expectedFrames(ptsUs, rate)
+                    val count = pcm.size / channels
+                    next = first + count
+                    val skip = (expectedFrames(fromUs, rate) - first).coerceIn(0L, count.toLong()).toInt()
+                    val end = if (last) first + count else min(first + count, expectedFrames(toUs, rate))
+                    val keep = (end - first).toInt() - skip
+                    if (keep <= 0) return@decode
+                    val samples = FloatArray(keep * channels) { pcm[skip * channels + it] / 32768f }
+                    synchronized(lock) {
+                        val span = max(1L, expectedFrames(durationUs, rate))
+                        val current = scanner ?: AudioScanner(rate, channels, 0, span, buckets, open = true, measureLoudness = false).also { scanner = it }
+                        current.feed(samples, keep, first + skip)
+                        fed += keep
+                        val fraction = min(1.0, fed.toDouble() / span)
+                        if (fraction - reported >= 0.01) {
+                            reported = fraction
+                            progress(fraction)
+                        }
+                    }
+                }
+            }
+        }.awaitAll()
+        checkNotNull(scanner).finish()
     }
 
     /** The first audio track, [range] of it when given, with [gainDb] then linear fades, as WAV or AAC in M4A. */

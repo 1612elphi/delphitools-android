@@ -291,6 +291,7 @@ object AVEditMedia {
     internal suspend fun decode(
         context: Context,
         uri: Uri,
+        rangeUs: LongRange? = null,
         chunk: (pcm: ShortArray, rate: Int, channels: Int, ptsUs: Long) -> Unit,
     ) = withContext(Dispatchers.IO) {
         val extractor = MediaExtractor()
@@ -301,6 +302,7 @@ object AVEditMedia {
             val track = AVEditEngine.firstAudioTrack(formats.mimes()) ?: error("no audio")
             val format = formats[track]
             extractor.selectTrack(track)
+            rangeUs?.let { extractor.seekTo(it.first, MediaExtractor.SEEK_TO_PREVIOUS_SYNC) }
             val decoder = MediaCodec.createDecoderByType(format.getString(MediaFormat.KEY_MIME)!!)
             codec = decoder
             decoder.configure(format, null, null, 0)
@@ -316,11 +318,12 @@ object AVEditMedia {
                     val index = decoder.dequeueInputBuffer(10_000)
                     if (index >= 0) {
                         val size = extractor.readSampleData(decoder.getInputBuffer(index)!!, 0)
-                        if (size < 0) {
+                        val time = extractor.sampleTime
+                        if (size < 0 || (rangeUs != null && time > rangeUs.last)) {
                             decoder.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
                             inputDone = true
                         } else {
-                            decoder.queueInputBuffer(index, 0, size, extractor.sampleTime, 0)
+                            decoder.queueInputBuffer(index, 0, size, time, 0)
                             extractor.advance()
                         }
                     }

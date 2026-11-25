@@ -159,10 +159,9 @@ private fun maskRender(image: Bitmap?, spec: MaskSpec, shape: MaskShape, side: I
         val (x, y, w, h) = spec.imageFrame(image.width, image.height, side.toDouble())
         canvas.drawBitmap(image, null, RectF(x.toFloat(), y.toFloat(), (x + w).toFloat(), (y + h).toFloat()), Paint(Paint.FILTER_BITMAP_FLAG))
     }
-    // clipPath is not anti-aliased
-    val mask = Bitmap.createBitmap(side, side, Bitmap.Config.ALPHA_8)
-    android.graphics.Canvas(mask).drawPath(shape.androidPath(side / 100f), Paint(Paint.ANTI_ALIAS_FLAG))
-    canvas.drawBitmap(mask, 0f, 0f, Paint().apply { xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN) })
+    // clipPath skips anti-aliasing
+    val outside = shape.androidPath(side / 100f).apply { toggleInverseFillType() }
+    canvas.drawPath(outside, Paint(Paint.ANTI_ALIAS_FLAG).apply { xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR) })
     return out
 }
 

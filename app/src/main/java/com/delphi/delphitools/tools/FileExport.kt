@@ -37,7 +37,7 @@ object FileExport {
             .putExtra(Intent.EXTRA_STREAM, uri)
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         send.clipData = ClipData.newRawUri(file.name, uri)
-        return Intent.createChooser(send, null)
+        return sheet(context, send)
     }
 
     /** A share-sheet intent for several [files], each under a cache path in `res/xml/file_paths.xml`. */
@@ -49,8 +49,11 @@ object FileExport {
             .putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         send.clipData = ClipData.newRawUri(files[0].name, uris[0]).apply { uris.drop(1).forEach { addItem(ClipData.Item(it)) } }
-        return Intent.createChooser(send, null)
+        return sheet(context, send)
     }
+
+    private fun sheet(context: Context, send: Intent): Intent =
+        Intent.createChooser(send, null).putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(Intent(send).setClass(context, SaveToFiles::class.java)))
 
     /** dt-ios FileExportService.share(text:): the share sheet on plain text. */
     fun shareText(context: Context, text: String) {

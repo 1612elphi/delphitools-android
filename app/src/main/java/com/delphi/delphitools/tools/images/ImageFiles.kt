@@ -3,7 +3,6 @@ package com.delphi.delphitools.tools.images
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import androidx.core.content.FileProvider
@@ -71,7 +70,6 @@ object ImageFiles {
 
     /** Writes the files to the export cache off the main thread, then opens the share sheet on all of them. */
     suspend fun shareAll(context: Context, files: List<Pair<String, ByteArray>>, mimeType: String) {
-        if (files.size == 1) return FileExport.share(context, files[0].second, files[0].first, mimeType)
         val written = withContext(Dispatchers.IO) {
             val dir = File(context.cacheDir, "exports")
             // clears the previous export
@@ -83,12 +81,6 @@ object ImageFiles {
                 null
             }
         } ?: return
-        val uris = written.map { FileProvider.getUriForFile(context, "${context.packageName}.files", it) }
-        val send = Intent(Intent.ACTION_SEND_MULTIPLE)
-            .setType(mimeType)
-            .putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
-            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        send.clipData = ClipData.newRawUri(written[0].name, uris[0]).apply { uris.drop(1).forEach { addItem(ClipData.Item(it)) } }
-        context.startActivity(Intent.createChooser(send, null))
+        context.startActivity(FileExport.chooser(context, written, mimeType))
     }
 }

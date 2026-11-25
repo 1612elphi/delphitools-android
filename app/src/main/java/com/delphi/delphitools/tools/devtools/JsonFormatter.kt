@@ -383,7 +383,7 @@ fun JsonFormatter(model: JsonFormatterModel = viewModel()) {
                 } else {
                     TextMarks(carets = listOf(TextCaret(JsonListing.caretOffset(failure), c.destructive)))
                 }
-                MarkedText(line, marks, listingFont, wraps = false, background = c.muted)
+                MarkedText(line, marks, listingFont, wraps = false, maxHeight = 600.dp, background = c.muted)
             }
             if (valid != null) {
                 if (model.tree) {

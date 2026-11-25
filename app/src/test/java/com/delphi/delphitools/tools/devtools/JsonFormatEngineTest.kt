@@ -44,6 +44,11 @@ class JsonFormatEngineTest {
     }
 
     @Test
+    fun shortNonJsonIsInvalid() {
+        for (source in listOf("hi", "h", "{")) invalid(source)
+    }
+
+    @Test
     fun rows() {
         val rows = JsonFormatEngine.rows(valid("""{"a":[1],"a":2}"""), setOf("root.0"))
         assertEquals(3, rows.size)

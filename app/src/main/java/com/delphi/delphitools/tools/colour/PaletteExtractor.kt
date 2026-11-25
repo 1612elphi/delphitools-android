@@ -379,7 +379,7 @@ private fun PaletteShareBand(colours: List<Rgb>, shares: List<Double>, modifier:
             val ink = if (colour.takesBlackInk) Color.Black else Color.White
             BoxWithConstraints(
                 Modifier
-                    .weight(weight)
+                    .weight(weight.coerceAtLeast(0.001f))
                     .fillMaxHeight()
                     .background(colour.toCanonColor())
                     .canonClickable { CanonCopyFeedback.copy(view, colour.formatted(format)) },

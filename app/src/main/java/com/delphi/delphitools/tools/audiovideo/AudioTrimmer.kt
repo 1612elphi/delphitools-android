@@ -2,11 +2,11 @@ package com.delphi.delphitools.tools.audiovideo
 
 import android.app.Application
 import android.net.Uri
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LastPage
@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -196,7 +197,7 @@ fun AudioTrimmer(model: AudioTrimmerModel = viewModel()) {
         boxing = CanonCanvasBoxing.UnlessWide,
     ) {
         AVEditTrimEditor(duration, model.start, model.end, ready, { start, end -> model.select(start, end) }) { inset ->
-            AudioTrimWaveform(scan?.peaks, duration, model.start, model.end, model.fadeIn, model.fadeOut, playback.playhead, inset, showsFadeCurves = true)
+            AudioTrimWaveform(scan?.peaks, duration, model.start, model.end, model.fadeIn, model.fadeOut, { playback.playhead }, inset, showsFadeCurves = true)
         }
     }
     val hasPlayhead by remember(playback) { derivedStateOf { playback.playhead != null } }
@@ -229,8 +230,8 @@ fun AudioTrimmer(model: AudioTrimmerModel = viewModel()) {
         }
     }
     val banner = CanonSection.canvas(CanonCanvasSize.Fixed(BAND_HEIGHT)) {
-        CanonReadoutBand(playback.transport, Modifier.fillMaxSize(), idle = if (ready) max(0.0, model.end - model.start) else null) { playhead ->
-            AudioTrimWaveform(scan?.peaks, duration, model.start, model.end, model.fadeIn, model.fadeOut, playhead, 0.dp) {
+        CanonReadoutBand(playback.transport, Modifier.fillMaxSize(), idle = if (ready) max(0.0, model.end - model.start) else null) {
+            AudioTrimWaveform(scan?.peaks, duration, model.start, model.end, model.fadeIn, model.fadeOut, { playback.playhead }, 0.dp) {
                 if (ready) playback.scrub(it)
             }
         }
@@ -256,7 +257,7 @@ private fun AudioTrimWaveform(
     end: Double,
     fadeIn: Double,
     fadeOut: Double,
-    playhead: Double?,
+    playhead: () -> Double?,
     inset: Dp,
     showsFadeCurves: Boolean = false,
     onScrub: ((Double) -> Unit)? = null,
@@ -273,15 +274,15 @@ private fun AudioTrimWaveform(
                 axis[0]?.seconds(change.position.x)?.let { scrub?.invoke(it) }
             }
         }
-    Canvas(Modifier.fillMaxSize().background(c.muted).then(gestures)) {
+    // playhead read at draw
+    Spacer(Modifier.fillMaxSize().background(c.muted).then(gestures).drawWithCache {
         val current = AVEditAxis(duration, size.width, inset.toPx(), rightToLeft).also { axis[0] = it }
         val mid = size.height / 2
         val strip = current.strip
         val left = inset.toPx()
         val hairline = CanonMetrics.hairline.toPx()
-        drawRect(c.border, Offset(left, mid), Size(strip, hairline))
-        if (peaks == null || peaks.min.isEmpty() || duration <= 0) return@Canvas
-        val buckets = peaks.min.size
+        val buckets = peaks?.min?.size ?: 0
+        if (peaks == null || buckets == 0 || duration <= 0) return@drawWithCache onDrawBehind { drawRect(c.border, Offset(left, mid), Size(strip, hairline)) }
         val (columns, merge) = AVEditAudioEngine.merge(buckets, strip)
         val width = max(1f, strip / columns)
         val lit = Path()
@@ -304,23 +305,22 @@ private fun AudioTrimWaveform(
             val x = if (rightToLeft) size.width - x0 - width else x0
             (if (selected) lit else dim).addRect(Rect(Offset(x, top), Size(width, max(1f, bottom - top))))
         }
-        drawPath(dim, c.mutedForeground.copy(alpha = 0.45f))
-        drawPath(lit, c.primary)
-
+        val frame = CanonMetrics.frame.toPx()
+        val curve = Path()
         if (showsFadeCurves && end > start && (fadeIn > 0 || fadeOut > 0)) {
-            val frame = CanonMetrics.frame.toPx()
-            val curve = Path()
             val steps = max(2, (abs(current.x(end) - current.x(start)) / 2).toInt())
             for (step in 0..steps) {
                 val seconds = start + (end - start) * step / steps
                 val y = size.height - frame - min(1.0, AVEditAudioEngine.envelope(seconds, start, end, fadeIn, fadeOut)).toFloat() * (size.height - frame * 2)
                 if (step == 0) curve.moveTo(current.x(seconds), y) else curve.lineTo(current.x(seconds), y)
             }
-            drawPath(curve, c.foreground, style = Stroke(frame, join = StrokeJoin.Round))
         }
-        if (playhead != null) {
-            val frame = CanonMetrics.frame.toPx()
-            drawRect(c.foreground, Offset(current.x(playhead) - frame / 2, 0f), Size(frame, size.height))
+        onDrawBehind {
+            drawRect(c.border, Offset(left, mid), Size(strip, hairline))
+            drawPath(dim, c.mutedForeground.copy(alpha = 0.45f))
+            drawPath(lit, c.primary)
+            if (!curve.isEmpty) drawPath(curve, c.foreground, style = Stroke(frame, join = StrokeJoin.Round))
+            playhead()?.let { drawRect(c.foreground, Offset(current.x(it) - frame / 2, 0f), Size(frame, size.height)) }
         }
-    }
+    })
 }

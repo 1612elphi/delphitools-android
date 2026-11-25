@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.images
 
+import android.Manifest
 import android.app.Application
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -56,6 +57,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -347,7 +349,7 @@ fun DocumentScanner(model: DocumentScannerModel = viewModel()) {
             launchCamera()
         }
     }
-    launchCamera = {
+    val openCamera = {
         val uri = model.captureUri()
         capture = uri
         try {
@@ -355,6 +357,16 @@ fun DocumentScanner(model: DocumentScannerModel = viewModel()) {
         } catch (_: ActivityNotFoundException) {
             capture = null
         }
+    }
+    var denied by remember { mutableStateOf(false) }
+    val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        denied = !granted
+        if (granted) openCamera()
+    }
+    // declared camera needs grant
+    launchCamera = {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) openCamera()
+        else ask.launch(Manifest.permission.CAMERA)
     }
 
     val picture = CanonSection.canvas(CanonCanvasSize.Aspect(0.8f), background = c.muted, showsPattern = true) {
@@ -395,6 +407,7 @@ fun DocumentScanner(model: DocumentScannerModel = viewModel()) {
                 launchCamera()
             }
             if (!hasCamera) CanonStatusRow("No camera", CanonTone.Muted)
+            if (denied) CanonStatusRow("Camera access denied", CanonTone.Warn)
             CanonDropZone(
                 "Drop images here",
                 icon = Icons.Outlined.FileCopy,

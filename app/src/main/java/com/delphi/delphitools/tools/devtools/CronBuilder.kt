@@ -155,7 +155,10 @@ class CronBuilderModel : ViewModel() {
 
     fun source(kind: CronFieldKind) = fields[kind] ?: "*"
 
-    fun parse(kind: CronFieldKind) = CronEngine.parseField(source(kind), CronEngine.rule(kind))
+    // empty counts as every
+    private fun effective(kind: CronFieldKind) = source(kind).ifBlank { "*" }
+
+    fun parse(kind: CronFieldKind) = CronEngine.parseField(effective(kind), CronEngine.rule(kind))
 
     fun mode(parse: CronFieldParse): CronMode? {
         if (!parse.ok) return null
@@ -172,7 +175,7 @@ class CronBuilderModel : ViewModel() {
 
     fun write(kind: CronFieldKind, source: String) {
         fields = fields + (kind to source)
-        boxText = CronEngine.fieldRules.joinToString(" ") { fields[it.kind] ?: "*" }
+        boxText = CronEngine.fieldRules.joinToString(" ") { effective(it.kind) }
         syncSubs()
     }
 

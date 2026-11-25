@@ -6,7 +6,7 @@ internal object Mp3Native {
         System.loadLibrary("dtmp3")
     }
 
-    /** A handle on a seekable mp3 file; 0 when [fd] is not one. */
+    /** A handle on a seekable file of mp3 frames; 0 when [fd] is not one, as with mp3 in an mp4 or matroska container. */
     external fun open(fd: Int): Long
 
     external fun rate(handle: Long): Int

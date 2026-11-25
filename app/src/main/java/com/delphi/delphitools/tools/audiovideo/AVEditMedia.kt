@@ -396,7 +396,7 @@ object AVEditMedia {
                     ensureActive()
                     val count = Mp3Native.read(handle, buffer)
                     if (count <= 0) break
-                    chunk(buffer.copyOf(count), rate, channels, frames * 1_000_000L / rate)
+                    chunk(buffer.copyOf(count), rate, channels, AVEditAudioEngine.micros(frames, rate))
                     frames += count / channels
                 }
             } finally {

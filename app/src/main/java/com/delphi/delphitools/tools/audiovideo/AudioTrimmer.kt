@@ -240,9 +240,7 @@ fun AudioTrimmer(model: AudioTrimmerModel = viewModel()) {
                     if (ready) playback.scrub(it)
                 }
                 if (source.scanning) {
-                    Box(Modifier.align(Alignment.TopEnd).padding(10.dp)) {
-                        CanonLoader(cell = 5.dp, gap = 1.dp, colour = LocalDelphiColours.current.mutedForeground)
-                    }
+                    CanonLoader(Modifier.align(Alignment.TopEnd).padding(10.dp), cell = 5.dp, gap = 1.dp, colour = LocalDelphiColours.current.mutedForeground)
                 }
             }
         }

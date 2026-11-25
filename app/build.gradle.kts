@@ -30,7 +30,7 @@ android {
             initWith(getByName("release"))
             signingConfig = signingConfigs.getByName("debug")
             matchingFallbacks += "release"
-            // one apk with every abi carries onnxruntime four times, 134 MB
+            // other abis: 134 MB
             ndk {
                 abiFilters += "arm64-v8a"
             }

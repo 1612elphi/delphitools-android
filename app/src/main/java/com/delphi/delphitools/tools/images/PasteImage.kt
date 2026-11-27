@@ -278,6 +278,7 @@ fun PasteImage(model: PasteImageModel = viewModel()) {
                     enabled = loaded && !model.exporting,
                     icon = Icons.Outlined.Download,
                     oversized = true,
+                    followsWorkflow = true,
                 ) { model.save(context) }
             }
             if (model.exporting) {

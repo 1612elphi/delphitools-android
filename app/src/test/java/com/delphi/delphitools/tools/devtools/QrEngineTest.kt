@@ -2,6 +2,7 @@ package com.delphi.delphitools.tools.devtools
 
 import com.delphi.delphitools.colour.Rgb
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -78,5 +79,13 @@ class QrEngineTest {
         val lines = QrEngine.wrap("Content: https://example.com/a/very/long/path", 10f) { it.length.toFloat() }
         assertTrue(lines.all { it.length <= 10 })
         assertEquals("Content:", lines[0])
+    }
+
+    @Test
+    fun colourSteps() {
+        assertFalse(QrEngine.continuesColour(null, true, 0))
+        assertTrue(QrEngine.continuesColour(true to 0L, true, 999))
+        assertFalse(QrEngine.continuesColour(true to 0L, true, 1000))
+        assertFalse(QrEngine.continuesColour(true to 0L, false, 10))
     }
 }

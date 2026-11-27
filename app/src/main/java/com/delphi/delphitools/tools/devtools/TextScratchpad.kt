@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.os.SystemClock
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -74,6 +75,8 @@ import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.rememberCanonTextFilePicker
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
+import com.delphi.delphitools.tools.ToolUndoActions
+import com.delphi.delphitools.tools.UndoStack
 import com.delphi.delphitools.ui.theme.DelphiMono
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.Dispatchers
@@ -108,6 +111,9 @@ class TextScratchpadModel(app: Application) : AndroidViewModel(app) {
     var decodeFailed by mutableStateOf(false)
         private set
 
+    val history = UndoStack<String>()
+    private var lastTyped: Long? = null
+
     private var saving: Job? = null
     private var typing: Job? = null
     private var searching: Job? = null
@@ -127,6 +133,9 @@ class TextScratchpadModel(app: Application) : AndroidViewModel(app) {
 
     fun type(new: String) {
         if (new == text) return
+        val now = SystemClock.uptimeMillis()
+        if (TextScratchpadEngine.startsUndoStep(lastTyped, now)) history.push(text)
+        lastTyped = now
         text = new
         save()
         refresh(TYPING_DELAY_MS)
@@ -145,7 +154,21 @@ class TextScratchpadModel(app: Application) : AndroidViewModel(app) {
     fun replace(with: String) {
         decodeFailed = false
         if (with == text) return
-        text = with
+        history.push(text)
+        show(with)
+    }
+
+    fun undo() {
+        history.undo(text)?.let(::show)
+    }
+
+    fun redo() {
+        history.redo(text)?.let(::show)
+    }
+
+    private fun show(new: String) {
+        lastTyped = null
+        text = new
         save()
         refresh(0)
     }
@@ -210,10 +233,11 @@ private class Lit(private val ranges: List<TextSpan>, private val colour: Color)
 
 private fun counted(count: Int) = String.format("%,d", count)
 
-// ponytail: no undo or redo and no line-slide or cross-fade on a transform; the android shell has no undo commands
+// ponytail: no line-slide or cross-fade on a transform; the text changes at once
 @Composable
 fun TextScratchpad(model: TextScratchpadModel = viewModel()) {
     val context = LocalContext.current
+    ToolUndoActions(model.history.canUndo, model.history.canRedo, model::undo, model::redo)
     val picker = rememberCanonTextFilePicker(onText = model::replace)
     val hasText = model.text.isNotEmpty()
 

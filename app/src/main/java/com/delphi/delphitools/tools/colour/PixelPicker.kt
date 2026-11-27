@@ -43,6 +43,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import com.delphi.delphitools.colour.hex
+import com.delphi.delphitools.shell.workflowColours
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -258,10 +260,12 @@ fun PixelPicker(model: PixelPickerModel = viewModel()) {
         }
     }
 
-    // ponytail: no workflow pass-along button, workflows are not ported
+    val pass = workflowColours {
+        if (model.picks.isEmpty()) (if (loaded) listOf(model.sampled.hex) else emptyList()) else model.picks.map { it.colour.hex }
+    }
     CanonSplit(
         sidebar = listOf(canvas),
-        main = listOf(source) + (if (loaded) listOf(card, p3) else emptyList()) + (if (model.picks.isNotEmpty()) listOf(picked) else emptyList()),
+        main = listOf(source) + (if (loaded) listOf(card, p3) else emptyList()) + pass + (if (model.picks.isNotEmpty()) listOf(picked) else emptyList()),
         halves = true,
         collapsesTo = 240.dp,
         isFooterHidden = !loaded,

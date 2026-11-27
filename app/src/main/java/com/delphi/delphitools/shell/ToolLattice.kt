@@ -69,7 +69,7 @@ private val heroMaxWidth = 672.dp
 private val cardHeight = 44.dp
 
 // UIColor.systemYellow
-private val starYellow = Color(0xFFFFCC00)
+internal val starYellow = Color(0xFFFFCC00)
 
 /** The home: hero, favour banner and favourites, then every tool in a lattice of cells, one section per category. */
 @Composable
@@ -260,7 +260,7 @@ private fun ToolCell(tool: Tool, isFavourite: Boolean, firstColumn: Boolean, fir
  * A long press runs [action] and swallows the rest of the gesture, so the click under it does not fire.
  * Place it after the click modifier: it sees each event before the click does.
  */
-private fun Modifier.longPress(label: String, action: () -> Unit): Modifier = this
+internal fun Modifier.longPress(label: String, action: () -> Unit): Modifier = this
     .semantics {
         onLongClick(label) {
             action()

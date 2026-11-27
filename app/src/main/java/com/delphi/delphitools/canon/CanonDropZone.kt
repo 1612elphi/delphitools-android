@@ -28,6 +28,7 @@ import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -111,6 +112,8 @@ fun CanonDropZone(
             if (decoded.isNotEmpty()) decode(decoded.map { it.first }, if (pasted) emptyList() else decoded.map { it.second })
         }
     }
+
+    LaunchedEffect(Unit) { deliver(CanonHost.pendingFiles(mimeTypes, multiple), false) }
 
     val pickFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { deliver(listOfNotNull(it), false) }
     val pickFiles = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { deliver(it, false) }

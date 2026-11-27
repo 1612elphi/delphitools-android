@@ -98,6 +98,8 @@ import com.delphi.delphitools.canon.MenuCellPopup
 import com.delphi.delphitools.canon.canonClickable
 import com.delphi.delphitools.canon.rememberCanonGlyphFlowState
 import com.delphi.delphitools.tools.FileExport
+import com.delphi.delphitools.tools.ToolUndoActions
+import com.delphi.delphitools.tools.UndoStack
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiColours
 import com.delphi.delphitools.ui.theme.DelphiFont
@@ -142,6 +144,7 @@ class ShavianTransliteratorModel(application: Application) : AndroidViewModel(ap
         private set
     var selected by mutableStateOf<Int?>(null)
         private set
+    val history = UndoStack<List<GlossToken>>()
     private val engine = ShavianEngine()
     private var coreLoaded = false
 
@@ -153,6 +156,7 @@ class ShavianTransliteratorModel(application: Application) : AndroidViewModel(ap
             retokenise()
             engine.full = ShavianDictionary.full(assets)
             tokens = engine.reResolve(tokens)
+            history.clear()
             ready = true
         }
     }
@@ -165,6 +169,7 @@ class ShavianTransliteratorModel(application: Application) : AndroidViewModel(ap
         if (text == input) return
         input = text
         selected = null
+        history.clear()
         retokenise()
     }
 
@@ -182,6 +187,7 @@ class ShavianTransliteratorModel(application: Application) : AndroidViewModel(ap
     private fun edit(slot: Int, change: (GlossWord) -> GlossWord?) {
         val word = word(slot) ?: return
         val changed = change(word) ?: return
+        history.push(tokens)
         tokens = tokens.toMutableList().also { it[slot] = GlossToken.Word(changed) }
     }
 
@@ -192,6 +198,10 @@ class ShavianTransliteratorModel(application: Application) : AndroidViewModel(ap
     fun insert(slot: Int, index: Int, letter: ShavianLetter) = edit(slot) { ShavianEngine.inserting(letter, index, it) }
 
     fun remove(slot: Int, index: Int) = edit(slot) { ShavianEngine.removing(index, it) }
+
+    fun undo(redo: Boolean) {
+        tokens = (if (redo) history.redo(tokens) else history.undo(tokens)) ?: return
+    }
 }
 
 private fun styled(tokens: List<GlossToken>, c: DelphiColours) = buildAnnotatedString {
@@ -215,7 +225,6 @@ private fun legend(c: DelphiColours) = buildAnnotatedString {
     withStyle(SpanStyle(color = c.mutedForeground, textDecoration = TextDecoration.Underline)) { append("Guessed") }
 }
 
-// ponytail: no undo history; dt-android has no shell undo yet, add one with it
 @Composable
 fun ShavianTransliterator(model: ShavianTransliteratorModel = viewModel()) {
     val c = LocalDelphiColours.current
@@ -224,6 +233,7 @@ fun ShavianTransliterator(model: ShavianTransliteratorModel = viewModel()) {
     val tokens = model.tokens
     val words = model.words
     val text = if (words.isEmpty()) "" else model.text
+    ToolUndoActions(model.history.canUndo, model.history.canRedo, { model.undo(false) }, { model.undo(true) })
     val save = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri ->
         if (uri != null) scope.launch { writeGloss(context, tokens, uri) }
     }
@@ -254,7 +264,7 @@ fun ShavianTransliterator(model: ShavianTransliteratorModel = viewModel()) {
                             .padding(horizontal = CanonMetrics.panelPadding, vertical = 10.dp),
                     )
                     CanonGrid {
-                        CanonButton("Share image", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.Photo) {
+                        CanonButton("Share image", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.Photo, followsWorkflow = true) {
                             scope.launch { FileExport.share(context, glossPng(context, tokens), IMAGE_NAME, "image/png") }
                         }
                         CanonButton("Save to Files…", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.Folder) {

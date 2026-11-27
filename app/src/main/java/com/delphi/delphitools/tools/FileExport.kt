@@ -4,15 +4,17 @@ import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.FileProvider
+import com.delphi.delphitools.shell.WorkflowRun
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 
-/** dt-ios FileExportService: cache files offered through the share sheet. */
+/** dt-ios FileExportService: cache files offered through the share sheet, or handed to the next workflow leg. */
 object FileExport {
     /** Writes [data] to the cache off the main thread, then opens the share sheet on it. */
     suspend fun share(context: Context, data: ByteArray, filename: String, mimeType: String) {
+        if (WorkflowRun.capture(data, safeFilename(filename), mimeType)) return
         val file = withContext(Dispatchers.IO) {
             val dir = File(context.cacheDir, "exports")
             // clears the previous export
@@ -27,6 +29,11 @@ object FileExport {
             }
         } ?: return
         context.startActivity(chooser(context, file, mimeType))
+    }
+
+    /** Opens the share sheet on [files], each under a cache path in `res/xml/file_paths.xml`. */
+    fun send(context: Context, files: List<File>, mimeType: String) {
+        if (!WorkflowRun.capture(files, mimeType)) context.startActivity(chooser(context, files, mimeType))
     }
 
     /** A share-sheet intent for [file], which must be under a cache path in `res/xml/file_paths.xml`. */

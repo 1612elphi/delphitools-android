@@ -124,6 +124,10 @@ data class QrClearing(val minRow: Int, val maxRow: Int, val minColumn: Int, val 
 object QrEngine {
     val wifiEncryptions = listOf("WPA", "WEP", "None")
 
+    /** The colour picker sends every change at once; a change to the well in [last] (foreground, uptime ms) within a second joins its undo step. */
+    fun continuesColour(last: Pair<Boolean, Long>?, foreground: Boolean, at: Long) =
+        last != null && last.first == foreground && at - last.second < 1000
+
     /** Top-left module of each 7×7 finder pattern. */
     fun finderOrigins(n: Int) = listOf(0 to 0, 0 to n - 7, n - 7 to 0)
 

@@ -11,6 +11,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.edit
+import org.json.JSONArray
+import org.json.JSONObject
+import java.util.UUID
 import kotlin.random.Random
 
 // dt-ios RecentsStore.maxRecents
@@ -33,8 +36,9 @@ private const val TINT = "backdropTint"
 private const val GRAIN = "backdropGrain"
 private const val LAUNCHES = "launches"
 private const val FAVOUR_DONE = "favourDone"
+private const val WORKFLOWS = "savedWorkflows"
 
-/** dt-ios AppStores: favourites, recents, home order, backdrop and the favour, kept in SharedPreferences. */
+/** dt-ios AppStores: favourites, recents, home order, saved workflows, backdrop and the favour, kept in SharedPreferences. */
 @Stable
 class ShellStores private constructor(context: Context) {
     private val prefs = context.getSharedPreferences("delphitools", Context.MODE_PRIVATE)
@@ -78,6 +82,33 @@ class ShellStores private constructor(context: Context) {
         categoryOrder = ToolCategory.entries
         prefs.edit { remove(ORDER) }
     }
+
+    /** dt-ios SavedWorkflows: the custom workflows the person saved. */
+    var savedWorkflows by mutableStateOf(readWorkflows(prefs.getString(WORKFLOWS, null)))
+        private set
+
+    fun saveWorkflow(workflow: Workflow, name: String) = keep(savedWorkflows + workflow.copy(id = "saved:${UUID.randomUUID()}", name = name))
+
+    fun renameWorkflow(workflow: Workflow, name: String) = keep(savedWorkflows.map { if (it.id == workflow.id) it.copy(name = name) else it })
+
+    fun removeWorkflow(workflow: Workflow) = keep(savedWorkflows.filter { it.id != workflow.id })
+
+    private fun keep(workflows: List<Workflow>) {
+        savedWorkflows = workflows
+        val json = JSONArray(workflows.map { JSONObject().put("id", it.id).put("name", it.name).put("steps", JSONArray(it.steps)) })
+        prefs.edit { putString(WORKFLOWS, json.toString()) }
+    }
+
+    private fun readWorkflows(json: String?): List<Workflow> = runCatching {
+        val all = JSONArray(json ?: return emptyList())
+        (0 until all.length()).mapNotNull { index ->
+            runCatching {
+                val item = all.getJSONObject(index)
+                val steps = item.getJSONArray("steps")
+                Workflow(item.getString("id"), item.getString("name"), List(steps.length(), steps::getString))
+            }.getOrNull()
+        }
+    }.getOrDefault(emptyList())
 
     private var backdropId by mutableStateOf(prefs.getString(BACKDROP, null))
 

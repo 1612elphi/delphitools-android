@@ -30,6 +30,7 @@ import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonGrid
 import com.delphi.delphitools.canon.CanonHeading
 import com.delphi.delphitools.canon.CanonLoader
+import com.delphi.delphitools.canon.CanonPassAlongWhenDone
 import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonStatusRow
 import com.delphi.delphitools.canon.CanonTone
@@ -106,6 +107,7 @@ class PdfJob(private val scope: CoroutineScope, private val context: Context) {
 fun PdfJobPanel(job: PdfJob, title: String, icon: ImageVector, failure: String, enabled: Boolean, onStart: () -> Unit) {
     val c = LocalDelphiColours.current
     val context = LocalContext.current
+    CanonPassAlongWhenDone(enabled, job.busy, job.output, job.failed, onStart) { FileExport.send(context, listOf(it), PdfDocuments.MIME) }
     if (job.busy) {
         CanonRow("Processing…") {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -117,7 +119,7 @@ fun PdfJobPanel(job: PdfJob, title: String, icon: ImageVector, failure: String, 
         CanonButton("Cancel", Modifier.fillMaxWidth(), icon = Icons.Outlined.Close, onClick = job::reset)
         return
     }
-    CanonButton(title, kind = CanonButtonKind.Primary, enabled = enabled, icon = icon, oversized = true, onClick = onStart)
+    CanonButton(title, kind = CanonButtonKind.Primary, enabled = enabled, icon = icon, oversized = true, followsWorkflow = false, onClick = onStart)
     if (job.failed) CanonStatusRow(failure, CanonTone.Warn)
     val output = job.output ?: return
     CanonHeading("Result")
@@ -126,7 +128,7 @@ fun PdfJobPanel(job: PdfJob, title: String, icon: ImageVector, failure: String, 
         val cell = Modifier.weight(1f).fillMaxHeight()
         CanonButton("Preview", cell, icon = Icons.Outlined.Visibility) { preview(context, output) }
         CanonButton("Share", cell, kind = CanonButtonKind.Primary, icon = Icons.Outlined.Share) {
-            context.startActivity(FileExport.chooser(context, output, PdfDocuments.MIME))
+            FileExport.send(context, listOf(output), PdfDocuments.MIME)
         }
     }
 }

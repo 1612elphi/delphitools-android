@@ -28,6 +28,9 @@ import com.delphi.delphitools.canon.CanonValueLine
 import com.delphi.delphitools.colour.LocalColourFormats
 import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.colour.formatted
+import com.delphi.delphitools.tools.ToolUndoActions
+import com.delphi.delphitools.tools.UndoGrouping
+import com.delphi.delphitools.tools.UndoStack
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import java.util.Locale
 import kotlin.math.abs
@@ -55,8 +58,11 @@ class HarmonyGeneratorModel : ViewModel() {
     var asked by mutableStateOf(space.parts(base).toList())
         private set
     private var shownNotch: Int? = null
+    val undoStack = UndoStack<Pair<Rgb, HarmonyMode>>()
+    val grouping = UndoGrouping()
 
     init {
+        turntable.onGrab = ::pushUndo
         turntable.onTurn = { hue, radius ->
             asked = listOf(asked[0], radius, hue)
             apply(animated = false, fromTable = true)
@@ -71,7 +77,22 @@ class HarmonyGeneratorModel : ViewModel() {
         asked = listOf(l, r, if (r < 0.002) asked[2] else h)
     }
 
+    private fun pushUndo() = undoStack.push(base to mode)
+
+    private fun restore(step: Pair<Rgb, HarmonyMode>?) {
+        val (colour, mode) = step ?: return
+        take(colour)
+        this.mode = mode
+        selected = null
+        apply(animated = true)
+    }
+
+    fun undo() = restore(undoStack.undo(base to mode))
+
+    fun redo() = restore(undoStack.redo(base to mode))
+
     fun use(colour: Rgb) {
+        grouping.record(::pushUndo)
         take(colour)
         apply(animated = true)
     }
@@ -85,6 +106,7 @@ class HarmonyGeneratorModel : ViewModel() {
     }
 
     fun select(mode: HarmonyMode) {
+        grouping.record(::pushUndo)
         this.mode = mode
         selected = null
         apply(animated = true)
@@ -92,6 +114,7 @@ class HarmonyGeneratorModel : ViewModel() {
 
     /** Channel 0 lightness, 1 radius, 2 hue, in the slider's units. */
     fun slide(channel: Int, value: Double) {
+        grouping.record(::pushUndo)
         asked = asked.toMutableList().also {
             it[channel] = when (channel) {
                 0 -> value / space.lightnessScale
@@ -126,6 +149,7 @@ fun HarmonyGenerator(model: HarmonyGeneratorModel = viewModel()) {
     val oklch = space == HarmonyWheelSpace.OKLCH
     val format = LocalColourFormats.current.primary
     val (l, r, h) = model.asked
+    ToolUndoActions(model.undoStack.canUndo, model.undoStack.canRedo, model::undo, model::redo)
 
     val canvas = CanonSection.canvas(CanonCanvasSize.Aspect(1f), background = LocalDelphiColours.current.muted, maxHeight = 640.dp) {
         Column(Modifier.fillMaxSize()) {
@@ -208,7 +232,7 @@ fun HarmonyGenerator(model: HarmonyGeneratorModel = viewModel()) {
     val css = ":root {\n" + shown.withIndex().joinToString("\n") { "  --harmony-${it.index + 1}: ${it.value.formatted(format)};" } + "\n}"
     val code = CanonSection.of { CanonCodeBlock(css, language = "CSS") }
 
-    CanonSplit(sidebar = listOf(canvas), main = listOf(controls, palette, lines, code), halves = true, collapsesTo = 240.dp)
+    CanonSplit(sidebar = listOf(canvas), main = listOf(controls, palette, lines, code), model.grouping.modifier, halves = true, collapsesTo = 240.dp)
 }
 
 /** Up to one decimal, no trailing zero. */

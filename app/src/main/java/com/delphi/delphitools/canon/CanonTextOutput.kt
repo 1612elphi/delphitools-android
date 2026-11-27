@@ -69,6 +69,7 @@ fun CanonTextOutput(
                 kind = CanonButtonKind.Secondary,
                 enabled = !blank,
                 icon = Icons.Outlined.Share,
+                followsWorkflow = false,
             ) {
                 // ponytail: shares the text, not a file named fileName; a file needs a FileProvider in the manifest
                 val send = Intent(Intent.ACTION_SEND)

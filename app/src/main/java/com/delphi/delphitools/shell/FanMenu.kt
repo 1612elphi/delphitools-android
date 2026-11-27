@@ -35,6 +35,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Looks3
+import androidx.compose.material.icons.filled.LooksOne
+import androidx.compose.material.icons.filled.LooksTwo
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Looks3
+import androidx.compose.material.icons.outlined.LooksOne
+import androidx.compose.material.icons.outlined.LooksTwo
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -68,6 +77,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -155,18 +165,39 @@ private const val MAX_ANGLE = 85f * Math.PI.toFloat() / 180f
 private val restStyle = CanonText.bodyMedium
 private val kicker = CanonText.captionSemibold.copy(letterSpacing = 1.4.sp)
 
-/** A category header (`tool` null) or a tool, in fan order. */
-private class FanEntry(val category: ToolCategory, val tool: Tool?)
+/** A header, a tool, a running workflow's leg (`leg` its index) or the workflow's exit, in fan order. */
+private class FanEntry(val header: String? = null, val tool: Tool? = null, val leg: Int? = null, val exits: Boolean = false) {
+    val name get() = if (exits) "Exit workflow" else tool?.name
+    val icon get() = if (exits) Icons.Outlined.Close else leg?.let { legIcon(it, WorkflowRun.step) } ?: tool?.icon
+}
 
-private fun fanEntries(order: List<ToolCategory>): List<FanEntry> = shownCategories(order).flatMap { (category, inCategory) ->
-    listOf(FanEntry(category, null)) + inCategory.map { FanEntry(category, it) }
+/** A workflow leg's symbol: a tick once passed, its number filled on the current step. */
+internal fun legIcon(leg: Int, step: Int): ImageVector = when {
+    leg < step -> Icons.Filled.CheckCircle
+    leg == step -> listOf(Icons.Filled.LooksOne, Icons.Filled.LooksTwo, Icons.Filled.Looks3)[leg.coerceAtMost(2)]
+    else -> listOf(Icons.Outlined.LooksOne, Icons.Outlined.LooksTwo, Icons.Outlined.Looks3)[leg.coerceAtMost(2)]
+}
+
+private fun fanEntries(order: List<ToolCategory>): List<FanEntry> {
+    val legs = WorkflowRun.workflow?.let { workflow ->
+        listOf(FanEntry(header = workflow.name)) + workflow.tools.mapIndexed { index, tool -> FanEntry(tool = tool, leg = index) } + FanEntry(exits = true)
+    }
+    return legs.orEmpty() + shownCategories(order).flatMap { (category, inCategory) ->
+        listOf(FanEntry(header = category.title)) + inCategory.map { FanEntry(tool = it) }
+    }
+}
+
+private fun pick(entry: FanEntry, onOpen: (Tool) -> Unit) = when {
+    entry.exits -> WorkflowRun.exit()
+    entry.leg != null -> WorkflowRun.goTo(entry.leg)
+    else -> entry.tool?.let(onOpen) ?: Unit
 }
 
 private fun List<FanEntry>.wrapped(index: Int) = index.mod(size)
 
 private fun List<FanEntry>.nearestTool(value: Float): Float {
     val index = value.roundToInt()
-    return if (this[wrapped(index)].tool == null) index + 1f else index.toFloat()
+    return if (this[wrapped(index)].header != null) index + 1f else index.toFloat()
 }
 
 private fun easeOutBack(t: Float): Float {
@@ -263,10 +294,10 @@ private fun FanList(entries: List<FanEntry>, onOpen: (Tool) -> Unit, onDismissed
         item { CanonButton("Close", Modifier.padding(16.dp), kind = CanonButtonKind.Secondary, onClick = onDismissed) }
         entries.forEach { entry ->
             item {
-                val tool = entry.tool
-                if (tool == null) {
+                val header = entry.header
+                if (header != null) {
                     Text(
-                        entry.category.title.uppercase(),
+                        header.uppercase(),
                         style = kicker,
                         color = c.mutedForeground,
                         modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 8.dp).semantics { heading() },
@@ -277,15 +308,15 @@ private fun FanList(entries: List<FanEntry>, onOpen: (Tool) -> Unit, onDismissed
                             .fillMaxWidth()
                             .heightIn(min = 48.dp)
                             .canonClickable {
-                                onOpen(tool)
+                                pick(entry, onOpen)
                                 onDismissed()
                             }
                             .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Icon(tool.icon, contentDescription = null, tint = c.primary, modifier = Modifier.size(20.dp))
-                        Text(tool.name, style = restStyle, color = c.foreground)
+                        entry.icon?.let { Icon(it, contentDescription = null, tint = c.primary, modifier = Modifier.size(20.dp)) }
+                        Text(entry.name.orEmpty(), style = restStyle, color = c.foreground)
                     }
                 }
             }
@@ -430,13 +461,12 @@ private fun FanWheel(entries: List<FanEntry>, item: Rect, vertical: Boolean, cur
                     detectTapGestures { point ->
                         if (state.closing) return@detectTapGestures
                         val index = entryIndex(point)
-                        val tool = index?.let { entries[it].tool }
                         when {
                             index == null -> state.dismiss()
-                            tool != null -> {
+                            entries[index].header == null -> {
                                 haptics.performHapticFeedback(HapticFeedbackType.Confirm)
                                 state.dismiss(index)
-                                onOpen(tool)
+                                pick(entries[index], onOpen)
                             }
                         }
                     }
@@ -615,7 +645,8 @@ private fun fitStyles(room: Float, density: Float, measure: (String, TextStyle) 
 @Composable
 private fun Spoke(entry: FanEntry, focus: Float, side: Float, rest: TextStyle, selected: TextStyle, labelLength: Dp, modifier: Modifier) {
     val c = DelphiDark
-    val tool = entry.tool
+    val name = entry.name
+    val icon = entry.icon
     val mirrored = side < 0
     val align = if (mirrored) Alignment.Start else Alignment.End
     Box(modifier) {
@@ -626,11 +657,11 @@ private fun Spoke(entry: FanEntry, focus: Float, side: Float, rest: TextStyle, s
                 .fillMaxHeight(),
             contentAlignment = if (mirrored) Alignment.CenterStart else Alignment.CenterEnd,
         ) {
-            if (tool == null) {
-                Text(entry.category.title.uppercase(), style = kicker, color = c.mutedForeground, maxLines = 1, softWrap = false)
+            if (name == null) {
+                Text(entry.header.orEmpty().uppercase(), style = kicker, color = c.mutedForeground, maxLines = 1, softWrap = false)
             } else {
                 Text(
-                    tool.name,
+                    name,
                     style = lerp(rest, selected, focus),
                     color = lerp(c.foreground, c.primary, focus),
                     maxLines = 1,
@@ -640,9 +671,9 @@ private fun Spoke(entry: FanEntry, focus: Float, side: Float, rest: TextStyle, s
                 )
             }
         }
-        if (tool != null) {
+        if (icon != null) {
             Icon(
-                tool.icon,
+                icon,
                 contentDescription = null,
                 tint = lerp(c.mutedForeground, c.primary, focus),
                 modifier = Modifier

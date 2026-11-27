@@ -12,6 +12,7 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -33,6 +34,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -48,12 +50,19 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.automirrored.outlined.Redo
+import androidx.compose.material.icons.automirrored.outlined.Undo
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.outlined.SaveAlt
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -72,21 +81,28 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.imageResource
@@ -98,6 +114,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.core.content.FileProvider
 import androidx.lifecycle.HasDefaultViewModelProviderFactory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStore
@@ -105,15 +123,23 @@ import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.delphi.delphitools.canon.CanonHeading
+import com.delphi.delphitools.canon.CanonButton
+import com.delphi.delphitools.canon.CanonButtonKind
+import com.delphi.delphitools.canon.CanonGrid
+import com.delphi.delphitools.canon.CanonHost
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.LocalCanonPatternSymbol
 import com.delphi.delphitools.canon.canonClickable
 import com.delphi.delphitools.gallery.galleryPages
+import com.delphi.delphitools.tools.FileExport
+import com.delphi.delphitools.tools.LocalToolUndo
+import com.delphi.delphitools.tools.ToolUndo
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.File
 
 // dt-ios Shell/FanMenu.swift FanItemView and Shell.swift StripBackdropView metrics
 private val tabGap = 18.dp
@@ -136,9 +162,11 @@ private val previewCorner = 28.dp
 private val sideBar = 96.dp
 private val verticalPillWidth = 72.dp
 
-// the home's buttons beside the tab, square chips on the strip
-private val stripButton = 44.dp
-private val stripButtonGap = 8.dp
+private val barButton = 44.dp
+private val barButtonGap = 8.dp
+private val barMargin = 16.dp
+private val barBlur = 14.dp
+private const val BAR_GLASS = 0.55f
 
 /** The app frame: the page inset in the strip, the tab naming it, and the fan behind the tab. */
 @Composable
@@ -159,6 +187,11 @@ private fun ShellFrame(startTool: String?) {
     LaunchedEffect(splashing) { if (!splashing && WhatsNew.shouldShow(context)) whatsNewDue = true }
     var toolId by rememberSaveable { mutableStateOf(startTool) }
     val tool = toolId?.let(::toolWithId)
+    // rebuilds an open page
+    var generation by rememberSaveable { mutableIntStateOf(0) }
+    val undo = remember { ToolUndo() }
+    val run = WorkflowRun
+    val haptics = LocalHapticFeedback.current
     var fanOpen by remember { mutableStateOf(false) }
     val lattice = rememberLazyGridState()
     val scope = rememberCoroutineScope()
@@ -172,6 +205,7 @@ private fun ShellFrame(startTool: String?) {
                 back.snapTo(it.progress)
             }
             toolId = null
+            run.visit(null)
             scope.launch {
                 delay(SWAP_MS.toLong())
                 back.snapTo(0f)
@@ -181,11 +215,28 @@ private fun ShellFrame(startTool: String?) {
             throw cancelled
         }
     }
-    // ponytail: iOS also records the workflow visit here
     val open: (Tool) -> Unit = {
         stores.recordUsage(it.id)
         scope.launch { back.snapTo(0f) }
         toolId = it.id
+        // before the page composes
+        run.visit(it)
+    }
+    DisposableEffect(context) {
+        val app = context.applicationContext
+        run.attach(
+            File(app.cacheDir, "workflow"),
+            open = {
+                generation++
+                open(it)
+            },
+            share = { files -> context.startActivity(FileExport.chooser(context, files.map { it.file }, files.first().mimeType)) },
+        )
+        CanonHost.capturesFiles = { run.capturesFiles }
+        CanonHost.pendingFiles = { types, multiple ->
+            run.pending(types, multiple).map { FileProvider.getUriForFile(app, "${app.packageName}.files", it) }
+        }
+        onDispose { run.detach() }
     }
 
     BoxWithConstraints(Modifier.fillMaxSize().background(c.accentBg)) {
@@ -207,15 +258,18 @@ private fun ShellFrame(startTool: String?) {
 
         val tape = stores.backdrop.tape?.let { ImageBitmap.imageResource(it) }
         val darkTheme = isSystemInDarkTheme()
-        // ponytail: no workflow ticket over the backdrop, and the status bar glyphs ignore it (iOS: wantsLightGlyphs)
-        Canvas(Modifier.fillMaxSize()) {
+        val ticket = rememberWorkflowTicket()
+        // ponytail: the status bar glyphs ignore the backdrop (iOS: wantsLightGlyphs)
+        val drawStrip: DrawScope.() -> Unit = {
             val strip = when (edge) {
                 TabEdge.Bottom -> Rect(0f, size.height - band.toPx(), size.width, size.height)
                 TabEdge.Left -> Rect(0f, 0f, left.toPx(), size.height)
                 TabEdge.Right -> Rect(size.width - right.toPx(), 0f, size.width, size.height)
             }
             drawBackdrop(stores.backdrop.base(c, darkTheme), tape, stores.grain, backdropWash(stores.tint), strip, turned = edge == TabEdge.Bottom)
+            drawTicket(ticket, edge, strip, if (vertical) 0f else navigation.toPx(), c)
         }
+        Canvas(Modifier.fillMaxSize(), drawStrip)
         Box(
             Modifier
                 .absolutePadding(left = left, right = right, bottom = band)
@@ -225,16 +279,16 @@ private fun ShellFrame(startTool: String?) {
             val pageFrame = Modifier.fillMaxSize().background(c.background).statusBarsPadding().padding(bottom = if (vertical) navigation else 0.dp)
             if (previewing && tool != null) Box(pageFrame) { ToolLattice(lattice, open, onFavour = { favourOpen = true }) }
             AnimatedContent(
-                tool,
+                tool to generation,
                 transitionSpec = {
                     // the home is already drawn behind the preview
                     if (back.value > 0f) (EnterTransition.None togetherWith fadeOut(tween(SWAP_MS, easing = EaseOut))).apply { targetContentZIndex = -1f }
                     else (fadeIn(tween(SWAP_MS, easing = EaseOut)) + slideInVertically(tween(SWAP_MS, easing = EaseOut)) { travel })
                         .togetherWith(fadeOut(tween(SWAP_MS, easing = EaseOut)) + slideOutVertically(tween(SWAP_MS, easing = EaseOut)) { travel })
                 },
-                contentKey = { it?.id },
+                contentKey = { (shown, fresh) -> shown?.id to fresh },
                 label = "page",
-            ) { page ->
+            ) { (page, fresh) ->
                 Box(
                     Modifier
                         .graphicsLayer {
@@ -255,7 +309,8 @@ private fun ShellFrame(startTool: String?) {
                         }
                         .then(pageFrame)
                 ) {
-                    if (page == null) ToolLattice(lattice, open, onFavour = { favourOpen = true }) else ToolPage(page, isOpen = { toolId == page.id })
+                    if (page == null) ToolLattice(lattice, open, onFavour = { favourOpen = true })
+                    else ToolPage(page, fresh, undo, isOpen = { toolId == page.id && generation == fresh })
                 }
             }
             if (!vertical && !previewing) Box(
@@ -272,9 +327,38 @@ private fun ShellFrame(startTool: String?) {
             val density = LocalDensity.current
             val name = tool?.name ?: "Tools"
             val measured = with(density) { measurer.measure(name, pillName, maxLines = 1).size.width.toDp() }
+            val items = buildList {
+                if (tool == null) {
+                    add(BarItem(Icons.Outlined.Search, "Search") { searchOpen = true })
+                    add(BarItem(Icons.Outlined.Settings, "Settings") { settingsOpen = true })
+                    return@buildList
+                }
+                if (!run.isOnStep && tool.id in toolPages) {
+                    val starred = tool.id in stores.favourites
+                    add(
+                        BarItem(
+                            if (starred) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                            if (starred) "Remove from favourites" else "Add to favourites",
+                            tint = if (starred) starYellow else null,
+                        ) { stores.toggleFavourite(tool.id) }
+                    )
+                }
+                undo.undo?.let { add(BarItem(Icons.AutoMirrored.Outlined.Undo, "Undo", enabled = undo.canUndo, onClick = it)) }
+                if (undo.canRedo) undo.redo?.let { add(BarItem(Icons.AutoMirrored.Outlined.Redo, "Redo", onClick = it)) }
+                if (run.isOnStep) {
+                    add(
+                        BarItem(
+                            if (run.isLast) Icons.Outlined.SaveAlt else Icons.AutoMirrored.Outlined.ArrowForward,
+                            if (run.isLast) "Save" else "Next",
+                            enabled = !run.isLanding && (run.capturesFiles || run.canAdvance),
+                            prominent = true,
+                        ) { if (!run.next()) haptics.performHapticFeedback(HapticFeedbackType.Reject) }
+                    )
+                }
+            }
+            val barStart = (if (vertical) safe.calculateTopPadding() else safe.calculateLeftPadding(LayoutDirection.Ltr)) + barMargin
             // iOS FanItemView.nameRoom: the bar's margins, 53 pt per sibling button, the item's own padding
-            val siblings = if (tool == null) 2 else 0
-            val nameRoom = if (vertical) nameLimit else minOf(nameLimit, maxOf(60.dp, maxWidth - 146.dp - 53.dp * siblings))
+            val nameRoom = minOf(nameLimit, maxOf(60.dp, (if (vertical) maxHeight - barStart - 110.dp else maxWidth - 146.dp) - 53.dp * items.size))
             val nameLength = measured.coerceAtMost(nameRoom)
             // tab runs along the page edge, `depth` out of it towards the screen edge
             val tabEnd = (if (vertical) maxHeight else maxWidth) - tabGap
@@ -291,6 +375,16 @@ private fun ShellFrame(startTool: String?) {
                 TabEdge.Right -> maxWidth - right
             }
             val view = LocalView.current
+            // ponytail: iOS flies file chips to the pill and bursts symbols out of it at the end; here the pill only stamps
+            val stamp = remember { Animatable(1f) }
+            var stamped by remember { mutableIntStateOf(run.captureCount) }
+            LaunchedEffect(run.captureCount) {
+                if (run.captureCount == stamped) return@LaunchedEffect
+                stamped = run.captureCount
+                haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                stamp.snapTo(1.14f)
+                stamp.animateTo(1f, spring(dampingRatio = 0.42f, stiffness = Spring.StiffnessMediumLow))
+            }
             var displayCorner by remember { mutableFloatStateOf(0f) }
             val cornerPosition = if (edge == TabEdge.Left) RoundedCorner.POSITION_BOTTOM_LEFT else RoundedCorner.POSITION_BOTTOM_RIGHT
 
@@ -319,30 +413,34 @@ private fun ShellFrame(startTool: String?) {
                     TabEdge.Right -> Modifier.offset(x = pageEdge, y = tabStart).size(depth, tabEnd - tabStart)
                 }
                     .clickable(interactionSource = null, indication = null, role = Role.Button) { fanOpen = true }
+                    .graphicsLayer {
+                        scaleX = stamp.value
+                        scaleY = stamp.value
+                    }
                     .padding(start = if (vertical) 0.dp else tabOverhang, top = if (vertical) tabOverhang else 0.dp),
                 contentAlignment = if (vertical) Alignment.TopCenter else Alignment.CenterStart,
             ) {
                 Crossfade(tool, animationSpec = tween(SWAP_MS), label = "pill") { shown ->
-                    val icon = shown?.icon ?: Icons.Outlined.GridView
+                    val leg = run.tools.indexOfFirst { it.id == shown?.id }.takeIf { it >= 0 }
+                    val icon = leg?.let { legIcon(it, it) } ?: shown?.icon ?: Icons.Outlined.GridView
                     val label = shown?.name ?: "Tools"
-                    if (vertical) VerticalPill(icon, label, if (barOnLeft) 90f else -90f) else Pill(icon, label, nameRoom)
+                    if (vertical) VerticalPill(icon, label, if (barOnLeft) 90f else -90f, nameRoom) else Pill(icon, label, nameRoom)
                 }
             }
 
-            // iOS shellBarItems: Settings beside the pill on the home; search sits with it here
-            if (tool == null) {
-                val buttons = listOf(
-                    Triple(Icons.Outlined.Settings, "Settings") { settingsOpen = true },
-                    Triple(Icons.Outlined.Search, "Search") { searchOpen = true },
-                )
-                buttons.forEachIndexed { index, (icon, label, onClick) ->
-                    val along = tabStart - tabFillet - stripButtonGap - (stripButton + stripButtonGap) * index - stripButton
-                    val across = when (edge) {
-                        TabEdge.Bottom -> pageEdge + (bandRow - stripButton) / 2
-                        TabEdge.Left -> pageEdge - depth / 2 - stripButton / 2
-                        TabEdge.Right -> pageEdge + depth / 2 - stripButton / 2
-                    }
-                    StripButton(icon, label, if (vertical) Modifier.offset(x = across, y = along) else Modifier.offset(x = along, y = across), onClick)
+            val window = Size(constraints.maxWidth.toFloat(), constraints.maxHeight.toFloat())
+            items.forEachIndexed { index, item ->
+                val along = barStart + (barButton + barButtonGap) * index
+                val across = when (edge) {
+                    TabEdge.Bottom -> pageEdge + (bandRow - barButton) / 2
+                    TabEdge.Left -> pageEdge - depth / 2 - barButton / 2
+                    TabEdge.Right -> pageEdge + depth / 2 - barButton / 2
+                }
+                val x = if (vertical) across else along
+                val y = if (vertical) along else across
+                BarButton(item, Modifier.offset(x, y)) {
+                    // strip in window coordinates
+                    inset(-x.toPx(), -y.toPx(), x.toPx() + size.width - window.width, y.toPx() + size.height - window.height, drawStrip)
                 }
             }
 
@@ -365,12 +463,13 @@ private fun ShellFrame(startTool: String?) {
         SheetVisibility(settingsOpen) { SettingsPane { settingsOpen = false } }
         SheetVisibility(searchOpen) { SearchOverlay(open) { searchOpen = false } }
         SheetVisibility(favourOpen) { stores.favourDialogue?.let { FavourSheet(it) { favourOpen = false } } }
+        if (run.pendingDiscard != null) DiscardDialog(run::answerDiscard)
         if (whatsNewDue) WhatsNewSheet { whatsNewDue = false }
         if (splashing) LaunchSplash { splashing = false }
     }
 }
 
-private enum class TabEdge { Left, Right, Bottom }
+internal enum class TabEdge { Left, Right, Bottom }
 
 /** The tab's outline and fill: concave fillets where it leaves the page edge, convex corners at its far end. */
 private fun tabPaths(edge: TabEdge, start: Float, end: Float, pageEdge: Float, depth: Float, fillet: Float, corner: Float): Pair<Path, Path> {
@@ -413,7 +512,7 @@ private fun View.cornerRadius(position: Int): Float {
 
 /** The 72 pt side-bar item: symbol on top, the name turned so its baseline faces the screen edge. */
 @Composable
-private fun VerticalPill(icon: ImageVector, name: String, turn: Float) {
+private fun VerticalPill(icon: ImageVector, name: String, turn: Float, nameRoom: Dp) {
     val c = LocalDelphiColours.current
     Column(
         Modifier.width(verticalPillWidth).padding(vertical = 10.dp),
@@ -430,7 +529,7 @@ private fun VerticalPill(icon: ImageVector, name: String, turn: Float) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.layout { measurable, _ ->
-                val text = measurable.measure(Constraints(maxWidth = nameLimit.roundToPx()))
+                val text = measurable.measure(Constraints(maxWidth = nameRoom.roundToPx()))
                 layout(text.height, text.width) {
                     text.placeWithLayer((text.height - text.width) / 2, (text.width - text.height) / 2) { rotationZ = turn }
                 }
@@ -471,23 +570,28 @@ internal class ToolStores : ViewModel() {
 }
 
 @Composable
-private fun ToolPage(tool: Tool, isOpen: () -> Boolean) {
+private fun ToolPage(tool: Tool, generation: Int, undo: ToolUndo, isOpen: () -> Boolean) {
     val activity = checkNotNull(LocalViewModelStoreOwner.current)
     val stores: ToolStores = viewModel()
-    val owner = remember(tool.id, activity) {
+    val key = "${tool.id}#$generation"
+    val owner = remember(key, activity) {
         object : ViewModelStoreOwner, HasDefaultViewModelProviderFactory by (activity as HasDefaultViewModelProviderFactory) {
-            override val viewModelStore get() = stores.of(tool.id)
+            override val viewModelStore get() = stores.of(key)
         }
     }
     val changingConfigurations = LocalActivity.current
-    DisposableEffect(tool.id) {
+    DisposableEffect(key) {
         onDispose {
             // reopened tool shares store
-            if (!isOpen() && changingConfigurations?.isChangingConfigurations != true) stores.clear(tool.id)
+            if (!isOpen() && changingConfigurations?.isChangingConfigurations != true) stores.clear(key)
         }
     }
-    CompositionLocalProvider(LocalCanonPatternSymbol provides tool.icon, LocalViewModelStoreOwner provides owner) {
-        toolPages[tool.id]?.invoke() ?: if (tool.id == canonGallery.id && galleryPages.isNotEmpty()) GalleryPages() else EmptyPage(tool)
+    CompositionLocalProvider(LocalCanonPatternSymbol provides tool.icon, LocalViewModelStoreOwner provides owner, LocalToolUndo provides undo) {
+        when {
+            tool.id == workflowsTool.id -> WorkflowsPage()
+            tool.id == canonGallery.id && galleryPages.isNotEmpty() -> GalleryPages()
+            else -> toolPages[tool.id]?.invoke() ?: EmptyPage(tool)
+        }
     }
 }
 
@@ -504,19 +608,46 @@ private fun EmptyPage(tool: Tool) {
     }
 }
 
-/** A square chip on the strip: card, hairline, symbol. */
+private class BarItem(
+    val icon: ImageVector,
+    val label: String,
+    val enabled: Boolean = true,
+    val tint: Color? = null,
+    val prominent: Boolean = false,
+    val onClick: () -> Unit,
+)
+
+/** A circle on the strip: the strip behind it blurred under a wash of the card colour, a rule, the symbol. */
 @Composable
-private fun StripButton(icon: ImageVector, label: String, modifier: Modifier, onClick: () -> Unit) {
+private fun BarButton(item: BarItem, modifier: Modifier, strip: DrawScope.() -> Unit) {
     val c = LocalDelphiColours.current
+    val ink = if (item.prominent) c.primary else item.tint ?: c.foreground
     Box(
         modifier
-            .size(stripButton)
-            .canonClickable(onClick = onClick)
-            .background(c.card)
-            .border(CanonMetrics.hairline, c.border),
+            .size(barButton)
+            .canonClickable(enabled = item.enabled, onClick = item.onClick)
+            .clip(CircleShape)
+            .border(ruleWidth, c.foreground.copy(alpha = if (item.prominent) 1f else 0.22f), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, contentDescription = label, tint = c.foreground, modifier = Modifier.size(20.dp))
+        // ponytail: Modifier.blur draws nothing extra before API 31; the wash alone backs the button there
+        Canvas(Modifier.matchParentSize().blur(barBlur), strip)
+        Box(Modifier.matchParentSize().background(if (item.prominent) c.background else c.card.copy(alpha = BAR_GLASS)))
+        Icon(item.icon, contentDescription = item.label, tint = ink.copy(alpha = if (item.enabled) 1f else 0.3f), modifier = Modifier.size(20.dp))
+    }
+}
+
+@Composable
+private fun DiscardDialog(answer: (Boolean) -> Unit) {
+    val c = LocalDelphiColours.current
+    Dialog(onDismissRequest = { answer(false) }) {
+        Column(Modifier.width(320.dp).background(c.border).padding(CanonMetrics.frame), verticalArrangement = Arrangement.spacedBy(CanonMetrics.hairline)) {
+            CanonHeading("Discard captures?")
+            CanonGrid {
+                CanonButton("Cancel", Modifier.weight(1f).fillMaxHeight()) { answer(false) }
+                CanonButton("Discard", Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Primary) { answer(true) }
+            }
+        }
     }
 }
 

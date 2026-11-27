@@ -81,6 +81,6 @@ object ImageFiles {
                 null
             }
         } ?: return
-        context.startActivity(FileExport.chooser(context, written, mimeType))
+        FileExport.send(context, written, mimeType)
     }
 }

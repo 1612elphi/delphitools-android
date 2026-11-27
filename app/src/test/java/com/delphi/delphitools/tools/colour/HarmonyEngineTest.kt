@@ -3,12 +3,35 @@ package com.delphi.delphitools.tools.colour
 import com.delphi.delphitools.colour.fromOklch
 import com.delphi.delphitools.colour.oklch
 import com.delphi.delphitools.colour.parseHex
+import com.delphi.delphitools.tools.UndoGrouping
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.abs
 
 class HarmonyEngineTest {
+    @Test
+    fun undoGroupingPushesOncePerPress() {
+        val grouping = UndoGrouping()
+        var pushes = 0
+        val edit = { grouping.record { pushes++ } }
+        edit()
+        edit()
+        assertEquals(2, pushes)
+        val first = grouping.press()
+        edit()
+        edit()
+        assertEquals(3, pushes)
+        val second = grouping.press()
+        grouping.lift(first)
+        edit()
+        edit()
+        assertEquals(4, pushes)
+        grouping.lift(second)
+        edit()
+        assertEquals(5, pushes)
+    }
+
     @Test
     fun wheelSpaces() {
         val blue = parseHex("#3B82F6")!!

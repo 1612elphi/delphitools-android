@@ -5,6 +5,7 @@ import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.material.icons.outlined.Abc
+import androidx.compose.material.icons.outlined.AccountTree
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.AspectRatio
 import androidx.compose.material.icons.outlined.Attachment
@@ -241,10 +242,16 @@ val tools: List<Tool> = allTools.filter { it.id in toolPages }
 // iOS debug builds only; the shell shows it in every build
 val canonGallery = Tool("canon-gallery", "Canon Gallery", "Every canon component", Icons.Outlined.Apps, ToolCategory.DevTools)
 
-// ponytail: "workflows" opens the Workflows page on iOS, not ported
-val greatestHits = listOf("qr-genny", "auto-subtitle", "background-remover").mapNotNull { id -> tools.firstOrNull { it.id == id } }
+/** The Workflows page, opened like a tool; in no list of tools, so the fan and search skip it. */
+val workflowsTool = Tool("workflows", "Workflows", "Execute multi-tool sequences", Icons.Outlined.AccountTree, ToolCategory.DevTools)
 
-fun toolWithId(id: String): Tool? = if (id == canonGallery.id) canonGallery else allTools.firstOrNull { it.id == id }
+val greatestHits = listOf(workflowsTool) + listOf("qr-genny", "auto-subtitle", "background-remover").mapNotNull { id -> tools.firstOrNull { it.id == id } }
+
+fun toolWithId(id: String): Tool? = when (id) {
+    canonGallery.id -> canonGallery
+    workflowsTool.id -> workflowsTool
+    else -> allTools.firstOrNull { it.id == id }
+}
 
 fun toolsIn(category: ToolCategory): List<Tool> = tools.filter { it.category == category }
 

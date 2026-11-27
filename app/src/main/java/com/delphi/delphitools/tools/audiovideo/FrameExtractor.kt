@@ -282,7 +282,7 @@ fun FrameExtractor(model: FrameExtractorModel = viewModel()) {
             } else {
                 StillGrid(stills, onShare = { avEditShare(context, it.file) }, onRemove = model::remove)
                 CanonButton("Share all", icon = Icons.Outlined.Share) {
-                    context.startActivity(FileExport.chooser(context, stills.map { it.file }, "image/png"))
+                    FileExport.send(context, stills.map { it.file }, "image/png")
                 }
             }
         }

@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.delphi.delphitools.shell.Shell
 import com.delphi.delphitools.shell.ShellStores
+import com.delphi.delphitools.shell.WorkflowRun
 import com.delphi.delphitools.ui.theme.DelphitoolsTheme
 import java.io.File
 import kotlin.concurrent.thread
@@ -21,7 +22,11 @@ class MainActivity : ComponentActivity() {
         }
         // debug: --es tool <id>
         val startTool = if (debuggable) intent.getStringExtra("tool") else null
-        if (savedInstanceState == null) sweepCache()
+        if (savedInstanceState == null) {
+            // process outlives the activity
+            WorkflowRun.reset()
+            sweepCache()
+        }
         enableEdgeToEdge()
         setContent {
             DelphitoolsTheme {
@@ -33,7 +38,7 @@ class MainActivity : ComponentActivity() {
     // rename, then delete
     private fun sweepCache() {
         val stale = File(cacheDir, "stale-${System.nanoTime()}")
-        val moved = listOf("pdf-sources", "jobs", "media").count { File(cacheDir, it).renameTo(File(stale.apply { mkdirs() }, it)) }
+        val moved = listOf("pdf-sources", "jobs", "media", "workflow").count { File(cacheDir, it).renameTo(File(stale.apply { mkdirs() }, it)) }
         thread { cacheDir.listFiles { file -> file.name.startsWith("stale-") }?.forEach { it.deleteRecursively() } }
         if (moved == 0) stale.delete()
     }

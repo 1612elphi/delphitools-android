@@ -68,6 +68,8 @@ import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.colour.SolidSpace
 import com.delphi.delphitools.colour.hex
 import com.delphi.delphitools.colour.parseHex
+import com.delphi.delphitools.shell.workflowColours
+import com.delphi.delphitools.shell.WorkflowRun
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.launch
@@ -158,6 +160,8 @@ fun ColourConverter(model: ColourConverterModel = viewModel()) {
     val display = management.sRgb(colour)
     val names = colourNamesOrNull()
     val pace = remember { ChangeClock() }
+    LaunchedEffect(model) { WorkflowRun.takeColours()?.firstOrNull()?.let(model::read) }
+    val pass = workflowColours { listOf(display.hex) }
     val animated = pace.note(colour)
     val text = ColourConverterNotation.format(notation.values(colour, space), space)
     LaunchedEffect(text) { model.input.show(text) }
@@ -227,7 +231,7 @@ fun ColourConverter(model: ColourConverterModel = viewModel()) {
         }
     }
 
-    CanonSplit(sidebar = listOf(canvas), main = listOf(controls, formats, profiles), halves = true, collapsesTo = 240.dp)
+    CanonSplit(sidebar = listOf(canvas), main = listOf(controls) + pass + listOf(formats, profiles), halves = true, collapsesTo = 240.dp)
 }
 
 private class ChangeClock {

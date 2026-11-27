@@ -76,6 +76,7 @@ import com.delphi.delphitools.canon.CanonGrid
 import com.delphi.delphitools.canon.CanonHeading
 import com.delphi.delphitools.canon.CanonLoader
 import com.delphi.delphitools.canon.CanonMetrics
+import com.delphi.delphitools.canon.CanonPassAlongWhenDone
 import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonStatusRow
 import com.delphi.delphitools.canon.CanonTiles
@@ -608,7 +609,7 @@ internal fun AVEditTrackStrips(source: AVEditSource, playhead: Double?, removed:
 private fun mimeType(file: File) = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension) ?: "application/octet-stream"
 
 internal fun avEditShare(context: Context, file: File) {
-    context.startActivity(FileExport.chooser(context, file, mimeType(file)))
+    FileExport.send(context, listOf(file), mimeType(file))
 }
 
 private fun preview(context: Context, file: File) {
@@ -626,6 +627,7 @@ private fun preview(context: Context, file: File) {
 internal fun AVEditJobPanel(job: AVEditJob, title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, failure: String, enabled: Boolean, oversized: Boolean = true, onStart: () -> Unit) {
     val c = LocalDelphiColours.current
     val context = LocalContext.current
+    CanonPassAlongWhenDone(enabled, job.busy, job.output, job.failed, onStart) { avEditShare(context, it) }
     if (job.busy) {
         CanonRow("Processing…") {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -637,7 +639,7 @@ internal fun AVEditJobPanel(job: AVEditJob, title: String, icon: androidx.compos
         CanonButton("Cancel", icon = Icons.Outlined.Close, onClick = job::reset)
         return
     }
-    CanonButton(title, kind = CanonButtonKind.Primary, enabled = enabled, icon = icon, oversized = oversized, onClick = onStart)
+    CanonButton(title, kind = CanonButtonKind.Primary, enabled = enabled, icon = icon, oversized = oversized, followsWorkflow = false, onClick = onStart)
     if (job.failed) CanonStatusRow(failure, CanonTone.Warn)
     val output = job.output ?: return
     CanonHeading("Result")

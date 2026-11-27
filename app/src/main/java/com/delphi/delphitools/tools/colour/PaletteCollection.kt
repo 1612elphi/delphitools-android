@@ -59,6 +59,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
+import com.delphi.delphitools.canon.CanonNameDialog
 import com.delphi.delphitools.canon.CanonCanvasBoxing
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonColourCard
@@ -231,7 +232,7 @@ fun PaletteCollection(model: PaletteCollectionModel = viewModel()) {
     CanonSplit(sidebar = listOf(deck), main = listOfNotNull(wheels, search, details), halves = true, collapsesTo = 240.dp)
 
     renaming?.let { target ->
-        PaletteNameDialog("Rename Palette", target.name, "Rename", onDismiss = { renaming = null }) { name ->
+        CanonNameDialog("Rename Palette", target.name, "Rename", "Palette name", KeyboardCapitalization.Words, onDismiss = { renaming = null }) { name ->
             if (name.isNotEmpty()) store.rename(target.id, name)
         }
     }
@@ -328,32 +329,6 @@ private fun PaletteWheelRow(palette: CuratedPalette, focus: Float) {
                 .height((3 + 4 * step).dp),
         ) {
             colours.forEach { Box(Modifier.weight(1f).fillMaxHeight().background(it.toCanonColor())) }
-        }
-    }
-}
-
-/** Asks for a palette's name; `onConfirm` gets the trimmed text. */
-@Composable
-internal fun PaletteNameDialog(title: String, initial: String, confirm: String, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    val c = LocalDelphiColours.current
-    var text by remember { mutableStateOf(initial) }
-    Dialog(onDismissRequest = onDismiss) {
-        Column(Modifier.width(320.dp).background(c.border).padding(CanonMetrics.frame), verticalArrangement = Arrangement.spacedBy(CanonMetrics.hairline)) {
-            CanonHeading(title)
-            CanonTextCell(
-                text,
-                { text = it },
-                Modifier.fillMaxWidth(),
-                placeholder = "Palette name",
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
-            )
-            CanonGrid {
-                CanonButton("Cancel", Modifier.weight(1f).fillMaxHeight(), onClick = onDismiss)
-                CanonButton(confirm, Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Primary) {
-                    onConfirm(text.trim())
-                    onDismiss()
-                }
-            }
         }
     }
 }

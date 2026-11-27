@@ -92,6 +92,7 @@ import com.delphi.delphitools.canon.CanonLamp
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.CanonReadoutBand
 import com.delphi.delphitools.canon.CanonRows
+import com.delphi.delphitools.shell.WorkflowPassButton
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonStatusRow
@@ -520,6 +521,7 @@ fun VoiceRecorder(model: VoiceRecorderModel = viewModel()) {
                 }
             }
             CanonHeading("Takes")
+            WorkflowPassButton { model.takes.firstOrNull()?.let { avEditShare(context, it.file) } }
             if (model.takes.isEmpty()) CanonEmptyRow("No takes")
             for (take in model.takes) {
                 VoiceTakeRow(

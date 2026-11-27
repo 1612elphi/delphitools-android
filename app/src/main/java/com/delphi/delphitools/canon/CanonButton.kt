@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -87,6 +89,8 @@ internal val LocalCanonSymbolOnly = compositionLocalOf<CanonSymbolOnly?> { null 
  * [repeats]: holding repeats [onClick]. [flashesCopied]: the title shows [flashTitle] for 1.5 s after a click.
  * [contentDescription] is read by TalkBack when the button shows its symbol alone.
  * [textStyle] replaces the title's size and family; the weight still follows [kind].
+ * On a workflow leg a button with the share symbol, or as [followsWorkflow] says, reads Pass along: its export is
+ * handed to the next leg.
  */
 @Composable
 fun CanonButton(
@@ -102,17 +106,28 @@ fun CanonButton(
     flashTitle: String = "Copied",
     contentDescription: String? = null,
     textStyle: TextStyle? = null,
+    followsWorkflow: Boolean? = null,
     onClick: () -> Unit,
 ) {
     val c = LocalDelphiColours.current
+    val passes = (followsWorkflow ?: (icon == Icons.Outlined.Share)) && CanonHost.capturesFiles()
+    CanonPassAlong(passes && enabled, first = kind == CanonButtonKind.Primary, onClick)
     var flashes by remember { mutableIntStateOf(0) }
     LaunchedEffect(flashes) {
         if (flashes == 0) return@LaunchedEffect
         delay(COPIED_MS)
         flashes = 0
     }
-    val title = if (flashes > 0) flashTitle else text
-    val symbol = if (flashes > 0) Icons.Rounded.Check else icon
+    val title = when {
+        flashes > 0 -> flashTitle
+        passes && text.isNotEmpty() -> "Pass along"
+        else -> text
+    }
+    val symbol = when {
+        flashes > 0 -> Icons.Rounded.Check
+        passes -> Icons.AutoMirrored.Outlined.ArrowForward
+        else -> icon
+    }
     val fills = kind == CanonButtonKind.Primary || kind == CanonButtonKind.Secondary
     val filled = kind == CanonButtonKind.Primary ||
         (selected && (kind == CanonButtonKind.Segment || kind == CanonButtonKind.Secondary))
@@ -152,7 +167,7 @@ fun CanonButton(
     }
 
     val press = rememberCanonPress()
-    val label = contentDescription ?: text
+    val label = if (passes) "Pass along" else contentDescription ?: text
     Box(
         modifier
             .then(if (fills) Modifier.fillMaxWidth() else Modifier)

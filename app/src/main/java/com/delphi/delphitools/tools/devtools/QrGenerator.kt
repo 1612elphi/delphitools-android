@@ -7,6 +7,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Bitmap
+import android.os.SystemClock
 import android.text.format.DateFormat
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -95,6 +96,8 @@ import com.delphi.delphitools.colour.contrastFigure
 import com.delphi.delphitools.colour.contrastRatio
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
+import com.delphi.delphitools.tools.ToolUndoActions
+import com.delphi.delphitools.tools.UndoStack
 import com.delphi.delphitools.tools.images.ImageFiles
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiMono
@@ -132,7 +135,6 @@ private fun keyboard(type: QrContentType) = when (type) {
     QrContentType.Phone, QrContentType.Sms -> KeyboardType.Phone
 }
 
-// ponytail: no undo stack; the Android shell has no undo bar to drive one
 /** dt-ios QRGeneratorViewModel and its controller's state. */
 class QrGeneratorModel(application: Application) : AndroidViewModel(application) {
     var type by mutableStateOf(QrContentType.Text)
@@ -191,6 +193,8 @@ class QrGeneratorModel(application: Application) : AndroidViewModel(application)
     private var password = ""
     private var message = ""
     private var typing: Job? = null
+    val history = UndoStack<Snapshot>()
+    private var colourEdit: Pair<Boolean, Long>? = null
     private var cached: Pair<Pair<String, QrCorrection>, List<BooleanArray>?>? = null
     private val measurer = TextMeasurer(createFontFamilyResolver(application), Density(1f), LayoutDirection.Ltr)
 
@@ -223,23 +227,23 @@ class QrGeneratorModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun chooseType(value: QrContentType) = change { type = value }
+    fun chooseType(value: QrContentType) = change(record = true) { type = value }
     fun chooseEncryption(value: String) = change { encryption = value }
     fun changeHidden(value: Boolean) = change { hidden = value }
-    fun changeAllDay(value: Boolean) = change { event = event.copy(allDay = value) }
-    fun changeStart(value: Instant) = change { event = event.copy(start = value) }
-    fun changeEnd(value: Instant) = change { event = event.copy(end = value) }
-    fun changeForeground(value: Rgb) = change { foreground = value }
-    fun changeBackground(value: Rgb) = change { background = value }
-    fun chooseCorrection(value: QrCorrection) = change { correction = value }
-    fun chooseDot(value: QrDotStyle) = change { dot = value }
-    fun chooseEye(value: QrEyeStyle) = change { eye = value }
-    fun choosePupil(value: QrPupilStyle) = change { pupil = value }
+    fun changeAllDay(value: Boolean) = change(record = true) { event = event.copy(allDay = value) }
+    fun changeStart(value: Instant) = change(record = true) { event = event.copy(start = value) }
+    fun changeEnd(value: Instant) = change(record = true) { event = event.copy(end = value) }
+    fun changeForeground(value: Rgb) = changeColour(true) { foreground = value }
+    fun changeBackground(value: Rgb) = changeColour(false) { background = value }
+    fun chooseCorrection(value: QrCorrection) = change(record = true) { correction = value }
+    fun chooseDot(value: QrDotStyle) = change(record = true) { dot = value }
+    fun chooseEye(value: QrEyeStyle) = change(record = true) { eye = value }
+    fun choosePupil(value: QrPupilStyle) = change(record = true) { pupil = value }
     fun changeInfo(value: Boolean) = change { showInfo = value }
     fun changeLogoModules(value: Int) = change { logoModules = value }
     fun removeLogo() = change { logo = null }
 
-    fun applyPreset(preset: QrStylePreset) = change {
+    fun applyPreset(preset: QrStylePreset) = change(record = true) {
         dot = preset.dot
         eye = preset.eye
         pupil = preset.pupil
@@ -274,8 +278,71 @@ class QrGeneratorModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private fun change(block: () -> Unit) {
+    private fun changeColour(foreground: Boolean, block: () -> Unit) {
+        val now = SystemClock.uptimeMillis()
+        val continues = QrEngine.continuesColour(colourEdit, foreground, now)
+        change(record = !continues, block)
+        colourEdit = foreground to now
+    }
+
+    private fun change(record: Boolean = false, block: () -> Unit) {
+        val before = if (record) snapshot() else null
         block()
+        if (before != null && snapshot() != before) {
+            history.push(before)
+            colourEdit = null
+        }
+        refresh()
+    }
+
+    /** dt-ios QRGeneratorViewModel.Snapshot; the event carries the location and notes fields. */
+    data class Snapshot(
+        val type: QrContentType,
+        val content: String,
+        val password: String,
+        val message: String,
+        val encryption: String,
+        val hidden: Boolean,
+        val event: QrEvent,
+        val correction: QrCorrection,
+        val foreground: Rgb,
+        val background: Rgb,
+        val size: Int,
+        val dot: QrDotStyle,
+        val eye: QrEyeStyle,
+        val pupil: QrPupilStyle,
+        val logoModules: Int,
+    )
+
+    private fun snapshot() = Snapshot(
+        type, contentField, passwordField, messageField, encryption, hidden, event.copy(location = locationField, notes = notesField),
+        correction, foreground, background, size, dot, eye, pupil, logoModules,
+    )
+
+    fun undo(redo: Boolean) {
+        val s = (if (redo) history.redo(snapshot()) else history.undo(snapshot())) ?: return
+        typing?.cancel()
+        colourEdit = null
+        type = s.type
+        contentField = s.content
+        passwordField = s.password
+        messageField = s.message
+        locationField = s.event.location
+        notesField = s.event.notes
+        content = s.content
+        password = s.password
+        message = s.message
+        encryption = s.encryption
+        hidden = s.hidden
+        event = s.event
+        correction = s.correction
+        foreground = s.foreground
+        background = s.background
+        size = s.size
+        dot = s.dot
+        eye = s.eye
+        pupil = s.pupil
+        logoModules = s.logoModules
         refresh()
     }
 
@@ -333,6 +400,7 @@ fun QrGenerator(model: QrGeneratorModel = viewModel()) {
     val types = QrContentType.entries
     val type = model.type
     val sheet = model.sheet
+    ToolUndoActions(model.history.canUndo, model.history.canRedo, { model.undo(false) }, { model.undo(true) })
     val keyboardOptions = { kind: KeyboardType, words: Boolean ->
         KeyboardOptions(
             capitalization = if (words) KeyboardCapitalization.Sentences else KeyboardCapitalization.None,

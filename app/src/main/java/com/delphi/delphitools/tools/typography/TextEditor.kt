@@ -17,6 +17,7 @@ import android.text.style.TypefaceSpan
 import android.text.style.UnderlineSpan
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -141,6 +142,7 @@ import com.delphi.delphitools.canon.rememberCanonTextFilePicker
 import com.delphi.delphitools.colour.rgbOf
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
+import com.delphi.delphitools.tools.ToolUndoActions
 import com.delphi.delphitools.tools.typography.TextDoc.Style
 import com.delphi.delphitools.tools.typography.TextEditorEngine.Look
 import com.delphi.delphitools.tools.typography.TextEditorEngine.Span
@@ -189,6 +191,7 @@ private fun Style.fontFamily() = families[family.ordinal]
 private fun com.delphi.delphitools.colour.Rgb.doc() = clamped.let { TextDoc.Rgb(it.r, it.g, it.b) }
 
 /** dt-ios TextEditorViewModel and the controller's settings. */
+@OptIn(ExperimentalFoundationApi::class)
 class TextEditorModel(application: Application) : AndroidViewModel(application) {
     val state = TextFieldState()
     val text get() = state.text.toString()
@@ -229,6 +232,7 @@ class TextEditorModel(application: Application) : AndroidViewModel(application) 
                     replace(0, length, saved)
                     selection = TextRange.Zero
                 }
+                state.undoState.clearHistory()
             }
         }
     }
@@ -281,6 +285,7 @@ class TextEditorModel(application: Application) : AndroidViewModel(application) 
     override fun onCleared() = saveNow()
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TextEditor(model: TextEditorModel = viewModel()) {
     val context = LocalContext.current
@@ -294,6 +299,8 @@ fun TextEditor(model: TextEditorModel = viewModel()) {
             model.saveNow()
         }
     }
+    val history = model.state.undoState
+    ToolUndoActions(history.canUndo, history.canRedo, history::undo, history::redo)
     var anchor by remember { mutableStateOf<Int?>(null) }
     val empty = model.text.isEmpty()
     val picker = rememberCanonTextFilePicker(arrayOf("text/plain", "text/markdown", "text/x-markdown", "text/*")) { model.replace(it) }

@@ -130,9 +130,14 @@ import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.colour.SolidSpace
 import com.delphi.delphitools.colour.fromOklch
 import com.delphi.delphitools.colour.hex
+import com.delphi.delphitools.colour.parseColour
 import com.delphi.delphitools.colour.parseHex
+import com.delphi.delphitools.shell.WorkflowRun
 import com.delphi.delphitools.colour.toArgb
 import com.delphi.delphitools.tools.FileExport
+import com.delphi.delphitools.tools.ToolUndoActions
+import com.delphi.delphitools.tools.UndoGrouping
+import com.delphi.delphitools.tools.UndoStack
 import com.delphi.delphitools.tools.colour.GradientPaint.Shape
 import com.delphi.delphitools.tools.colour.GradientPaint.Space
 import com.delphi.delphitools.tools.images.ImageFiles
@@ -170,8 +175,16 @@ private val centred = Offset(0.5f, 0.5f)
 // snap range in degrees
 private const val SNAP = 4.0
 
+data class GradientSnapshot(
+    val type: GradientType,
+    val angle: Double,
+    val stops: List<GradientStop>,
+    val meshPoints: List<MeshPoint>,
+    val interpolation: Space,
+    val centre: Offset,
+)
+
 /** dt-ios GradientGeneratorViewModel and the controller's selection and export. */
-// ponytail: no undo or redo; the android shell has no undo commands
 class GradientGeneratorModel(application: Application) : AndroidViewModel(application) {
     private var nextId = 0L
     private fun newId() = nextId++
@@ -204,6 +217,8 @@ class GradientGeneratorModel(application: Application) : AndroidViewModel(applic
 
     private var meshJob: Job? = null
     private var shownColour: Rgb? = null
+    val undoStack = UndoStack<GradientSnapshot>()
+    val grouping = UndoGrouping()
 
     val isMesh get() = type == GradientType.Mesh
     val paintStops get() = stops.map { GradientPaint.Stop(it.colour, it.position) }
@@ -236,6 +251,42 @@ class GradientGeneratorModel(application: Application) : AndroidViewModel(applic
         renderMeshFast()
     }
 
+    private fun snapshot() = GradientSnapshot(type, angle, stops, meshPoints, interpolation, centre)
+
+    fun pushUndo() = undoStack.push(snapshot())
+
+    /** dt-ios edit: one undo step per touch sequence. */
+    fun edit(change: () -> Unit) {
+        grouping.record(::pushUndo)
+        change()
+    }
+
+    /** A workflow's colours: several replace the stops, one replaces the first stop's colour. */
+    fun carry(colours: List<Rgb>) {
+        stops = when {
+            colours.size > 1 -> colours.mapIndexed { index, colour -> GradientStop(newId(), colour, index.toDouble() / (colours.size - 1)) }
+            colours.size == 1 -> sortedStops.first().let { first -> stops.map { if (it.id == first.id) it.copy(colour = colours[0]) else it } }
+            else -> return
+        }
+        select(sortedStops.first().id)
+    }
+
+    private fun restore(step: GradientSnapshot?) {
+        step ?: return
+        type = step.type
+        angle = step.angle
+        stops = step.stops
+        meshPoints = step.meshPoints
+        interpolation = step.interpolation
+        centre = step.centre
+        if (isMesh) renderMeshFast()
+        select(if (selectedColour != null) selected else if (isMesh) meshPoints.firstOrNull()?.id else sortedStops.firstOrNull()?.id)
+    }
+
+    fun undo() = restore(undoStack.undo(snapshot()))
+
+    fun redo() = restore(undoStack.redo(snapshot()))
+
     fun choose(type: GradientType) {
         this.type = type
         select(if (isMesh) meshPoints.firstOrNull()?.id else sortedStops.firstOrNull()?.id)
@@ -252,6 +303,7 @@ class GradientGeneratorModel(application: Application) : AndroidViewModel(applic
     private fun colourChanged(colour: Rgb) {
         if (colour.hex == shownColour?.hex) return
         shownColour = colour
+        if (selectedColour.let { it != null && it.hex != colour.hex }) grouping.record(::pushUndo)
         if (isMesh) {
             meshPoints = meshPoints.map { if (it.id == selected) it.copy(colour = colour) else it }
             renderMeshFast()
@@ -266,6 +318,7 @@ class GradientGeneratorModel(application: Application) : AndroidViewModel(applic
 
     /** A stop at `position` in the colour the gradient already has there, so the picture does not change. */
     fun addStop(position: Double): Long {
+        pushUndo()
         val stop = GradientStop(newId(), GradientPaint.colour(position, paintStops, interpolation), position)
         stops = stops + stop
         return stop.id
@@ -273,10 +326,12 @@ class GradientGeneratorModel(application: Application) : AndroidViewModel(applic
 
     fun autoStep() {
         if (!GradientStops.canAutoStep(stops.size)) return
+        pushUndo()
         stops = GradientStops.autoStep(sortedStops, { it.position }, paintStops, interpolation) { colour, at -> GradientStop(newId(), colour, at) }
     }
 
     fun addMeshPoint(x: Float, y: Float): Long {
+        pushUndo()
         val point = MeshPoint(newId(), x, y, GradientMesh.colour(meshPoints, x.toDouble(), y.toDouble()))
         meshPoints = meshPoints + point
         renderMeshFast()
@@ -287,6 +342,7 @@ class GradientGeneratorModel(application: Application) : AndroidViewModel(applic
     fun seedMeshGrid(size: Int) {
         val hexes = if (size == 2) listOf("3b82f6", "8b5cf6", "10b981", "f59e0b")
         else listOf("3b82f6", "8b5cf6", "ec4899", "10b981", "6366f1", "f59e0b", "06b6d4", "84cc16", "ef4444")
+        pushUndo()
         val step = 0.7f / (size - 1)
         meshPoints = (0 until size * size).map { index ->
             MeshPoint(newId(), 0.15f + index % size * step, 0.15f + index / size * step, parseHex(hexes[index % hexes.size])!!)
@@ -298,6 +354,7 @@ class GradientGeneratorModel(application: Application) : AndroidViewModel(applic
     fun removeSelected() {
         val id = selected ?: return
         if (!canRemove) return
+        pushUndo()
         if (isMesh) {
             meshPoints = meshPoints.filter { it.id != id }
             renderMeshFast()
@@ -409,6 +466,8 @@ fun GradientGenerator(model: GradientGeneratorModel = viewModel()) {
     val view = LocalView.current
     val mesh = model.isMesh
     val type = model.type
+    ToolUndoActions(model.undoStack.canUndo, model.undoStack.canRedo, model::undo, model::redo)
+    LaunchedEffect(model) { WorkflowRun.takeColours()?.let { model.carry(it.mapNotNull(::parseColour)) } }
 
     LaunchedEffect(model) {
         snapshotFlow { Triple(model.meshPoints, model.width to model.height, model.dragging to model.type) }.collect { (_, _, state) ->
@@ -436,26 +495,26 @@ fun GradientGenerator(model: GradientGeneratorModel = viewModel()) {
         CanonRows {
             CanonSegmented(GradientType.entries.map { it.title }, type.ordinal) {
                 view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                model.choose(GradientType.entries[it])
+                model.edit { model.choose(GradientType.entries[it]) }
             }
             if (!mesh) {
                 CanonRow("Interpolation", flush = true) {
-                    CanonSegmented(Space.entries.map { it.title }, model.interpolation.ordinal) { model.interpolation = Space.entries[it] }
+                    CanonSegmented(Space.entries.map { it.title }, model.interpolation.ordinal) { model.edit { model.interpolation = Space.entries[it] } }
                 }
             }
             if (type == GradientType.Linear || type == GradientType.Conic) {
                 CanonRow(if (type == GradientType.Conic) "Start" else "Angle", flush = true) {
                     Row(Modifier.height(IntrinsicSize.Min)) {
-                        GradientAngleDial(model.angle) { model.angle = it }
+                        GradientAngleDial(model.angle) { model.edit { model.angle = it } }
                         CanonRule(vertical = true)
-                        CanonDecimalField(Math.round(model.angle).toDouble(), { model.angle = it % 360 }, unit = "°", step = 15.0, decimals = 0, range = 0.0..359.0)
+                        CanonDecimalField(Math.round(model.angle).toDouble(), { model.edit { model.angle = it % 360 } }, unit = "°", step = 15.0, decimals = 0, range = 0.0..359.0)
                     }
                 }
             }
             if (type == GradientType.Radial || type == GradientType.Conic) {
                 val detail = "${(model.centre.x * 100).roundToInt()} %, ${(model.centre.y * 100).roundToInt()} %"
                 CanonRow("Centre", detail = detail, flush = true) {
-                    CanonButton("Reset", icon = Icons.Outlined.GpsFixed, enabled = model.centre != centred) { model.centre = centred }
+                    CanonButton("Reset", icon = Icons.Outlined.GpsFixed, enabled = model.centre != centred) { model.edit { model.centre = centred } }
                 }
             }
             if (mesh) {
@@ -480,7 +539,7 @@ fun GradientGenerator(model: GradientGeneratorModel = viewModel()) {
             val stop = model.stops.firstOrNull { it.id == model.selected }
             if (!mesh && stop != null) {
                 CanonRow("Position", flush = true) {
-                    CanonDecimalField(Math.round(stop.position * 100).toDouble(), { model.setPosition(stop.id, it / 100) }, unit = "%", step = 1.0, decimals = 0, range = 0.0..100.0)
+                    CanonDecimalField(Math.round(stop.position * 100).toDouble(), { model.edit { model.setPosition(stop.id, it / 100) } }, unit = "%", step = 1.0, decimals = 0, range = 0.0..100.0)
                 }
             }
             CanonGrid(columns = 2) {
@@ -533,6 +592,7 @@ fun GradientGenerator(model: GradientGeneratorModel = viewModel()) {
     CanonSplit(
         sidebar = listOf(canvas),
         main = listOf(settings, solidCanvas, stopsBlock, imageBlock, cssBlock) + if (mesh) emptyList() else listOf(swiftBlock),
+        modifier = model.grouping.modifier,
         halves = true,
         collapsesTo = 240.dp,
     )
@@ -786,6 +846,7 @@ private fun GradientPicture(model: GradientGeneratorModel, modifier: Modifier) {
         }
 
         fun begin(found: GradientGrab, point: Offset) {
+            model.pushUndo()
             drag.grab = found
             drag.snapped = false
             model.dragging = true
@@ -934,7 +995,11 @@ private fun GradientPicture(model: GradientGeneratorModel, modifier: Modifier) {
                         if (stop != null) {
                             stateDescription = "${Math.round(stop.position * 100)} %"
                             progressBarRangeInfo = ProgressBarRangeInfo(stop.position.toFloat(), 0f..1f, 99)
-                            setProgress { model.setPosition(id, it.toDouble()); true }
+                            setProgress {
+                                model.pushUndo()
+                                model.setPosition(id, it.toDouble())
+                                true
+                            }
                         }
                     },
             )

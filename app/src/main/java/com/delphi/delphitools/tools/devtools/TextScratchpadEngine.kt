@@ -8,6 +8,10 @@ data class ScratchpadCounts(val words: Int, val characters: Int, val lines: Int)
 /** dt-ios TextScratchpadViewModel's transforms and ScratchpadEditor's find and counts, on whole strings. */
 object TextScratchpadEngine {
     private const val REGEX_TIME_LIMIT_MS = 400L
+    private const val TYPING_RUN_MS = 1000L
+
+    /** dt-ios ScratchpadEditor's typing run: a keystroke a second or more after the last one, or the first, starts an undo step. */
+    fun startsUndoStep(lastTypedMs: Long?, nowMs: Long) = lastTypedMs == null || nowMs - lastTypedMs >= TYPING_RUN_MS
     private val newline = Regex("\r\n|[\n\r\u000B\u000C\u0085  ]")
     private val lineNumber = Regex("^\\d+[.):]\\s?")
     private val extraSpaces = Regex(" {2,}")

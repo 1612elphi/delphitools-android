@@ -73,34 +73,34 @@ import kotlin.math.min
 
 internal fun Context.shellPreferences() = getSharedPreferences("delphitools", Context.MODE_PRIVATE)
 
-/** The 2.0 welcome: four slides of web art and text, shown once per version on the home, and from Settings. */
+/** The 1.0 welcome: four slides of web art and text, shown once per version on the home, and from Settings. */
 object WhatsNew {
-    const val VERSION = "2.0"
+    const val VERSION = "1.0"
     private const val SEEN_KEY = "delphitools.whatsNewSeen"
 
     internal class Slide(@DrawableRes val art: Int, val title: String, val body: String)
 
-    // art from the web's whats-new.gts, in its order; text is the iOS copy
+    // art from the web's whats-new.gts after the first slide
     internal val slides = listOf(
         Slide(
-            R.drawable.whatsnew_house,
-            "delphitools 2.0",
-            "Welcome to delphitools-iOS 2.0! The entire app has been re-engineered to work beautifully on all platforms, with UIs made with love and attention to detail. Every single one of the over 90 tools has been rebuilt in UIKit, with new controls that work the same way, everywhere.",
+            R.drawable.whatsnew_monolith,
+            "delphitools 1.0",
+            "Against my better judgment, we're finally here. There it is. You all did it. You successfully annoyed me into making a version for Android, which was a miserable experience and I hope you're all happy now that you've robbed me of my last piece of sanity. There. It's done. It was a horrible experience and I already dread maintaining this mess.",
         ),
         Slide(
             R.drawable.whatsnew_av,
-            "Audio & Video",
-            "For example, to match the web version, we support tons of new Audio and Video tools, including a completely free and open source Auto Subtitle tool that runs on device. No connection required, and no data stored or sent off. Try them today! Or don't! I won't know either way!",
+            "Full Parity",
+            "This version matches the iOS version. Mostly. It has some android-specific features like extreme, inexplicable slowdown when drawing waveforms, and a bunch of cool widgets that I only made because I broke my husband's widgets by accident and can't seem to get them back, so I just made new ones.",
         ),
         Slide(
             R.drawable.whatsnew_workflows,
             "Workflows",
-            "Also new: Workflows chain tools into sequences that can pass your work from one tool to the next. This works like Shortcuts, but within the app itself. You can even build your own and save them for later!",
+            "Workflows, blah blah, chain tools into other tools, that's how it works, you get this stuff. You're android people. You're smarter than everyone anyways. Did you know that the iPhone people can't even change their launcher application? How can they live like this? Thank god you're here",
         ),
         Slide(
             R.drawable.whatsnew_home,
             "Other improvements",
-            "And, just like the web version, the main menu has hero art by amazing talented human artists who donated their incredible work to delphitools. There are also colour themes and backdrop washi tape in the settings, and new widgets and shortcuts for you to use. Stay as long as you like.",
+            "And, just like the web version, the main menu has hero art by amazing talented human artists who donated their incredible work to delphitools. There are also colour themes and backdrop washi tape in the settings, and new widgets and shortcuts for you to use. Now go. Shoo. Away with you",
         ),
     )
 

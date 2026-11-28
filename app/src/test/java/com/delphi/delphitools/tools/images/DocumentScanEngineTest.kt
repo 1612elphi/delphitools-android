@@ -13,6 +13,20 @@ class DocumentScanEngineTest {
     }
 
     @Test
+    fun cornersOfABrightPageOnADarkGround() {
+        val width = 40
+        val height = 60
+        val pixels = IntArray(width * height) { i ->
+            val x = i % width
+            val y = i / width
+            if (x in 8..30 && y in 10..49) 0xFFEEEEEE.toInt() else 0xFF202020.toInt()
+        }
+        val quad = DocumentScanEngine.corners(width, height, pixels)!!
+        assertEquals(listOf(QuadPoint(8.5, 10.5), QuadPoint(30.5, 10.5), QuadPoint(30.5, 49.5), QuadPoint(8.5, 49.5)), quad)
+        assertEquals(null, DocumentScanEngine.corners(width, height, IntArray(width * height) { 0xFF202020.toInt() }))
+    }
+
+    @Test
     fun luma() {
         assertEquals(255, DocumentScanEngine.luma(0xFFFFFFFF.toInt()))
         assertEquals(0, DocumentScanEngine.luma(0xFF000000.toInt()))

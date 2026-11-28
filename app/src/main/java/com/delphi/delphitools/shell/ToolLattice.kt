@@ -1,6 +1,5 @@
 package com.delphi.delphitools.shell
 
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -10,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -37,13 +37,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInWindow
-import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
@@ -51,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.toSize
 import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonJumpGrid
 import com.delphi.delphitools.canon.CanonJumpSection
@@ -60,13 +61,16 @@ import com.delphi.delphitools.canon.MenuCellPopup
 import com.delphi.delphitools.canon.canonClickable
 import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.CanonText
+import com.delphi.delphitools.ui.theme.DelphiMono
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.launch
-import com.delphi.delphitools.ui.theme.DelphiMono
 
 // dt-ios Shell/HomeWeb.swift HomeMetrics, WebToolCell and HomeFavouriteCard
 private val columnWidth = 195.dp
 private val cellHeight = 116.dp
+
+// ponytail: line height taken as 1.5 of the font size; measure the text if a font change clips the second line
+private const val LINE_HEIGHT = 1.5f
 private val headingPadding = 12.dp
 private val heroMaxWidth = 672.dp
 private val cardHeight = 44.dp
@@ -229,6 +233,14 @@ private fun FavouriteCard(tool: Tool, modifier: Modifier, onClick: () -> Unit) {
     }
 }
 
+/** How much taller the name and two description lines are than at font scale 1; each size converts alone, as sp to dp is not linear from API 34. */
+@Composable
+private fun textGrowth() = with(LocalDensity.current) {
+    val name = CanonText.subheadline.fontSize
+    val line = CanonText.caption.fontSize
+    (name.toDp() + line.toDp() * 2 - (name.value + line.value * 2).dp).coerceAtLeast(0.dp) * LINE_HEIGHT
+}
+
 @Composable
 private fun ToolCell(tool: Tool, isFavourite: Boolean, firstColumn: Boolean, firstRow: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val c = LocalDelphiColours.current
@@ -239,7 +251,7 @@ private fun ToolCell(tool: Tool, isFavourite: Boolean, firstColumn: Boolean, fir
         Column(
             Modifier
                 .fillMaxWidth()
-                .height(cellHeight)
+                .height(cellHeight + textGrowth())
                 .canonClickable(onClick = onClick)
                 .longPress(toggle) { menu = true }
                 .background(c.card)

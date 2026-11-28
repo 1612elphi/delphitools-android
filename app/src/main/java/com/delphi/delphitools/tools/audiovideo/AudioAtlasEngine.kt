@@ -110,7 +110,7 @@ class AudioScanner(
 
 /**
  * dt-ios AVInfoAudioDSP.spectrogram: [columns] FFTs of 1024 mono frames, evenly spread over [spanFrames], each as a column of
- * [rows] palette pixels, low frequencies at the bottom. Fed one frame at a time; columns it never reaches stay white.
+ * [rows] palette pixels, low frequencies at the bottom. Fed one frame at a time; a column whose frame is skipped takes the next FFT, and columns past the last frame stay white.
  */
 class SpectrogramBuilder(private val columns: Int, private val rows: Int, spanFrames: Long) {
     val pixels = IntArray(columns * rows) { -1 }
@@ -124,18 +124,20 @@ class SpectrogramBuilder(private val columns: Int, private val rows: Int, spanFr
     fun feed(mono: Float, position: Long) {
         ring[(position % fft).toInt()] = mono
         filled++
-        if (column >= columns || filled < fft || position != column * hop + fft - 1) return
+        // first frame may lag
+        if (column >= columns || filled < fft || position < column * hop + fft - 1) return
         val oldest = position - fft + 1
         for (index in 0 until fft) block[index] = ring[((oldest + index) % fft).toInt()] * AudioAtlasEngine.hann[index]
         val magnitudes = AudioAtlasEngine.fftMagnitudes(block)
         val binsPerRow = (fft / 2).toDouble() / rows
+        val due = min(columns - 1L, oldest / hop).toInt()
         for (row in 0 until rows) {
             val bin = ((rows - 1 - row) * binsPerRow).toInt()
             val db = 20 * log10(magnitudes[min(bin, magnitudes.size - 1)] + 1e-12)
             val t = (1 - db / AudioAtlasEngine.FLOOR_DB).coerceIn(0.0, 1.0)
-            pixels[row * columns + column] = AudioAtlasEngine.palette[(t * 255).roundToInt()]
+            pixels.fill(AudioAtlasEngine.palette[(t * 255).roundToInt()], row * columns + column, row * columns + due + 1)
         }
-        column++
+        column = due + 1
     }
 }
 

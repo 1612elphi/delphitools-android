@@ -17,37 +17,37 @@ data class ClipMargins(val top: Int, val right: Int, val bottom: Int, val left: 
     }
 }
 
+/** The highest alpha in each row and column, so the bounds at any threshold need no second scan. */
+class AlphaProfile(private val rows: IntArray, private val columns: IntArray) {
+    /** The smallest rect covering every pixel with alpha above [threshold], or null when all are at or below it. */
+    fun rect(threshold: Int): IntRect? {
+        val top = rows.indexOfFirst { it > threshold }
+        if (top < 0) return null
+        return IntRect(columns.indexOfFirst { it > threshold }, top, columns.indexOfLast { it > threshold } + 1, rows.indexOfLast { it > threshold } + 1)
+    }
+}
+
 /** dt-core AlphaTrimmer. */
 object ImageClipEngine {
-    /**
-     * The smallest rect covering every pixel with alpha above [threshold], or null when all are transparent.
-     * [readRow] fills its array with row y's ARGB pixels, so only one row is held at a time.
-     */
-    fun boundingRect(width: Int, height: Int, threshold: Int = 0, readRow: (y: Int, into: IntArray) -> Unit): IntRect? {
-        if (width <= 0 || height <= 0) return null
-        val row = IntArray(width)
-        var minX = width
-        var minY = height
-        var maxX = -1
-        var maxY = -1
-        for (y in 0 until height) {
+    /** [readRow] fills its array with row y's ARGB pixels, so only one row is held at a time. */
+    fun profile(width: Int, height: Int, readRow: (y: Int, into: IntArray) -> Unit): AlphaProfile {
+        val row = IntArray(maxOf(width, 0))
+        val rows = IntArray(maxOf(height, 0))
+        val columns = IntArray(row.size)
+        for (y in rows.indices) {
             readRow(y, row)
-            var first = -1
-            for (x in 0 until width) {
-                if (row[x] ushr 24 > threshold) {
-                    first = x
-                    break
-                }
+            var most = 0
+            for (x in row.indices) {
+                val alpha = row[x] ushr 24
+                if (alpha > most) most = alpha
+                if (alpha > columns[x]) columns[x] = alpha
             }
-            if (first < 0) continue
-            var last = width - 1
-            while (row[last] ushr 24 <= threshold) last--
-            if (first < minX) minX = first
-            if (last > maxX) maxX = last
-            if (minY == height) minY = y
-            maxY = y
+            rows[y] = most
         }
-        if (maxX < minX || maxY < minY) return null
-        return IntRect(minX, minY, maxX + 1, maxY + 1)
+        return AlphaProfile(rows, columns)
     }
+
+    /** The smallest rect covering every pixel with alpha above [threshold], or null when all are transparent. */
+    fun boundingRect(width: Int, height: Int, threshold: Int = 0, readRow: (y: Int, into: IntArray) -> Unit): IntRect? =
+        profile(width, height, readRow).rect(threshold)
 }

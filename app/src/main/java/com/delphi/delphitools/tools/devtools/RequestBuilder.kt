@@ -1,5 +1,6 @@
 package com.delphi.delphitools.tools.devtools
 
+import android.os.SystemClock
 import android.text.format.Formatter
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -52,6 +53,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
+import com.delphi.delphitools.canon.CanonButtonKind
+import com.delphi.delphitools.canon.CanonStatusRow
+import com.delphi.delphitools.canon.CanonTile
+import com.delphi.delphitools.canon.CanonTiles
+import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonCodeBlock
 import com.delphi.delphitools.canon.CanonFigure
@@ -73,9 +79,16 @@ import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiFont
 import com.delphi.delphitools.ui.theme.DelphiMono
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.concurrent.thread
 
 private const val MAX_LINES = 12
 private val pairFont = TextStyle(fontFamily = DelphiMono, fontSize = 14.sp)
@@ -84,6 +97,59 @@ private val wireMono = TextStyle(fontFamily = DelphiMono, fontSize = 12.sp)
 private val wireMarker = TextStyle(fontFamily = DelphiMono, fontSize = 9.sp, fontWeight = FontWeight.SemiBold)
 private val wireSmall = TextStyle(fontFamily = DelphiFont, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
 private val barHeight = 10.dp
+
+// ponytail: the body is one Text; a longer one stalls layout. Page it if larger bodies matter
+private const val RESPONSE_LIMIT = 1 shl 16
+private val RESPONSE_HEIGHT = 320.dp
+
+// platform rewrites get bodies
+private val bodiless = setOf("GET", "HEAD")
+private const val TIMEOUT_MS = 15_000
+
+/** [body] is the first [RESPONSE_LIMIT] bytes as UTF-8; [bytes] counts what was read. */
+class RequestResponse(val status: Int, val reason: String, val headers: String, val body: String, val bytes: Int, val cut: Boolean, val millis: Long)
+
+// ponytail: HttpURLConnection, so no HTTP/2, no cookie jar and cleartext http is refused by the platform default
+private fun send(spec: RequestSpec, opened: (HttpURLConnection) -> Unit): RequestResponse {
+    val started = SystemClock.elapsedRealtime()
+    val connection = URL(RequestBuilderEngine.fullUrl(spec)).openConnection() as HttpURLConnection
+    opened(connection)
+    try {
+        connection.requestMethod = spec.method
+        connection.connectTimeout = TIMEOUT_MS
+        connection.readTimeout = TIMEOUT_MS
+        connection.instanceFollowRedirects = false
+        for (pair in RequestBuilderEngine.live(spec.headers)) connection.addRequestProperty(pair.key.trim(), pair.value)
+        if (spec.body.isNotEmpty() && spec.method !in bodiless) {
+            connection.doOutput = true
+            connection.outputStream.use { it.write(spec.body.toByteArray(Charsets.UTF_8)) }
+        }
+        val status = connection.responseCode
+        val headers = connection.headerFields.entries
+            // platform adds x-android headers
+            .filter { it.key != null && !it.key.startsWith("X-Android-") }
+            .flatMap { (name, values) -> values.map { "$name: $it" } }
+            .joinToString("\n")
+        val out = ByteArrayOutputStream()
+        var cut = false
+        (connection.errorStream ?: runCatching { connection.inputStream }.getOrNull())?.use { stream ->
+            val chunk = ByteArray(8192)
+            while (true) {
+                val read = stream.read(chunk)
+                if (read < 0) break
+                if (out.size() + read > RESPONSE_LIMIT) {
+                    out.write(chunk, 0, RESPONSE_LIMIT - out.size())
+                    cut = true
+                    break
+                }
+                out.write(chunk, 0, read)
+            }
+        }
+        return RequestResponse(status, connection.responseMessage.orEmpty(), headers, out.toString("UTF-8"), out.size(), cut, SystemClock.elapsedRealtime() - started)
+    } finally {
+        connection.disconnect()
+    }
+}
 
 internal class PairRow(val id: Int, key: String, value: String) {
     var key by mutableStateOf(key)
@@ -104,6 +170,42 @@ class RequestBuilderModel : ViewModel() {
         private set
     private var nextId = 0
     private var typing: Job? = null
+
+    var response by mutableStateOf<RequestResponse?>(null)
+        private set
+    var failure by mutableStateOf<String?>(null)
+        private set
+    var sending by mutableStateOf(false)
+        private set
+    private var sendJob: Job? = null
+    private var open: AtomicReference<HttpURLConnection?>? = null
+
+    fun send() {
+        refresh()
+        val spec = spec
+        cancel()
+        sending = true
+        response = null
+        failure = null
+        val held = AtomicReference<HttpURLConnection?>()
+        open = held
+        sendJob = viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) { runCatching { send(spec, held::set) } }
+            held.set(null)
+            sending = false
+            response = result.getOrNull()
+            failure = result.exceptionOrNull()?.let { it.message ?: it.javaClass.simpleName }
+        }
+    }
+
+    fun cancel() {
+        sendJob?.cancel()
+        // unblocks the io read
+        open?.getAndSet(null)?.let { thread { it.disconnect() } }
+        sending = false
+    }
+
+    override fun onCleared() = cancel()
 
     fun chooseMethod(index: Int) {
         method = index
@@ -180,6 +282,39 @@ fun RequestBuilder(model: RequestBuilderModel = viewModel()) {
                 textStyle = urlFont,
                 keyboardOptions = noAutocorrect.copy(keyboardType = KeyboardType.Uri),
             )
+            CanonButton(
+                if (model.sending) "Cancel" else "Send",
+                Modifier.fillMaxWidth().height(CanonMetrics.controlHeight),
+                kind = CanonButtonKind.Primary,
+                enabled = model.sending || model.url.isNotBlank(),
+                icon = pencil(R.drawable.pencil_arrow_up_right),
+            ) { if (model.sending) model.cancel() else model.send() }
+        }
+    }
+    val context = LocalContext.current
+    val reply = CanonSection.of {
+        val response = model.response
+        val failure = model.failure
+        if (response == null && failure == null && !model.sending) return@of
+        CanonRows {
+            CanonHeading("Response")
+            if (model.sending) CanonStatusRow("Sending…", CanonTone.Muted)
+            if (failure != null) CanonStatusRow(failure, CanonTone.Warn)
+            if (response != null) {
+                CanonTiles(
+                    listOf(
+                        CanonTile("Status", "${response.status} ${response.reason}".trim()),
+                        CanonTile("Time", "${response.millis} ms"),
+                        CanonTile("Size", Formatter.formatFileSize(context, response.bytes.toLong()) + if (response.cut) " +" else ""),
+                    )
+                )
+                CanonHeading("Headers")
+                CanonCodeBlock(response.headers, maxHeight = RESPONSE_HEIGHT)
+                if (response.body.isNotEmpty()) {
+                    CanonHeading("Body")
+                    CanonCodeBlock(response.body, maxHeight = RESPONSE_HEIGHT)
+                }
+            }
         }
     }
     val pairs = CanonSection.of {
@@ -216,7 +351,7 @@ fun RequestBuilder(model: RequestBuilderModel = viewModel()) {
     }
     val banner = CanonSection.canvas(CanonCanvasSize.Fitting) { RequestWire(wire) }
 
-    CanonSplit(sidebar = listOf(request, pairs, payload), main = listOf(target, curlBlock, httpBlock), banner = banner)
+    CanonSplit(sidebar = listOf(request, pairs, payload), main = listOf(reply, target, curlBlock, httpBlock), banner = banner)
 }
 
 @Composable

@@ -8,6 +8,9 @@ object BackgroundRemoveEngine {
     /** The model's input and output side, from its preprocessor_config.json. */
     const val SIDE = 1024
 
+    /** Matte values at or below this are background noise and become fully transparent. */
+    const val MATTE_FLOOR = 8
+
     /** ARGB pixels as planar RGB, each value / 255 - 0.5 (image_mean 0.5, image_std 1). */
     fun planes(argb: IntArray): FloatArray {
         val count = argb.size
@@ -26,7 +29,7 @@ object BackgroundRemoveEngine {
         val pixels = IntArray(matte.remaining())
         var sum = 0L
         for (i in pixels.indices) {
-            val value = (matte.get().coerceIn(0f, 1f) * 255f).roundToInt()
+            val value = (matte.get().coerceIn(0f, 1f) * 255f).roundToInt().let { if (it <= MATTE_FLOOR) 0 else it }
             sum += value
             pixels[i] = value shl 24
         }

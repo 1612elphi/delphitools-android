@@ -68,6 +68,7 @@ import com.delphi.delphitools.canon.CanonHeading
 import com.delphi.delphitools.canon.CanonLoader
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.CanonRow
+import com.delphi.delphitools.canon.CanonSlider
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSplit
@@ -97,10 +98,17 @@ private const val CLIP_MAX_PIXELS = 8192
 private const val CLIP_PREVIEW_PIXELS = 1600
 
 private val emptyPixels = IntSize(1600, 1200)
+// matte exports keep faint alpha
+private const val CLIP_TOLERANCE = 10
+
 private val emptyKept = IntRect(340, 220, 1370, 920)
 
-private class ClipSource(val image: Bitmap, val preview: ImageBitmap, val name: String, val width: Int, val height: Int) {
+/** [alpha] is null for an image with no alpha channel. */
+private class ClipSource(val image: Bitmap, val preview: ImageBitmap, val name: String, val width: Int, val height: Int, val alpha: AlphaProfile?) {
     val stem get() = name.substringBeforeLast('.').ifEmpty { "image" }
+
+    /** [tolerance] 0 to 100: alpha at or below that share counts as transparent. */
+    fun bounds(tolerance: Int): IntRect? = if (alpha == null) IntRect(0, 0, image.width, image.height) else alpha.rect(tolerance * 255 / 100)
 }
 
 /** dt-ios ImageClipperViewController: the transparent edges of an image found and cut off. */
@@ -135,21 +143,25 @@ class ImageClipperModel(application: Application) : AndroidViewModel(application
                 val image = decoded.image
                 ImageFiles.unlessOutOfMemory {
                     val preview = ImageCompressEngine.preview(image, CLIP_PREVIEW_PIXELS).asImageBitmap()
-                    val kept = if (!image.hasAlpha()) {
-                        IntRect(0, 0, image.width, image.height)
-                    } else {
-                        ImageClipEngine.boundingRect(image.width, image.height) { y, row -> image.getPixels(row, 0, image.width, 0, y, image.width, 1) }
-                    }
-                    ClipSource(image, preview, name, decoded.width, decoded.height) to kept
+                    val alpha = if (image.hasAlpha()) ImageClipEngine.profile(image.width, image.height) { y, row -> image.getPixels(row, 0, image.width, 0, y, image.width, 1) } else null
+                    ClipSource(image, preview, name, decoded.width, decoded.height, alpha)
                 }
             }
             working = false
             failedName = if (loaded == null) name else null
             if (loaded != null) {
-                source = loaded.first
-                kept = loaded.second
+                source = loaded
+                kept = loaded.bounds(tolerance)
             }
         }
+    }
+
+    var tolerance by mutableStateOf(CLIP_TOLERANCE)
+        private set
+
+    fun changeTolerance(value: Int) {
+        tolerance = value
+        source?.let { kept = it.bounds(value) }
     }
 
     fun clear() {
@@ -216,6 +228,11 @@ fun ImageClipper(model: ImageClipperModel = viewModel()) {
                 }
             }
             model.failedName?.let { CanonStatusRow("Could not read $it", CanonTone.Warn) }
+            if (size != null) {
+                CanonRow("Tolerance", flush = true) {
+                    CanonSlider(model.tolerance.toFloat(), { model.changeTolerance(it.roundToInt()) }, Modifier.fillMaxSize(), range = 0f..50f, step = 1f, readout = "${model.tolerance} %")
+                }
+            }
         }
     }
 

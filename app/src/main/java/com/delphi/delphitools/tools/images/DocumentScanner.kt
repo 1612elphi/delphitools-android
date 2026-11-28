@@ -60,6 +60,7 @@ import com.delphi.delphitools.canon.CanonDimensionPlacement
 import com.delphi.delphitools.canon.CanonDropZone
 import com.delphi.delphitools.canon.CanonGrid
 import com.delphi.delphitools.canon.CanonHeading
+import com.delphi.delphitools.canon.CanonLoupe
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.CanonPageStrip
 import com.delphi.delphitools.canon.CanonPageStripHeight
@@ -76,9 +77,11 @@ import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonGrabPan
+import com.delphi.delphitools.canon.canonLoupeFrame
 import com.delphi.delphitools.canon.canonPlaced
 import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
+import com.delphi.delphitools.tools.colour.PixelPickerSampler
 import com.delphi.delphitools.tools.pdf.PdfDocuments
 import com.delphi.delphitools.tools.pdf.PdfImageDocument
 import com.delphi.delphitools.tools.pdf.PdfJob
@@ -87,21 +90,26 @@ import com.delphi.delphitools.tools.pdf.PdfRect
 import com.delphi.delphitools.tools.pdf.PdfSize
 import com.delphi.delphitools.tools.pdf.uris
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
+import java.io.File
+import java.util.UUID
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
-import java.util.UUID
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.roundToInt
 
 private const val SCAN_PIXELS = 3072
 private const val THUMBNAIL_PIXELS = 480
 private const val SETTLE_MS = 120L
+private const val DETECT_SIDE = 200
+private const val LOUPE_RADIUS = 8
+private const val LOUPE_PIXELS = 1024
+private val LOUPE_SIDE = 116.dp
+private val LOUPE_GAP = 34.dp
 
 /** dt-ios ScannedPage: the photo, its corners in photo pixels, quarter turns, and the corrected, filtered page. */
 class ScanPage(val original: Bitmap) {
@@ -181,8 +189,24 @@ class DocumentScannerModel(application: Application) : AndroidViewModel(applicat
             pages.addAll(min(at, pages.size), added)
             selectedId = added[0].id
             job.reset()
-            added.forEach(::process)
+            for (page in added) {
+                val found = withContext(Dispatchers.Default) { detected(page.original) }
+                if (run != generation) return@launch
+                if (found != null) page.quad = found
+                process(page)
+            }
         }
+    }
+
+    private fun detected(photo: Bitmap): List<QuadPoint>? {
+        val small = ImageCompressEngine.preview(photo, DETECT_SIDE)
+        val width = small.width
+        val height = small.height
+        val pixels = IntArray(width * height).also { small.getPixels(it, 0, width, 0, 0, width, height) }
+        if (small !== photo) small.recycle()
+        return DocumentScanEngine.corners(width, height, pixels)
+            ?.map { QuadPoint(it.x * photo.width / width, it.y * photo.height / height) }
+            ?.takeIf(ImageDeskewEngine::isConvex)
     }
 
     fun move(from: Int, to: Int) {
@@ -331,7 +355,7 @@ fun DocumentScanner(model: DocumentScannerModel = viewModel()) {
     val hasCamera = remember { context.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY) }
     var capture by rememberSaveable { mutableStateOf<Uri?>(null) }
 
-    // ponytail: no live edge detection; dt-ios uses VisionKit's VNDocumentCameraViewController, here the corners are set by hand
+    // ponytail: no live edge detection as dt-ios VNDocumentCameraViewController; corners are found after capture
     lateinit var launchCamera: () -> Unit
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { taken ->
         val uri = capture
@@ -531,6 +555,8 @@ private fun CornerEditor(page: ScanPage, onMove: (List<QuadPoint>) -> Unit) {
     var grab by remember { mutableStateOf<DeskewGrab?>(null) }
     var start by remember { mutableStateOf(emptyList<QuadPoint>()) }
     var from by remember { mutableStateOf(QuadPoint(0.0, 0.0)) }
+    var loupeSides by remember { mutableStateOf<Pair<Boolean, Boolean>?>(null) }
+    val sampled = remember(page) { ImageCompressEngine.preview(page.original, LOUPE_PIXELS) }
     BoxWithConstraints(Modifier.fillMaxSize().clipToBounds()) {
         val frame = with(density) {
             val padding = CanonMetrics.panelPadding.toPx()
@@ -552,6 +578,7 @@ private fun CornerEditor(page: ScanPage, onMove: (List<QuadPoint>) -> Unit) {
                     grabs = { grabAt(it) != null },
                     onStart = { point ->
                         grab = grabAt(point)
+                        loupeSides = null
                         start = currentQuad
                         from = imagePixels(point)
                         haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
@@ -577,6 +604,25 @@ private fun CornerEditor(page: ScanPage, onMove: (List<QuadPoint>) -> Unit) {
                 drawCircle(Color.White, handle, corner)
                 drawCircle(ink, handle, corner, style = Stroke(CanonMetrics.frame.toPx()))
             }
+        }
+        val held = (grab as? DeskewGrab.Corner)?.index
+        if (held != null && shown.size == 4) {
+            val corner = shown[held]
+            val loupe = with(density) {
+                val margin = 8.dp.toPx()
+                val bounds = Size(constraints.maxWidth.toFloat(), constraints.maxHeight.toFloat())
+                canonLoupeFrame(corner, min(LOUPE_SIDE.toPx(), bounds.height * 0.4f), LOUPE_GAP.toPx(), bounds, top.toPx() + margin, margin, loupeSides)
+            }
+            if (loupeSides == null) loupeSides = (loupe.center.x < corner.x) to (loupe.center.y < corner.y)
+            val x = PixelPickerSampler.index(quad[held].x / pixels.width, sampled.width)
+            val y = PixelPickerSampler.index(quad[held].y / pixels.height, sampled.height)
+            val cells = LOUPE_RADIUS * 2 + 1
+            val patch = PixelPickerSampler.loupe(sampled.width, sampled.height, x, y, LOUPE_RADIUS, sampled::getPixel)
+            CanonLoupe(
+                Bitmap.createBitmap(patch, cells, cells, Bitmap.Config.ARGB_8888).asImageBitmap(),
+                Color(sampled.getPixel(x, y)),
+                Modifier.canonPlaced(CanonDimensionPlacement(loupe.center, loupe.size)),
+            )
         }
     }
 }

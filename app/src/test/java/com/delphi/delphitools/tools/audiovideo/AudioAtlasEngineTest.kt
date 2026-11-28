@@ -92,6 +92,14 @@ class AudioAtlasEngineTest {
     }
 
     @Test
+    fun spectrogramFillsEveryColumnAfterALateFirstFrame() {
+        val span = 4096L
+        val builder = SpectrogramBuilder(8, 4, span)
+        for (frame in 300 until span) builder.feed(sin(2 * PI * 100 * frame / 1000).toFloat(), frame)
+        assertTrue(builder.pixels.none { it == -1 })
+    }
+
+    @Test
     fun coarseWindowCutsTheOverview() {
         val overview = AVEditPeaks(FloatArray(10) { -it.toFloat() }, FloatArray(10) { it.toFloat() })
         val window = AudioAtlasEngine.coarseWindow(overview, 10.0, 2.0, 4.0)!!

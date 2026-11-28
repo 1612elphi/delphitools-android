@@ -18,7 +18,7 @@ enum class RequestPart { Start, Headers, Body }
 /** [ending]: CRLF in the head, LF between body lines. */
 data class RequestLine(val part: RequestPart, val offset: Int, val text: String, val ending: String)
 
-/** dt-ios RequestBuilderEngine: composes request text only. Nothing here opens a connection. */
+/** dt-ios RequestBuilderEngine: composes request text only; the tool sends it. */
 object RequestBuilderEngine {
     val methods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS")
 
@@ -27,7 +27,7 @@ object RequestBuilderEngine {
 
     private fun String.trimSpaces() = trim { it == ' ' || it == '\t' }
 
-    private fun live(pairs: List<RequestPair>) = pairs.filter { it.key.trimSpaces().isNotEmpty() }
+    internal fun live(pairs: List<RequestPair>) = pairs.filter { it.key.trimSpaces().isNotEmpty() }
 
     private fun hasHeader(headers: List<RequestPair>, name: String) = headers.any { it.key.trimSpaces().lowercase() == name }
 

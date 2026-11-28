@@ -16,8 +16,11 @@ import android.graphics.PorterDuffXfermode
 import android.graphics.Rect
 import android.net.Uri
 import android.util.Half
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -26,9 +29,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -36,6 +41,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -74,16 +81,17 @@ import com.delphi.delphitools.tools.audiovideo.WhisperModel
 import com.delphi.delphitools.tools.audiovideo.WhisperModelStore
 import com.delphi.delphitools.tools.audiovideo.WhisperState
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import kotlin.math.roundToInt
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private const val MAX_PIXELS = 3072
 private const val PREVIEW_PIXELS = 1600
@@ -95,6 +103,11 @@ private val RMBG = WhisperModel(
     "rmbg-1.4", "RMBG 1.4", "briaai/RMBG-1.4", "da1d078376e6691105a5530a374a010627fc60b5",
     listOf(WhisperFile("onnx/model_fp16.onnx", WEIGHTS, 88217533L, "9fdfdb41866d872e0acf4a010c35c1a8547bf0eebe0d1544406bbf1c824cb59d")),
 )
+
+private const val TRACE_ALPHA = 0.3f
+private const val TRACE_FADE_MS = 250
+private const val TRACE_FIRST_MS = 500L
+private const val TRACE_TAPPED_MS = 3000L
 
 private class CutSource(val image: Bitmap, val preview: ImageBitmap, val name: String) {
     val stem get() = name.substringBeforeLast('.').ifEmpty { "image" }
@@ -271,11 +284,24 @@ fun BackgroundRemover(model: BackgroundRemoverModel = viewModel()) {
             if (ghost != null) {
                 val ratio = ghost.width.toFloat() / ghost.height
                 val wide = ratio > maxWidth / maxHeight
-                Box(Modifier.size(if (wide) maxWidth else maxHeight * ratio, if (wide) maxWidth / ratio else maxHeight).canonChecks()) {
+                val cut = model.cut
+                var taps by remember(cut) { mutableIntStateOf(0) }
+                val trace = remember { Animatable(1f) }
+                LaunchedEffect(cut, taps) {
+                    if (cut == null) return@LaunchedEffect trace.snapTo(1f)
+                    trace.animateTo(TRACE_ALPHA, tween(TRACE_FADE_MS))
+                    delay(if (taps == 0) TRACE_FIRST_MS else TRACE_TAPPED_MS)
+                    trace.animateTo(0f, tween(TRACE_FADE_MS))
+                }
+                Box(
+                    Modifier
+                        .size(if (wide) maxWidth else maxHeight * ratio, if (wide) maxWidth / ratio else maxHeight)
+                        .canonChecks()
+                        .pointerInput(cut) { detectTapGestures { taps++ } },
+                ) {
                     if (fill != null) Box(Modifier.fillMaxSize().background(Color(fill.argb)))
-                    val cut = model.cut
                     // dt-ios CutoutPicture.trace
-                    Image(ghost, null, Modifier.fillMaxSize(), contentScale = ContentScale.FillBounds, alpha = if (cut == null) 1f else 0.3f)
+                    Image(ghost, null, Modifier.fillMaxSize().graphicsLayer { alpha = trace.value }, contentScale = ContentScale.FillBounds)
                     if (cut != null) Image(cut, "Preview", Modifier.fillMaxSize(), contentScale = ContentScale.FillBounds)
                 }
             }

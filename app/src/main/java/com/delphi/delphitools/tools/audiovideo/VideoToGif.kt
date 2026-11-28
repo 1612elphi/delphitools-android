@@ -14,12 +14,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.LastPage
-import androidx.compose.material.icons.filled.FirstPage
-import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.derivedStateOf
@@ -39,6 +33,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasBoxing
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -59,6 +54,7 @@ import com.delphi.delphitools.canon.CanonTile
 import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.canonSmpte
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
@@ -256,10 +252,10 @@ fun VideoToGif(model: VideoToGifModel = viewModel()) {
                 )
             }
             CanonGrid {
-                CanonButton("Set in", Modifier.weight(1f).fillMaxHeight(), enabled = hasPlayhead, icon = Icons.AutoMirrored.Filled.LastPage) {
+                CanonButton("Set in", Modifier.weight(1f).fillMaxHeight(), enabled = hasPlayhead, icon = pencil(R.drawable.pencil_arrow_right_to_line)) {
                     playback.playhead?.let { model.select(it, model.end) }
                 }
-                CanonButton("Set out", Modifier.weight(1f).fillMaxHeight(), enabled = hasPlayhead, icon = Icons.Filled.FirstPage) {
+                CanonButton("Set out", Modifier.weight(1f).fillMaxHeight(), enabled = hasPlayhead, icon = pencil(R.drawable.pencil_arrow_left_to_line)) {
                     playback.playhead?.let { model.select(model.start, it) }
                 }
             }
@@ -287,7 +283,7 @@ fun VideoToGif(model: VideoToGifModel = viewModel()) {
     }
     val result = CanonSection.of {
         CanonRows {
-            AVEditJobPanel(job, "Create GIF", Icons.Outlined.PhotoLibrary, "Couldn't read frames from this video.", enabled = ready && !over, onStart = model::encode)
+            AVEditJobPanel(job, "Create GIF", pencil(R.drawable.pencil_images), "Couldn't read frames from this video.", enabled = ready && !over, onStart = model::encode)
             if (output != null) GifPreview(output, aspect)
         }
     }
@@ -317,7 +313,7 @@ fun VideoToGif(model: VideoToGifModel = viewModel()) {
                     "",
                     Modifier.weight(1f).fillMaxHeight(),
                     enabled = ready,
-                    icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                    icon = pencil(R.drawable.pencil_chevron_left),
                     repeats = true,
                     contentDescription = "Back one frame",
                 ) { playback.step(-1) }
@@ -328,7 +324,7 @@ fun VideoToGif(model: VideoToGifModel = viewModel()) {
                     "",
                     Modifier.weight(1f).fillMaxHeight(),
                     enabled = ready,
-                    icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    icon = pencil(R.drawable.pencil_chevron_right),
                     repeats = true,
                     contentDescription = "Forward one frame",
                 ) { playback.step(1) }

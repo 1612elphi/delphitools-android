@@ -23,10 +23,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.FormatSize
-import androidx.compose.material.icons.outlined.OpenInFull
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -77,6 +73,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -86,6 +83,7 @@ import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSlider
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonStatusRow
@@ -96,6 +94,7 @@ import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonClickable
 import com.delphi.delphitools.canon.creases
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import com.delphi.delphitools.tools.typography.LargeTypeEngine.CharClass
 import com.delphi.delphitools.ui.theme.CanonText
@@ -176,6 +175,12 @@ class LargeTypeModel : ViewModel() {
         }
     }
 
+    fun set(next: String) {
+        typing?.cancel()
+        text = next
+        shown = next
+    }
+
     /** A drag turns maximum off. */
     fun drag(next: Double) {
         maximum = false
@@ -192,6 +197,7 @@ class LargeTypeModel : ViewModel() {
 
 @Composable
 fun LargeType(model: LargeTypeModel = viewModel()) {
+    CanonSharedText(model::set)
     val themes = largeTypeThemes()
     val theme = themes[model.theme]
     val settings = model.settings
@@ -250,7 +256,7 @@ fun LargeType(model: LargeTypeModel = viewModel()) {
                 "Full Screen",
                 kind = CanonButtonKind.Primary,
                 enabled = model.shown.isNotEmpty(),
-                icon = Icons.Outlined.OpenInFull,
+                icon = pencil(R.drawable.pencil_maximize_2),
                 oversized = true,
             ) { model.fullScreen = true }
         }
@@ -364,7 +370,7 @@ private fun LargeTypeDisplay(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
             ) {
-                Icon(Icons.Outlined.FormatSize, contentDescription = null, tint = theme.text.copy(alpha = 0.5f), modifier = Modifier.size(28.dp))
+                Icon(pencil(R.drawable.pencil_a_large_small), contentDescription = null, tint = theme.text.copy(alpha = 0.5f), modifier = Modifier.size(28.dp))
                 Text("Text will appear here", style = CanonText.caption, color = theme.text.copy(alpha = 0.6f))
             }
             return@BoxWithConstraints
@@ -559,7 +565,7 @@ private fun FullScreen(settings: LargeTypeSettings, theme: LargeTypeTheme, onClo
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Outlined.Close, contentDescription = null, tint = theme.text.copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
+                Icon(pencil(R.drawable.pencil_x), contentDescription = null, tint = theme.text.copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
             }
         }
     }

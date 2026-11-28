@@ -28,8 +28,8 @@ private const val DEFAULT_GRAIN = 0.57f
 // dt-ios Favour.chance: the share of launches past the intro that show the banner
 private const val FAVOUR_CHANCE = 0.35
 
-private const val FAVOURITES = "favouriteToolIDs"
-private const val RECENTS = "recentToolIDs"
+internal const val FAVOURITES = "favouriteToolIDs"
+internal const val RECENTS = "recentToolIDs"
 private const val ORDER = "categoryOrder"
 private const val BACKDROP = "backdropStyle"
 private const val TINT = "backdropTint"

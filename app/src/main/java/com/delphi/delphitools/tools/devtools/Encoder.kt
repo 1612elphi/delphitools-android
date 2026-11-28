@@ -4,8 +4,6 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.SwapVert
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonGrid
@@ -27,6 +26,7 @@ import com.delphi.delphitools.canon.CanonHeading
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSegmented
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonStatusRow
 import com.delphi.delphitools.canon.CanonTextInput
@@ -34,6 +34,7 @@ import com.delphi.delphitools.canon.CanonTextOutput
 import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.CanonValueLayout
 import com.delphi.delphitools.canon.CanonValueLine
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.DelphiMono
 
 enum class EncoderScheme(val label: String) { Base64("Base64"), Url("URL"), Hash("Hash") }
@@ -65,6 +66,10 @@ class EncoderModel : ViewModel() {
 
 @Composable
 fun Encoder(model: EncoderModel = viewModel()) {
+    CanonSharedText {
+        model.text = it
+        model.settle(it)
+    }
     val text = model.settled
     val scheme = model.scheme
     val decoding = model.decoding
@@ -117,7 +122,7 @@ fun Encoder(model: EncoderModel = viewModel()) {
         ) {
             if (failure != null) CanonStatusRow(failure.text, CanonTone.Warn)
             CanonGrid {
-                CanonButton("Swap", Modifier.weight(1f).fillMaxHeight(), enabled = converted.isNotEmpty(), icon = Icons.Outlined.SwapVert) {
+                CanonButton("Swap", Modifier.weight(1f).fillMaxHeight(), enabled = converted.isNotEmpty(), icon = pencil(R.drawable.pencil_arrow_up_down)) {
                     model.swap(converted)
                 }
             }

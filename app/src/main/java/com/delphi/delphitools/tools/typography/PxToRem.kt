@@ -1,5 +1,7 @@
 package com.delphi.delphitools.tools.typography
 
+import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -14,8 +16,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -155,7 +155,7 @@ fun PxToRem(model: PxToRemModel = viewModel()) {
                 "Copy",
                 kind = CanonButtonKind.Secondary,
                 enabled = result != null,
-                icon = Icons.Outlined.ContentCopy,
+                icon = pencil(R.drawable.pencil_copy),
                 flashesCopied = true,
             ) {
                 model.result?.let {

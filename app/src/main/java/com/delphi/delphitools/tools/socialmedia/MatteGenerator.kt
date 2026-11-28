@@ -19,10 +19,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -58,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -83,6 +80,7 @@ import com.delphi.delphitools.canon.canonDimensionLines
 import com.delphi.delphitools.canon.canonDimensionSheet
 import com.delphi.delphitools.canon.canonDisplayName
 import com.delphi.delphitools.canon.canonPlaced
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.colour.rgbOf
 import com.delphi.delphitools.tools.FileExport
@@ -252,7 +250,7 @@ fun MatteGenerator(model: MatteGeneratorModel = viewModel()) {
             CanonHeading("Source")
             if (model.loaded) {
                 CanonRow(model.stem, detail = model.fileSize, flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete) { model.load(null) }
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2)) { model.load(null) }
                 }
             } else {
                 CanonDropZone("Drop an image", paste = false, onFiles = { uris -> model.load(uris.firstOrNull()) })
@@ -281,7 +279,7 @@ fun MatteGenerator(model: MatteGeneratorModel = viewModel()) {
                 }
             }
             CanonRow("${spec.ratioW}:${spec.ratioH}", detail = shape, flush = true) {
-                CanonButton("Swap", icon = Icons.Rounded.SwapHoriz, enabled = spec.ratioW != spec.ratioH, onClick = model::swap)
+                CanonButton("Swap", icon = pencil(R.drawable.pencil_arrow_left_right), enabled = spec.ratioW != spec.ratioH, onClick = model::swap)
             }
             CanonHeading("Output")
             CanonSegmented(widths.map { it.toString() }, widths.indexOf(spec.width)) { model.width(widths[it]) }
@@ -289,7 +287,7 @@ fun MatteGenerator(model: MatteGeneratorModel = viewModel()) {
             CanonRow("Padding", flush = true) {
                 CanonSlider(spec.padding.toFloat(), { model.padding(it.roundToInt()) }, range = 0f..200f, step = 10f, readout = "${spec.padding} px")
             }
-            CanonButton("Export", kind = CanonButtonKind.Primary, enabled = model.loaded && !model.exporting, icon = Icons.Outlined.Share, oversized = true) {
+            CanonButton("Export", kind = CanonButtonKind.Primary, enabled = model.loaded && !model.exporting, icon = pencil(R.drawable.pencil_share), oversized = true) {
                 model.export(context)
             }
         }

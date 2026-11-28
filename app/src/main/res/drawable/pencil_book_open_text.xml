@@ -1,0 +1,42 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+	android:width="24dp"
+	android:height="24dp"
+	android:viewportWidth="24"
+	android:viewportHeight="24">
+	<path
+		android:pathData="M2.13 3.54 Q2.04 3.43 2.03 3.56 Q2.02 3.69 2.11 4.96 Q2.19 6.22 2.24 8.94 Q2.28 11.67 2.22 15.04 Q2.15 18.42 2.17 18.65 Q2.20 18.88 2.26 18.96 L2.32 19.05"
+		android:strokeColor="#FF000000"
+		android:strokeWidth="2"
+		android:strokeLineCap="round"
+		android:strokeLineJoin="round" />
+	<path
+		android:pathData="M12.22 5.46 Q12.20 7.96 12.12 9.47 Q12.04 10.99 12.03 13.39 Q12.01 15.80 11.91 17.83 Q11.81 19.85 11.83 20.09 Q11.85 20.33 11.93 20.70 Q12.00 21.06 12.03 21.12 Q12.06 21.17 12.09 21.13 L12.12 21.10"
+		android:strokeColor="#FF000000"
+		android:strokeWidth="2"
+		android:strokeLineCap="round"
+		android:strokeLineJoin="round" />
+	<path
+		android:pathData="M2.32 19.05 Q2.44 19.27 2.71 19.14 Q2.97 19.02 4.04 18.91 Q5.11 18.80 5.93 18.83 Q6.75 18.86 7.74 19.01 Q8.72 19.16 9.54 19.53 Q10.37 19.90 10.65 20.07 Q10.93 20.24 11.12 20.46 Q11.30 20.68 11.40 20.86 Q11.49 21.04 11.55 21.25 Q11.61 21.46 11.83 21.31 L12.06 21.17"
+		android:strokeColor="#FF000000"
+		android:strokeWidth="2"
+		android:strokeLineCap="round"
+		android:strokeLineJoin="round" />
+	<path
+		android:pathData="M12.06 21.17 Q12.11 21.26 12.23 21.02 Q12.35 20.77 12.60 20.45 Q12.84 20.13 13.34 19.75 Q13.84 19.38 14.30 19.19 Q14.75 19.00 15.59 18.83 Q16.42 18.66 17.04 18.59 Q17.66 18.52 18.23 18.51 Q18.79 18.49 19.92 18.61 Q21.06 18.73 21.13 18.87 L21.21 19.00"
+		android:strokeColor="#FF000000"
+		android:strokeWidth="2"
+		android:strokeLineCap="round"
+		android:strokeLineJoin="round" />
+	<path
+		android:pathData="M2.04 3.43 Q2.34 3.15 2.46 3.12 Q2.58 3.09 3.59 3.09 Q4.60 3.08 6.22 3.21 Q7.83 3.35 8.57 3.50 Q9.30 3.65 9.84 3.91 Q10.39 4.17 10.74 4.40 Q11.09 4.63 11.28 4.79 Q11.48 4.96 11.81 5.40 Q12.14 5.84 12.24 6.25 L12.35 6.66"
+		android:strokeColor="#FF000000"
+		android:strokeWidth="2"
+		android:strokeLineCap="round"
+		android:strokeLineJoin="round" />
+	<path
+		android:pathData="M12.22 5.46 Q12.06 5.22 12.14 5.05 Q12.23 4.88 12.68 4.35 Q13.14 3.83 13.52 3.57 Q13.89 3.30 14.38 3.11 Q14.86 2.93 15.12 2.87 Q15.38 2.82 16.38 2.72 Q17.39 2.62 18.84 2.73 Q20.29 2.85 20.84 2.92 Q21.39 3.00 21.36 3.82 Q21.32 4.64 21.27 5.13 Q21.21 5.61 21.23 6.31 Q21.24 7.00 21.19 7.87 Q21.14 8.74 21.16 9.70 Q21.18 10.66 21.15 11.37 Q21.12 12.09 21.17 13.46 Q21.22 14.82 21.43 16.28 Q21.65 17.75 21.64 18.04 Q21.64 18.33 21.42 18.67 L21.21 19.00"
+		android:strokeColor="#FF000000"
+		android:strokeWidth="2"
+		android:strokeLineCap="round"
+		android:strokeLineJoin="round" />
+</vector>

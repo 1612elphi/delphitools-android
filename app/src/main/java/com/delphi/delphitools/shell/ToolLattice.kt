@@ -24,10 +24,6 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,6 +36,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -50,12 +51,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonJumpGrid
 import com.delphi.delphitools.canon.CanonJumpSection
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.MenuCellItem
 import com.delphi.delphitools.canon.MenuCellPopup
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.launch
@@ -71,9 +74,32 @@ private val cardHeight = 44.dp
 // UIColor.systemYellow
 internal val starYellow = Color(0xFFFFCC00)
 
+/** The home's tiles, so a tool page can grow out of its tile and shrink back into it. */
+internal class TileOrigins {
+    private val tiles = HashMap<String, LayoutCoordinates>()
+    private var opened: String? = null
+
+    fun place(key: String, tile: LayoutCoordinates) {
+        tiles[key] = tile
+    }
+
+    private fun bounds(key: String?): Rect? = tiles[key]?.takeIf { it.isAttached }?.let { Rect(it.positionInWindow(), it.size.toSize()) }
+
+    /** The bounds of the tile a page opens from; null [key] when no tile opened it. */
+    fun open(key: String?): Rect? {
+        opened = key
+        return bounds(key)
+    }
+
+    /** Where the tile the open page came from is now; null when it is not drawn. */
+    fun current(): Rect? = bounds(opened)
+}
+
+private fun Modifier.tileOrigin(origins: TileOrigins, key: String) = onGloballyPositioned { origins.place(key, it) }
+
 /** The home: hero, favour banner and favourites, then every tool in a lattice of cells, one section per category. */
 @Composable
-internal fun ToolLattice(state: LazyGridState, onOpen: (Tool) -> Unit, onFavour: () -> Unit) {
+internal fun ToolLattice(state: LazyGridState, onOpen: (Tool, String?) -> Unit, origins: TileOrigins, onFavour: () -> Unit) {
     val stores = LocalShellStores.current
     val favourites = stores.favouriteTools
     val showsFavour = stores.showsFavour
@@ -118,12 +144,14 @@ internal fun ToolLattice(state: LazyGridState, onOpen: (Tool) -> Unit, onFavour:
                 }
             }
             if (favourites.isNotEmpty()) {
-                item(key = "favourites", span = { GridItemSpan(maxLineSpan) }) { Favourites(favourites, onOpen, jump) }
+                item(key = "favourites", span = { GridItemSpan(maxLineSpan) }) { Favourites(favourites, onOpen, origins, jump) }
             }
             sections.forEach { (title, sectionTools) ->
                 item(key = title, span = { GridItemSpan(maxLineSpan) }) { SectionHeading(title, sectionTools.size, onJump = jump) }
                 itemsIndexed(sectionTools, key = { _, tool -> "$title/${tool.id}" }) { index, tool ->
-                    ToolCell(tool, tool.id in stores.favourites, firstColumn = index % columns == 0, firstRow = index < columns) { onOpen(tool) }
+                    ToolCell(tool, tool.id in stores.favourites, firstColumn = index % columns == 0, firstRow = index < columns, Modifier.tileOrigin(origins, "$title/${tool.id}")) {
+                        onOpen(tool, "$title/${tool.id}")
+                    }
                 }
                 item(key = "$title/end", span = { GridItemSpan(maxLineSpan) }) { Spacer(Modifier.height(48.dp - headingPadding)) }
             }
@@ -145,14 +173,14 @@ private fun SectionHeading(title: String, count: Int, onJump: () -> Unit) {
     ) {
         Text(title.uppercase(), style = CanonText.captionSemibold.copy(letterSpacing = 1.4.sp), color = c.foreground)
         Text("$count", style = CanonText.caption.copy(fontFamily = DelphiMono), color = c.mutedForeground)
-        Icon(Icons.AutoMirrored.Outlined.ArrowForwardIos, contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(10.dp))
+        Icon(pencil(R.drawable.pencil_chevron_right), contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(10.dp))
     }
 }
 
 /** dt-ios HomeFavouritesCell: the favourites as cards in wrapping rows centred in the hero's column. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Favourites(favourites: List<Tool>, onOpen: (Tool) -> Unit, onJump: () -> Unit) {
+private fun Favourites(favourites: List<Tool>, onOpen: (Tool, String?) -> Unit, origins: TileOrigins, onJump: () -> Unit) {
     Column(
         Modifier.fillMaxWidth().padding(bottom = 48.dp - headingPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -163,17 +191,21 @@ private fun Favourites(favourites: List<Tool>, onOpen: (Tool) -> Unit, onJump: (
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            favourites.forEach { tool -> FavouriteCard(tool) { onOpen(tool) } }
+            favourites.forEach { tool ->
+                FavouriteCard(tool, Modifier.tileOrigin(origins, "favourite/${tool.id}")) {
+                    onOpen(tool, "favourite/${tool.id}")
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun FavouriteCard(tool: Tool, onClick: () -> Unit) {
+private fun FavouriteCard(tool: Tool, modifier: Modifier, onClick: () -> Unit) {
     val c = LocalDelphiColours.current
     val stores = LocalShellStores.current
     var menu by remember { mutableStateOf(false) }
-    Box {
+    Box(modifier) {
         Row(
             Modifier
                 .height(cardHeight)
@@ -185,11 +217,11 @@ private fun FavouriteCard(tool: Tool, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Icon(tool.icon, contentDescription = null, tint = c.primary, modifier = Modifier.size(20.dp))
+            Icon(pencil(tool.icon), contentDescription = null, tint = c.primary, modifier = Modifier.size(20.dp))
             Text(tool.name, style = CanonText.subheadline.copy(fontWeight = FontWeight.SemiBold), color = c.foreground, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         MenuCellPopup(menu, { menu = false }) {
-            MenuCellItem("Remove from favourites", icon = Icons.Outlined.StarBorder) {
+            MenuCellItem("Remove from favourites", icon = pencil(R.drawable.pencil_star)) {
                 menu = false
                 stores.toggleFavourite(tool.id)
             }
@@ -198,12 +230,12 @@ private fun FavouriteCard(tool: Tool, onClick: () -> Unit) {
 }
 
 @Composable
-private fun ToolCell(tool: Tool, isFavourite: Boolean, firstColumn: Boolean, firstRow: Boolean, onClick: () -> Unit) {
+private fun ToolCell(tool: Tool, isFavourite: Boolean, firstColumn: Boolean, firstRow: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val c = LocalDelphiColours.current
     val stores = LocalShellStores.current
     val toggle = if (isFavourite) "Remove from favourites" else "Add to favourites"
     var menu by remember { mutableStateOf(false) }
-    Box {
+    Box(modifier) {
         Column(
             Modifier
                 .fillMaxWidth()
@@ -220,7 +252,7 @@ private fun ToolCell(tool: Tool, isFavourite: Boolean, firstColumn: Boolean, fir
                 }
                 .padding(16.dp),
         ) {
-            Icon(tool.icon, contentDescription = null, tint = c.primary, modifier = Modifier.size(24.dp))
+            Icon(pencil(tool.icon), contentDescription = null, tint = c.primary, modifier = Modifier.size(24.dp))
             Spacer(Modifier.height(12.dp))
             Text(
                 tool.name,
@@ -237,7 +269,7 @@ private fun ToolCell(tool: Tool, isFavourite: Boolean, firstColumn: Boolean, fir
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            if (isFavourite) Icon(Icons.Filled.Star, contentDescription = null, tint = starYellow, modifier = Modifier.size(12.dp))
+            if (isFavourite) Icon(pencil(R.drawable.pencil_star), contentDescription = null, tint = starYellow, modifier = Modifier.size(12.dp))
             if (tool.isBeta) {
                 Text(
                     "BETA",
@@ -248,7 +280,7 @@ private fun ToolCell(tool: Tool, isFavourite: Boolean, firstColumn: Boolean, fir
             }
         }
         MenuCellPopup(menu, { menu = false }) {
-            MenuCellItem(toggle, icon = if (isFavourite) Icons.Outlined.StarBorder else Icons.Filled.Star) {
+            MenuCellItem(toggle, icon = pencil(R.drawable.pencil_star)) {
                 menu = false
                 stores.toggleFavourite(tool.id)
             }

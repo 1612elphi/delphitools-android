@@ -6,8 +6,6 @@ import android.graphics.Paint
 import android.net.Uri
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -25,6 +23,7 @@ import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonColourWell
 import com.delphi.delphitools.canon.CanonHeading
@@ -38,6 +37,7 @@ import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonTile
 import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.LocalCanonCanvas
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.canon.toCanonColor
 import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.colour.hex
@@ -151,7 +151,7 @@ fun WaveformGenerator(model: WaveformGeneratorModel = viewModel()) {
     val controls = CanonSection.of {
         CanonRows {
             if (source.uri == null) {
-                AVEditAudioDrop(Icons.Outlined.GraphicEq, model::load)
+                AVEditAudioDrop(pencil(R.drawable.pencil_audio_waveform), model::load)
             } else {
                 CanonHeading("Source")
                 AVEditFileRow(source.name, scan?.let(AVEditAudioEngine::audioDetail) ?: "", if (source.failed) "Failed to decode audio." else null, model::clear)
@@ -172,7 +172,7 @@ fun WaveformGenerator(model: WaveformGeneratorModel = viewModel()) {
                 CanonColourWell(model.background, model::changeBackground, label = "Background")
                 CanonHeading("Format")
                 CanonSegmented(formats, model.format, onSelect = model::selectFormat)
-                AVEditJobPanel(job, "Render", Icons.Outlined.GraphicEq, "Couldn't write image.", enabled = scan != null, onStart = model::render)
+                AVEditJobPanel(job, "Render", pencil(R.drawable.pencil_audio_waveform), "Couldn't write image.", enabled = scan != null, onStart = model::render)
             }
         }
     }

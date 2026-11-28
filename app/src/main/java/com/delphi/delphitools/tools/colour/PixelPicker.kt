@@ -30,11 +30,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Colorize
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,6 +38,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.colour.hex
 import com.delphi.delphitools.shell.workflowColours
 import androidx.compose.runtime.rememberUpdatedState
@@ -235,7 +232,7 @@ fun PixelPicker(model: PixelPickerModel = viewModel()) {
                 CanonDropZone("Drop an image", onFiles = { uris -> model.load(uris.firstOrNull()) })
             } else {
                 CanonRow("Image", detail = model.fileSize, flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete) { model.load(null) }
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2)) { model.load(null) }
                 }
             }
         }
@@ -250,12 +247,12 @@ fun PixelPicker(model: PixelPickerModel = viewModel()) {
             PickedColourList(model)
             CanonGrid {
                 val cell = Modifier.weight(1f).fillMaxHeight()
-                CanonButton("Save", cell, icon = Icons.Outlined.FavoriteBorder, flashesCopied = true, flashTitle = "Saved") {
+                CanonButton("Save", cell, icon = pencil(R.drawable.pencil_heart), flashesCopied = true, flashTitle = "Saved") {
                     store.add("Pixel Picker", model.picks.map { it.colour })
                     view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                 }
                 PaletteExportButton({ "Pixel Picker" }, { model.picks.map { it.colour } }, cell)
-                CanonButton("Clear", cell, icon = Icons.Outlined.Delete) { model.picks.clear() }
+                CanonButton("Clear", cell, icon = pencil(R.drawable.pencil_trash_2)) { model.picks.clear() }
             }
         }
     }
@@ -270,7 +267,7 @@ fun PixelPicker(model: PixelPickerModel = viewModel()) {
         collapsesTo = 240.dp,
         isFooterHidden = !loaded,
         footer = {
-            CanonButton("Pick", kind = CanonButtonKind.Primary, icon = Icons.Outlined.Colorize, oversized = true, flashesCopied = true, flashTitle = "Picked") {
+            CanonButton("Pick", kind = CanonButtonKind.Primary, icon = pencil(R.drawable.pencil_pipette), oversized = true, flashesCopied = true, flashTitle = "Picked") {
                 view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                 model.pick()
             }
@@ -293,7 +290,7 @@ private fun PixelPickerPicture(model: PixelPickerModel, modifier: Modifier) {
     val image = model.shown
     if (image == null) {
         Column(modifier, verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.Outlined.Colorize, null, tint = c.mutedForeground, modifier = Modifier.size(34.dp))
+            Icon(pencil(R.drawable.pencil_pipette), null, tint = c.mutedForeground, modifier = Modifier.size(34.dp))
             Text("Image", style = CanonText.bodySemibold.copy(fontSize = 17.sp), color = c.mutedForeground)
         }
         return
@@ -446,9 +443,9 @@ private fun PickedColourRow(colour: Rgb, selected: Boolean, onRecall: () -> Unit
             )
             Text(value, style = valueMono, color = c.mutedForeground, maxLines = 1)
         }
-        CanonButton("", Modifier.width(CanonMetrics.rowHeight).fillMaxHeight(), icon = Icons.Outlined.ContentCopy, contentDescription = "Copy") {
+        CanonButton("", Modifier.width(CanonMetrics.rowHeight).fillMaxHeight(), icon = pencil(R.drawable.pencil_copy), contentDescription = "Copy") {
             CanonCopyFeedback.copy(view, value)
         }
-        CanonButton("", Modifier.width(CanonMetrics.rowHeight).fillMaxHeight(), icon = Icons.Outlined.Delete, contentDescription = "Remove", onClick = onRemove)
+        CanonButton("", Modifier.width(CanonMetrics.rowHeight).fillMaxHeight(), icon = pencil(R.drawable.pencil_trash_2), contentDescription = "Remove", onClick = onRemove)
     }
 }

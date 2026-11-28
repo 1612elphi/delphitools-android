@@ -12,10 +12,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -61,6 +57,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.delay
@@ -110,7 +107,7 @@ fun CanonButton(
     onClick: () -> Unit,
 ) {
     val c = LocalDelphiColours.current
-    val passes = (followsWorkflow ?: (icon == Icons.Outlined.Share)) && CanonHost.capturesFiles()
+    val passes = (followsWorkflow ?: (icon == pencil(R.drawable.pencil_share))) && CanonHost.capturesFiles()
     CanonPassAlong(passes && enabled, first = kind == CanonButtonKind.Primary, onClick)
     var flashes by remember { mutableIntStateOf(0) }
     LaunchedEffect(flashes) {
@@ -124,8 +121,8 @@ fun CanonButton(
         else -> text
     }
     val symbol = when {
-        flashes > 0 -> Icons.Rounded.Check
-        passes -> Icons.AutoMirrored.Outlined.ArrowForward
+        flashes > 0 -> pencil(R.drawable.pencil_check)
+        passes -> pencil(R.drawable.pencil_arrow_right)
         else -> icon
     }
     val fills = kind == CanonButtonKind.Primary || kind == CanonButtonKind.Secondary

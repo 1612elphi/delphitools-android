@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="WidgetFlap">
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:gravity">center</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">#F1E9CF</item>
+        <item name="android:textSize">18dp</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <style name="WidgetPassTime">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:fontFamily">@font/roboto_flex</item>
+        <item name="android:fontVariationSettings">\'wght\' 700, \'wdth\' 25</item>
+        <item name="android:textSize">32dp</item>
+    </style>
+
+    <style name="WidgetPassDate">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">5dp</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:fontFamily">@font/iosevka_semibold</item>
+        <item name="android:textSize">9dp</item>
+    </style>
+
+    <bool name="widget_dials">false</bool>
+</resources>

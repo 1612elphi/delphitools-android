@@ -18,14 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.outlined.AccountTree
-import androidx.compose.material.icons.outlined.BookmarkBorder
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.UnfoldMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -64,6 +56,7 @@ import com.delphi.delphitools.canon.CanonTextCell
 import com.delphi.delphitools.canon.MenuCellItem
 import com.delphi.delphitools.canon.MenuCellPopup
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 
@@ -86,7 +79,7 @@ internal fun WorkflowsPage() {
             CanonRows {
                 CanonHeading("Current")
                 WorkflowRow(current, step = run.step) { run.goTo(run.step) }
-                CanonButton("Exit", icon = Icons.Outlined.Close, onClick = run::exit)
+                CanonButton("Exit", icon = pencil(R.drawable.pencil_x), onClick = run::exit)
             }
         }
         if (stores.savedWorkflows.isNotEmpty()) {
@@ -97,11 +90,11 @@ internal fun WorkflowsPage() {
                     Box {
                         WorkflowRow(saved, Modifier.longPress("Rename") { menu = true }) { run.start(saved) }
                         MenuCellPopup(menu, { menu = false }) {
-                            MenuCellItem("Rename", icon = Icons.Outlined.Edit) {
+                            MenuCellItem("Rename", icon = pencil(R.drawable.pencil_pencil)) {
                                 menu = false
                                 renaming = saved
                             }
-                            MenuCellItem("Delete", icon = Icons.Outlined.Delete) {
+                            MenuCellItem("Delete", icon = pencil(R.drawable.pencil_trash_2)) {
                                 menu = false
                                 stores.removeWorkflow(saved)
                             }
@@ -134,7 +127,7 @@ private fun Pass(picks: List<String>, valid: Boolean, onPick: (List<String>) -> 
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Icon(Icons.Outlined.AccountTree, contentDescription = null, tint = c.primaryForeground, modifier = Modifier.size(16.dp))
+                Icon(pencil(R.drawable.pencil_workflow), contentDescription = null, tint = c.primaryForeground, modifier = Modifier.size(16.dp))
                 Text("DELPHITOOLS WORKFLOW:", style = CanonText.captionSemibold.copy(letterSpacing = 1.4.sp), color = c.primaryForeground)
             }
             repeat(WorkflowCatalog.SLOTS) { index ->
@@ -145,8 +138,8 @@ private fun Pass(picks: List<String>, valid: Boolean, onPick: (List<String>) -> 
             Perforation()
             Barcode()
             CanonGrid {
-                CanonButton("Save", Modifier.weight(1f).fillMaxHeight(), enabled = valid, icon = Icons.Outlined.BookmarkBorder, onClick = onSave)
-                CanonButton("Start", Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Primary, enabled = valid, icon = Icons.AutoMirrored.Outlined.ArrowForward, onClick = onStart)
+                CanonButton("Save", Modifier.weight(1f).fillMaxHeight(), enabled = valid, icon = pencil(R.drawable.pencil_bookmark), onClick = onSave)
+                CanonButton("Start", Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Primary, enabled = valid, icon = pencil(R.drawable.pencil_arrow_right), onClick = onStart)
             }
         }
         Image(
@@ -185,11 +178,11 @@ private fun Slot(index: Int, picks: List<String>, modifier: Modifier, onPick: (L
         ) {
             val ink = if (enabled) c.foreground else c.foreground.copy(alpha = 0.4f)
             Text(tool?.name ?: "—", style = CanonText.bodyMedium, color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-            Icon(Icons.Outlined.UnfoldMore, contentDescription = null, tint = ink, modifier = Modifier.size(14.dp))
+            Icon(pencil(R.drawable.pencil_chevrons_up_down), contentDescription = null, tint = ink, modifier = Modifier.size(14.dp))
         }
         MenuCellPopup(open, { open = false }) {
             if (index >= 2 && tool != null) {
-                MenuCellItem("None", icon = Icons.Outlined.Close) {
+                MenuCellItem("None", icon = pencil(R.drawable.pencil_x)) {
                     open = false
                     onPick(picks.take(index))
                 }
@@ -204,7 +197,7 @@ private fun Slot(index: Int, picks: List<String>, modifier: Modifier, onPick: (L
                     modifier = Modifier.padding(start = CanonMetrics.panelPadding, top = 12.dp, bottom = 4.dp),
                 )
                 inCategory.forEach { option ->
-                    MenuCellItem(option.name, checked = option.id == tool?.id, icon = option.icon) {
+                    MenuCellItem(option.name, checked = option.id == tool?.id, icon = pencil(option.icon)) {
                         open = false
                         onPick(picks.take(index) + option.id)
                     }
@@ -237,9 +230,9 @@ private fun WorkflowRow(workflow: Workflow, modifier: Modifier = Modifier, step:
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             chain.forEachIndexed { index, tool ->
-                if (index > 0) Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(11.dp))
+                if (index > 0) Icon(pencil(R.drawable.pencil_arrow_right), contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(11.dp))
                 val reached = step == null || index <= step
-                Icon(tool.icon, contentDescription = null, tint = if (reached) c.primary else c.mutedForeground, modifier = Modifier.size(18.dp))
+                Icon(pencil(tool.icon), contentDescription = null, tint = if (reached) c.primary else c.mutedForeground, modifier = Modifier.size(18.dp))
             }
         }
     }

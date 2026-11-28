@@ -9,9 +9,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -19,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 
@@ -68,7 +66,7 @@ fun CanonTextOutput(
                 Modifier.weight(1f).fillMaxHeight(),
                 kind = CanonButtonKind.Secondary,
                 enabled = !blank,
-                icon = Icons.Outlined.Share,
+                icon = pencil(R.drawable.pencil_share),
                 followsWorkflow = false,
             ) {
                 // ponytail: shares the text, not a file named fileName; a file needs a FileProvider in the manifest
@@ -83,7 +81,7 @@ fun CanonTextOutput(
                 Modifier.weight(1f).fillMaxHeight(),
                 kind = CanonButtonKind.Primary,
                 enabled = !blank,
-                icon = Icons.Outlined.ContentCopy,
+                icon = pencil(R.drawable.pencil_copy),
                 oversized = true,
                 flashesCopied = true,
             ) {

@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonDecimalField
@@ -33,6 +32,7 @@ import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonTextCell
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import com.delphi.delphitools.tools.print.PaperPick
 import com.delphi.delphitools.tools.print.PaperQuery
@@ -119,7 +119,7 @@ fun PaperSizePicker(extra: String?, selected: PaperChoice?, onDismiss: () -> Uni
                     CanonRow("Width", flush = true) { CanonDecimalField(width, { width = it }, unit = "mm", step = 1.0, decimals = 1, range = customRange) }
                     CanonRow("Height", flush = true) { CanonDecimalField(height, { height = it }, unit = "mm", step = 1.0, decimals = 1, range = customRange) }
                     CanonGrid {
-                        CanonButton("Use", Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Primary, icon = Icons.Outlined.Check) {
+                        CanonButton("Use", Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Primary, icon = pencil(R.drawable.pencil_check)) {
                             choose(PaperChoice.Custom(width, height))
                         }
                     }
@@ -134,7 +134,7 @@ fun PaperSizePicker(extra: String?, selected: PaperChoice?, onDismiss: () -> Uni
                         Modifier.padding(top = CanonMetrics.hairline).canonClickable { choose(PaperChoice.Paper(pick)) },
                         detail = pick.size.mmString,
                     ) {
-                        if (pick.key == chosenKey) Icon(Icons.Outlined.Check, null, tint = c.primary, modifier = Modifier.size(20.dp))
+                        if (pick.key == chosenKey) Icon(pencil(R.drawable.pencil_check), null, tint = c.primary, modifier = Modifier.size(20.dp))
                     }
                 }
             }

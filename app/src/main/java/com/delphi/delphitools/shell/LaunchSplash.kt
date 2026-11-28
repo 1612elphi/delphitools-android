@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -150,7 +151,7 @@ fun LaunchSplash(onFinished: () -> Unit) {
     val finished by rememberUpdatedState(onFinished)
     val resources = LocalResources.current
     val symbols = remember { allTools.map { it.icon }.distinct() }
-    val painters = symbols.map { rememberVectorPainter(it) }
+    val painters = symbols.map { rememberVectorPainter(pencil(it)) }
     val letters = remember { glyphDrawables.mapValues { ImageBitmap.imageResource(resources, it.value) } }
     val guests = remember { launchGuests.map { ImageBitmap.imageResource(resources, it.drawable) } }
     val scope = rememberCoroutineScope()

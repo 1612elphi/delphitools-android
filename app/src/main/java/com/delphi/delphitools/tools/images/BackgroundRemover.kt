@@ -25,11 +25,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.SyncProblem
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -48,6 +43,7 @@ import androidx.core.graphics.scale
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonBar
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
@@ -70,6 +66,7 @@ import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonChecks
 import com.delphi.delphitools.canon.canonDisplayName
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.tools.audiovideo.WhisperFile
@@ -293,7 +290,7 @@ fun BackgroundRemover(model: BackgroundRemoverModel = viewModel()) {
                 CanonDropZone("Drop an image here", paste = false, onFiles = { uris -> uris.firstOrNull()?.let(model::load) })
             } else {
                 CanonRow(model.name.ifEmpty { "Image" }, detail = pixels?.let { "${it.first} × ${it.second}" }, flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
             }
             model.download?.let { fraction ->
@@ -302,7 +299,7 @@ fun BackgroundRemover(model: BackgroundRemoverModel = viewModel()) {
             }
             model.failure?.let { failure ->
                 CanonStatusRow(failure, CanonTone.Warn)
-                if (pixels != null) CanonButton("Retry", Modifier.fillMaxWidth(), icon = Icons.Outlined.SyncProblem, onClick = model::retry)
+                if (pixels != null) CanonButton("Retry", Modifier.fillMaxWidth(), icon = pencil(R.drawable.pencil_refresh_cw), onClick = model::retry)
             }
         }
     }
@@ -334,8 +331,8 @@ fun BackgroundRemover(model: BackgroundRemoverModel = viewModel()) {
         CanonRows {
             CanonGrid {
                 val cell = Modifier.weight(1f).fillMaxHeight()
-                CanonButton("Copy Image", cell, enabled = model.ready, icon = Icons.Rounded.ContentCopy, flashesCopied = true) { model.copy(context) }
-                CanonButton("Export PNG", cell, kind = CanonButtonKind.Primary, enabled = model.ready, icon = Icons.Outlined.Share, oversized = true) {
+                CanonButton("Copy Image", cell, enabled = model.ready, icon = pencil(R.drawable.pencil_copy), flashesCopied = true) { model.copy(context) }
+                CanonButton("Export PNG", cell, kind = CanonButtonKind.Primary, enabled = model.ready, icon = pencil(R.drawable.pencil_share), oversized = true) {
                     model.export(context)
                 }
             }

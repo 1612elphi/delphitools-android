@@ -59,6 +59,7 @@ import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonValueLine
 import com.delphi.delphitools.canon.LocalCanonCanvas
@@ -67,6 +68,7 @@ import com.delphi.delphitools.canon.toCanonColor
 import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.colour.SolidSpace
 import com.delphi.delphitools.colour.hex
+import com.delphi.delphitools.colour.parseColour
 import com.delphi.delphitools.colour.parseHex
 import com.delphi.delphitools.shell.workflowColours
 import com.delphi.delphitools.shell.WorkflowRun
@@ -161,6 +163,7 @@ fun ColourConverter(model: ColourConverterModel = viewModel()) {
     val names = colourNamesOrNull()
     val pace = remember { ChangeClock() }
     LaunchedEffect(model) { WorkflowRun.takeColours()?.firstOrNull()?.let(model::read) }
+    CanonSharedText { if (parseColour(it) != null) model.read(it) }
     val pass = workflowColours { listOf(display.hex) }
     val animated = pace.note(colour)
     val text = ColourConverterNotation.format(notation.values(colour, space), space)

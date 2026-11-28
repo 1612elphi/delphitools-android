@@ -18,9 +18,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -71,6 +68,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonBigNumberField
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -89,6 +87,7 @@ import com.delphi.delphitools.canon.CanonTile
 import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import com.delphi.delphitools.tools.typography.PxToRemEngine
 import com.delphi.delphitools.ui.theme.CanonText
@@ -254,8 +253,8 @@ fun UnitConverter(model: UnitConverterModel = viewModel()) {
             )
             CanonFromTo(units.map { it.label }, model.fromIndex, model.toIndex, model::pickFrom, model::pickTo)
             CanonGrid(columns = 2) {
-                CanonButton("Swap", icon = Icons.Rounded.SwapHoriz, onClick = model::swap)
-                CanonButton("Copy", enabled = value != null, icon = Icons.Rounded.ContentCopy, flashesCopied = true) {
+                CanonButton("Swap", icon = pencil(R.drawable.pencil_arrow_left_right), onClick = model::swap)
+                CanonButton("Copy", enabled = value != null, icon = pencil(R.drawable.pencil_copy), flashesCopied = true) {
                     result ?: return@CanonButton
                     val text = AlgebraFormat.significant(result)
                     context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("", text))

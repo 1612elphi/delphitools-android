@@ -20,12 +20,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.PhotoLibrary
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -72,6 +66,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasBoxing
@@ -100,6 +95,7 @@ import com.delphi.delphitools.canon.canonDimensionLines
 import com.delphi.delphitools.canon.canonDimensionSheet
 import com.delphi.delphitools.canon.canonDisplayName
 import com.delphi.delphitools.canon.canonPlaced
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.tools.colour.PaletteExtractorEngine
 import com.delphi.delphitools.ui.theme.DelphiFont
@@ -369,14 +365,14 @@ fun ImageAtlas(model: ImageAtlasModel = viewModel()) {
                         detailColour = if (unreadable) c.destructive else null,
                         flush = true,
                     ) {
-                        CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                        CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                     }
                     if (!unreadable) {
                         CanonButton(
                             "Copy report",
                             kind = CanonButtonKind.Primary,
                             enabled = atlas?.readable == true,
-                            icon = Icons.Outlined.ContentCopy,
+                            icon = pencil(R.drawable.pencil_copy),
                         ) { model.report()?.let { CanonCopyFeedback.copy(view, it) } }
                     }
                 }
@@ -444,7 +440,7 @@ fun ImageAtlas(model: ImageAtlasModel = viewModel()) {
                     CanonRow(section.title, detail = "${section.rows.size} fields", flush = true) {
                         CanonButton(
                             if (model.showsOther) "Hide" else "Show",
-                            icon = if (model.showsOther) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+                            icon = if (model.showsOther) pencil(R.drawable.pencil_chevron_up) else pencil(R.drawable.pencil_chevron_down),
                         ) { model.showsOther = !model.showsOther }
                     }
                     if (model.showsOther) AtlasTiles(section.rows)
@@ -557,7 +553,7 @@ private fun AtlasPicture(
                         verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Icon(Icons.Outlined.PhotoLibrary, null, tint = c.mutedForeground, modifier = Modifier.size(34.dp))
+                        Icon(pencil(R.drawable.pencil_images), null, tint = c.mutedForeground, modifier = Modifier.size(34.dp))
                         Text("Image", style = headline, color = c.mutedForeground)
                     }
                 }

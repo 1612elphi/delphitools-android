@@ -29,8 +29,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -76,6 +74,7 @@ import androidx.compose.ui.unit.sp
 import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.launch
@@ -180,7 +179,7 @@ fun HomeHero(modifier: Modifier = Modifier) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    Icon(Icons.Outlined.Shuffle, contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(11.dp))
+                    Icon(pencil(R.drawable.pencil_shuffle), contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(11.dp))
                     Text("shuffle", style = CanonText.caption, color = c.mutedForeground)
                 }
             }
@@ -198,7 +197,7 @@ fun HomeHero(modifier: Modifier = Modifier) {
 private fun HomePattern(seed: Long, bottom: Float, drifts: Boolean) {
     val primary = LocalDelphiColours.current.primary
     val icons = remember { allTools.map { it.icon }.distinct() }
-    val painters = icons.map { rememberVectorPainter(it) }
+    val painters = icons.map { rememberVectorPainter(pencil(it)) }
     val picks = remember(seed) {
         val random = Random(seed)
         IntArray(PATTERN_BLOCK_TILES * PATTERN_BLOCK_TILES * 2) { random.nextInt(icons.size) }

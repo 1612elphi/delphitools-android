@@ -6,9 +6,6 @@ import android.net.Uri
 import android.text.format.Formatter
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -23,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasBoxing
@@ -40,6 +38,7 @@ import com.delphi.delphitools.canon.CanonSlider
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonDisplayName
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.Dispatchers
@@ -169,7 +168,7 @@ fun ImageCompressor(model: ImageCompressorModel = viewModel()) {
             } else {
                 CanonHeading("Source")
                 CanonRow(model.sourceName, detail = model.sourceMeta, flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
                 CanonHeading("Format")
                 CanonSegmented(formats.map { it.label }, formats.indexOf(model.format)) { model.select(formats[it]) }
@@ -189,7 +188,7 @@ fun ImageCompressor(model: ImageCompressorModel = viewModel()) {
                     "Export",
                     kind = CanonButtonKind.Primary,
                     enabled = model.result != null,
-                    icon = Icons.Outlined.Share,
+                    icon = pencil(R.drawable.pencil_share),
                     oversized = true,
                 ) { model.export(context) }
             }

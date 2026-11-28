@@ -3,8 +3,6 @@ package com.delphi.delphitools.tools.audiovideo
 import android.app.Application
 import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -14,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonGrid
 import com.delphi.delphitools.canon.CanonHeading
@@ -25,6 +24,7 @@ import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSegmented
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.canonSmpte
+import com.delphi.delphitools.canon.pencil
 import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.math.max
@@ -129,7 +129,7 @@ fun AudioExtractor(model: AudioExtractorModel = viewModel()) {
                 AVEditFileRow(source.name, facts?.let { AVEditEngine.timestamp(it.duration) } ?: "", warning, model::clear)
                 CanonHeading("Format")
                 CanonSegmented(formats.map { it.label }, formats.indexOf(model.format)) { model.select(formats[it]) }
-                AVEditJobPanel(job, "Extract", Icons.Outlined.GraphicEq, "Couldn't extract, try WAV format", enabled = hasAudio, onStart = model::extract)
+                AVEditJobPanel(job, "Extract", pencil(R.drawable.pencil_audio_waveform), "Couldn't extract, try WAV format", enabled = hasAudio, onStart = model::extract)
             }
         }
     }

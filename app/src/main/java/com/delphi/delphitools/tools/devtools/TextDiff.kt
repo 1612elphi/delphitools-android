@@ -12,10 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.SwapVert
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -54,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -65,11 +62,13 @@ import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonSwitch
 import com.delphi.delphitools.canon.CanonTextInput
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonMathInks
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiMono
@@ -185,6 +184,10 @@ private data class Quad(val left: Int?, val right: Int?, val marker: String, val
 
 @Composable
 fun TextDiff(model: TextDiffModel = viewModel()) {
+    CanonSharedText {
+        model.original = it
+        model.refresh()
+    }
     val c = LocalDelphiColours.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -202,7 +205,7 @@ fun TextDiff(model: TextDiffModel = viewModel()) {
             CanonHeading("Modified")
             CanonTextInput(model.modified, { model.modified = it }, { model.refresh() }, height = 160.dp, label = "Modified")
             CanonGrid {
-                CanonButton("Swap", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.SwapVert, onClick = model::swap)
+                CanonButton("Swap", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_arrow_up_down), onClick = model::swap)
             }
         }
     }
@@ -227,7 +230,7 @@ fun TextDiff(model: TextDiffModel = viewModel()) {
             }
             val enabled = hasText && !same
             CanonGrid {
-                CanonButton("Share", Modifier.weight(1f).fillMaxHeight(), enabled = enabled, icon = Icons.Outlined.Share) {
+                CanonButton("Share", Modifier.weight(1f).fillMaxHeight(), enabled = enabled, icon = pencil(R.drawable.pencil_share)) {
                     scope.launch { FileExport.share(context, patch.toByteArray(), "changes.diff", "text/x-diff") }
                 }
                 CanonButton(
@@ -235,7 +238,7 @@ fun TextDiff(model: TextDiffModel = viewModel()) {
                     Modifier.weight(1f).fillMaxHeight(),
                     kind = CanonButtonKind.Primary,
                     enabled = enabled,
-                    icon = Icons.Outlined.ContentCopy,
+                    icon = pencil(R.drawable.pencil_copy),
                     oversized = true,
                     flashesCopied = true,
                 ) {

@@ -8,10 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,6 +20,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonBar
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
@@ -34,6 +31,7 @@ import com.delphi.delphitools.canon.CanonPassAlongWhenDone
 import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonStatusRow
 import com.delphi.delphitools.canon.CanonTone
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -116,7 +114,7 @@ fun PdfJobPanel(job: PdfJob, title: String, icon: ImageVector, failure: String, 
             }
         }
         CanonBar(job.progress, Modifier.fillMaxWidth().padding(vertical = 2.dp))
-        CanonButton("Cancel", Modifier.fillMaxWidth(), icon = Icons.Outlined.Close, onClick = job::reset)
+        CanonButton("Cancel", Modifier.fillMaxWidth(), icon = pencil(R.drawable.pencil_x), onClick = job::reset)
         return
     }
     CanonButton(title, kind = CanonButtonKind.Primary, enabled = enabled, icon = icon, oversized = true, followsWorkflow = false, onClick = onStart)
@@ -126,8 +124,8 @@ fun PdfJobPanel(job: PdfJob, title: String, icon: ImageVector, failure: String, 
     CanonRow(output.name, detail = PdfDocuments.byteLabel(context, output.length()))
     CanonGrid {
         val cell = Modifier.weight(1f).fillMaxHeight()
-        CanonButton("Preview", cell, icon = Icons.Outlined.Visibility) { preview(context, output) }
-        CanonButton("Share", cell, kind = CanonButtonKind.Primary, icon = Icons.Outlined.Share) {
+        CanonButton("Preview", cell, icon = pencil(R.drawable.pencil_eye)) { preview(context, output) }
+        CanonButton("Share", cell, kind = CanonButtonKind.Primary, icon = pencil(R.drawable.pencil_share)) {
             FileExport.send(context, listOf(output), PdfDocuments.MIME)
         }
     }

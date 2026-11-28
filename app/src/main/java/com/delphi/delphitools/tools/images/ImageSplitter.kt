@@ -1,5 +1,7 @@
 package com.delphi.delphitools.tools.images
 
+import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.animation.ValueAnimator
 import android.app.Application
@@ -16,10 +18,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -216,7 +214,7 @@ fun ImageSplitter(model: ImageSplitterModel = viewModel()) {
                 CanonDropZone("Drop an image here", paste = false, onFiles = { uris -> uris.firstOrNull()?.let(model::load) })
             } else {
                 CanonRow(model.name, detail = "${pixels.width} × ${pixels.height}", flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
             }
         }
@@ -266,7 +264,7 @@ fun ImageSplitter(model: ImageSplitterModel = viewModel()) {
                 "Export All",
                 kind = CanonButtonKind.Primary,
                 enabled = cuttable && !model.exporting,
-                icon = Icons.Outlined.Share,
+                icon = pencil(R.drawable.pencil_share),
                 oversized = true,
             ) { model.export(context) }
             if (model.exporting) {
@@ -376,11 +374,11 @@ private fun SplitTile(
         }
         MenuCellPopup(menu, { menu = false }) {
             CanonHeading(cell.label)
-            MenuCellItem("Share", icon = Icons.Outlined.Share) {
+            MenuCellItem("Share", icon = pencil(R.drawable.pencil_share)) {
                 menu = false
                 onShare(cell)
             }
-            MenuCellItem("Copy", icon = Icons.Rounded.ContentCopy) {
+            MenuCellItem("Copy", icon = pencil(R.drawable.pencil_copy)) {
                 menu = false
                 onCopy(cell)
             }

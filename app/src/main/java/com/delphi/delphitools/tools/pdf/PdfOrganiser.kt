@@ -5,10 +5,6 @@ import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.CallSplit
-import androidx.compose.material.icons.outlined.FileCopy
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -25,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasBoxing
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -42,6 +39,7 @@ import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonStatusRow
 import com.delphi.delphitools.canon.CanonTextCell
 import com.delphi.delphitools.canon.CanonTone
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import com.delphi.delphitools.tools.images.ImageFiles
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -243,7 +241,7 @@ fun PdfOrganiser(model: PdfOrganiserModel = viewModel()) {
             model.readFailure?.let { CanonStatusRow(it, CanonTone.Warn) }
             CanonDropZone(
                 "Drop PDFs here",
-                icon = Icons.Outlined.FileCopy,
+                icon = pencil(R.drawable.pencil_copy),
                 mimeTypes = arrayOf(PdfDocuments.MIME),
                 photos = null,
                 multiple = true,
@@ -256,7 +254,7 @@ fun PdfOrganiser(model: PdfOrganiserModel = viewModel()) {
     val merge = CanonSection.of {
         CanonRows {
             CanonHeading("Merge")
-            PdfJobPanel(model.job, "Export Merged", Icons.Outlined.Share, "Merge failed", enabled = model.entries.isNotEmpty() && !model.splitting, onStart = model::exportMerged)
+            PdfJobPanel(model.job, "Export Merged", pencil(R.drawable.pencil_share), "Merge failed", enabled = model.entries.isNotEmpty() && !model.splitting, onStart = model::exportMerged)
         }
     }
 
@@ -298,7 +296,7 @@ fun PdfOrganiser(model: PdfOrganiserModel = viewModel()) {
             CanonButton(
                 if (groups.size == 1) "Export part" else "Export ${groups.size} parts",
                 Modifier.fillMaxWidth(),
-                icon = Icons.AutoMirrored.Outlined.CallSplit,
+                icon = pencil(R.drawable.pencil_columns_2),
                 enabled = groups.isNotEmpty() && !busy,
             ) { model.exportSplit(context) }
             if (model.splitting) CanonRow("Processing…") { CanonLoader(cell = 5.dp, gap = 1.dp, colour = c.mutedForeground) }

@@ -21,14 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowLeft
-import androidx.compose.material.icons.automirrored.filled.ArrowRight
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -57,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonNameDialog
@@ -76,6 +69,7 @@ import com.delphi.delphitools.canon.CanonTextCell
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.MenuCellItem
 import com.delphi.delphitools.canon.MenuCellPopup
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.canon.toCanonColor
 import com.delphi.delphitools.colour.ColourFormat
 import com.delphi.delphitools.colour.CuratedPalette
@@ -192,7 +186,7 @@ fun PaletteCollection(model: PaletteCollectionModel = viewModel()) {
     val search = CanonSection.of {
         CanonRows {
             Row(Modifier.fillMaxWidth().background(c.card).padding(start = CanonMetrics.panelPadding), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.Search, null, Modifier.size(16.dp), tint = c.mutedForeground)
+                Icon(pencil(R.drawable.pencil_search), null, Modifier.size(16.dp), tint = c.mutedForeground)
                 CanonTextCell(
                     model.typed,
                     { model.typed = it },
@@ -213,12 +207,12 @@ fun PaletteCollection(model: PaletteCollectionModel = viewModel()) {
                 CanonGrid {
                     val cell = Modifier.weight(1f).fillMaxHeight()
                     if (selected < shownMine) {
-                        CanonButton("Rename", cell, icon = Icons.Outlined.Edit) { renaming = shownPalette }
+                        CanonButton("Rename", cell, icon = pencil(R.drawable.pencil_pencil)) { renaming = shownPalette }
                         export(cell)
                         DeleteButton(cell) { store.remove(shownPalette.id) }
                     } else {
                         val saved = store.contains(shownPalette.id)
-                        CanonButton(if (saved) "Saved" else "Save", cell, enabled = !saved, icon = if (saved) Icons.Rounded.Favorite else Icons.Outlined.FavoriteBorder) {
+                        CanonButton(if (saved) "Saved" else "Save", cell, enabled = !saved, icon = if (saved) pencil(R.drawable.pencil_heart) else pencil(R.drawable.pencil_heart)) {
                             store.add(shownPalette)
                             view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                         }
@@ -242,9 +236,9 @@ fun PaletteCollection(model: PaletteCollectionModel = viewModel()) {
 private fun DeleteButton(modifier: Modifier, onDelete: () -> Unit) {
     var open by remember { mutableStateOf(false) }
     Box(modifier) {
-        CanonButton("Delete", Modifier.fillMaxSize(), icon = Icons.Outlined.Delete) { open = true }
+        CanonButton("Delete", Modifier.fillMaxSize(), icon = pencil(R.drawable.pencil_trash_2)) { open = true }
         MenuCellPopup(open, { open = false }) {
-            MenuCellItem("Delete", icon = Icons.Outlined.Delete) {
+            MenuCellItem("Delete", icon = pencil(R.drawable.pencil_trash_2)) {
                 open = false
                 onDelete()
             }
@@ -283,8 +277,8 @@ private fun PaletteWheels(
                 }
             }
         }
-        Icon(Icons.AutoMirrored.Filled.ArrowRight, null, Modifier.align(Alignment.CenterStart).size(14.dp), tint = c.primary)
-        Icon(Icons.AutoMirrored.Filled.ArrowLeft, null, Modifier.align(Alignment.CenterEnd).size(14.dp), tint = c.primary)
+        Icon(pencil(R.drawable.pencil_chevron_right), null, Modifier.align(Alignment.CenterStart).size(14.dp), tint = c.primary)
+        Icon(pencil(R.drawable.pencil_chevron_left), null, Modifier.align(Alignment.CenterEnd).size(14.dp), tint = c.primary)
     }
 }
 

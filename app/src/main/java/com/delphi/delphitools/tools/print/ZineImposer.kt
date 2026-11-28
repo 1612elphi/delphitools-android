@@ -18,10 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.AutoStories
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -47,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasBoxing
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -67,6 +64,7 @@ import com.delphi.delphitools.canon.CanonSwitch
 import com.delphi.delphitools.canon.CanonTile
 import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.CanonTone
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.images.ImageCompressEngine
 import com.delphi.delphitools.tools.images.ImageFiles
 import com.delphi.delphitools.tools.pdf.PaperChoice
@@ -281,7 +279,7 @@ fun ZineImposer(model: ZineImposerModel = viewModel()) {
             CanonDropZone("Drop images here", multiple = true, onFiles = { uris -> model.add(uris, 0) })
             if (model.hasAnyImage) {
                 CanonGrid {
-                    CanonButton("Clear", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.Delete, onClick = model::clearAll)
+                    CanonButton("Clear", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_trash_2), onClick = model::clearAll)
                 }
             }
         }
@@ -292,7 +290,7 @@ fun ZineImposer(model: ZineImposerModel = viewModel()) {
     val paper = CanonSection.of {
         CanonRows {
             CanonHeading("Paper")
-            CanonButton(model.paper.title(null), icon = Icons.AutoMirrored.Outlined.KeyboardArrowRight) { picking = true }
+            CanonButton(model.paper.title(null), icon = pencil(R.drawable.pencil_chevron_right)) { picking = true }
             CanonHeading("Reference DPI")
             CanonSegmented(dpis.map { "$it DPI" }, dpis.indexOf(model.dpi).takeIf { it >= 0 } ?: 2) { model.dpi = dpis[it] }
             CanonTiles(
@@ -307,7 +305,7 @@ fun ZineImposer(model: ZineImposerModel = viewModel()) {
 
     val action = CanonSection.of {
         CanonRows {
-            PdfJobPanel(model.job, "Export PDF", Icons.Outlined.AutoStories, "Failed", enabled = model.hasAnyImage, onStart = model::export)
+            PdfJobPanel(model.job, "Export PDF", pencil(R.drawable.pencil_book_open_text), "Failed", enabled = model.hasAnyImage, onStart = model::export)
         }
     }
 

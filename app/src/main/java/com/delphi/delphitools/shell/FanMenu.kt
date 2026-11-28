@@ -36,11 +36,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Looks3
 import androidx.compose.material.icons.filled.LooksOne
 import androidx.compose.material.icons.filled.LooksTwo
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Looks3
 import androidx.compose.material.icons.outlined.LooksOne
 import androidx.compose.material.icons.outlined.LooksTwo
@@ -96,9 +94,11 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiDark
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -168,12 +168,13 @@ private val kicker = CanonText.captionSemibold.copy(letterSpacing = 1.4.sp)
 /** A header, a tool, a running workflow's leg (`leg` its index) or the workflow's exit, in fan order. */
 private class FanEntry(val header: String? = null, val tool: Tool? = null, val leg: Int? = null, val exits: Boolean = false) {
     val name get() = if (exits) "Exit workflow" else tool?.name
-    val icon get() = if (exits) Icons.Outlined.Close else leg?.let { legIcon(it, WorkflowRun.step) } ?: tool?.icon
+    val icon @Composable get() = if (exits) pencil(R.drawable.pencil_x) else leg?.let { legIcon(it, WorkflowRun.step) } ?: tool?.icon?.let { pencil(it) }
 }
 
 /** A workflow leg's symbol: a tick once passed, its number filled on the current step. */
+@Composable
 internal fun legIcon(leg: Int, step: Int): ImageVector = when {
-    leg < step -> Icons.Filled.CheckCircle
+    leg < step -> pencil(R.drawable.pencil_circle_check)
     leg == step -> listOf(Icons.Filled.LooksOne, Icons.Filled.LooksTwo, Icons.Filled.Looks3)[leg.coerceAtMost(2)]
     else -> listOf(Icons.Outlined.LooksOne, Icons.Outlined.LooksTwo, Icons.Outlined.Looks3)[leg.coerceAtMost(2)]
 }
@@ -702,7 +703,7 @@ private fun FanInfo(tool: Tool, modifier: Modifier) {
         }
         val nameSize = listOf(19, 24, 32)[tier].sp
         val inset = listOf(16, 22, 28)[tier].dp
-        val painter = rememberVectorPainter(tool.icon)
+        val painter = rememberVectorPainter(pencil(tool.icon))
         val drift by rememberInfiniteTransition(label = "drift").animateFloat(
             0f, 1f, infiniteRepeatable(tween(18_000, easing = LinearEasing)), label = "drift",
         )

@@ -12,10 +12,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,6 +24,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasBoxing
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -35,6 +32,7 @@ import com.delphi.delphitools.canon.CanonGrid
 import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.canonDisplayName
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.CoroutineScope
@@ -261,13 +259,13 @@ fun pageCanvas(size: PdfSize, background: androidx.compose.ui.graphics.Color,con
 fun PdfPager(page: Int, count: Int, onStep: (Int) -> Unit) {
     val c = LocalDelphiColours.current
     CanonGrid {
-        CanonButton("", Modifier.fillMaxHeight(), icon = Icons.AutoMirrored.Outlined.KeyboardArrowLeft, contentDescription = "Previous page", enabled = page > 0) {
+        CanonButton("", Modifier.fillMaxHeight(), icon = pencil(R.drawable.pencil_chevron_left), contentDescription = "Previous page", enabled = page > 0) {
             onStep(-1)
         }
         Box(Modifier.weight(1f).fillMaxHeight().background(c.card), contentAlignment = Alignment.Center) {
             Text(if (count == 0) "" else "${page + 1} / $count", style = CanonText.bodySemibold, color = c.foreground)
         }
-        CanonButton("", Modifier.fillMaxHeight(), icon = Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = "Next page", enabled = page < count - 1) {
+        CanonButton("", Modifier.fillMaxHeight(), icon = pencil(R.drawable.pencil_chevron_right), contentDescription = "Next page", enabled = page < count - 1) {
             onStep(1)
         }
     }
@@ -288,6 +286,6 @@ fun PdfFileRow(source: PdfSource?, name: String, failed: Boolean, suffix: String
         else -> " "
     }
     CanonRow(name, detail = detail, detailColour = if (failed) c.destructive else null, flush = true) {
-        CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = onClear)
+        CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = onClear)
     }
 }

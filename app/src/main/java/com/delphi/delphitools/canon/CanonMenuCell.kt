@@ -11,9 +11,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.UnfoldMore
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -33,6 +30,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 
@@ -71,7 +69,7 @@ internal fun MenuCellItem(text: String, checked: Boolean = false, icon: ImageVec
     ) {
         if (icon != null) Icon(icon, contentDescription = null, tint = c.foreground, modifier = Modifier.size(18.dp))
         Text(text, style = CanonText.body, color = c.foreground, modifier = Modifier.weight(1f))
-        if (checked) Icon(Icons.Filled.Check, contentDescription = null, tint = c.primary, modifier = Modifier.size(18.dp))
+        if (checked) Icon(pencil(R.drawable.pencil_check), contentDescription = null, tint = c.primary, modifier = Modifier.size(18.dp))
     }
 }
 
@@ -116,7 +114,7 @@ fun CanonMenuCell(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false),
             )
-            Icon(Icons.Filled.UnfoldMore, contentDescription = null, tint = ink, modifier = Modifier.size(14.dp))
+            Icon(pencil(R.drawable.pencil_chevrons_up_down), contentDescription = null, tint = ink, modifier = Modifier.size(14.dp))
         }
         MenuCellPopup(open, { open = false }) {
             items.forEachIndexed { index, item ->

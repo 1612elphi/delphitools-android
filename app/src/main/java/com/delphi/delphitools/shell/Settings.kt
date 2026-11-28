@@ -30,17 +30,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBackIos
-import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
-import androidx.compose.material.icons.outlined.ArrowDownward
-import androidx.compose.material.icons.outlined.ArrowUpward
-import androidx.compose.material.icons.outlined.Celebration
-import androidx.compose.material.icons.outlined.Contrast
-import androidx.compose.material.icons.outlined.FormatListNumbered
-import androidx.compose.material.icons.outlined.GppGood
-import androidx.compose.material.icons.outlined.Restore
-import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -75,6 +64,7 @@ import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.LayoutBackDismiss
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.settings.ColourFormatRows
 import com.delphi.delphitools.settings.ThemePicker
 import com.delphi.delphitools.ui.theme.CanonText
@@ -142,7 +132,7 @@ internal fun PaneBar(title: String, onBack: (() -> Unit)? = null, done: () -> Un
                 Modifier.align(Alignment.CenterStart).size(CanonMetrics.controlHeight).canonClickable(onClick = onBack),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.AutoMirrored.Outlined.ArrowBackIos, contentDescription = "Settings", tint = c.foreground, modifier = Modifier.size(18.dp))
+                Icon(pencil(R.drawable.pencil_chevron_left), contentDescription = "Settings", tint = c.foreground, modifier = Modifier.size(18.dp))
             }
         }
         Text(
@@ -183,9 +173,9 @@ private fun SettingsBody(onHomeOrder: () -> Unit, onWhatsNew: () -> Unit) {
 
         CanonRows(section) {
             CanonHeading("Appearance")
-            CanonRow("Theme follows system", icon = Icons.Outlined.Contrast)
-            CanonRow("Home order", Modifier.canonClickable(onClick = onHomeOrder), icon = Icons.Outlined.FormatListNumbered) {
-                Icon(Icons.AutoMirrored.Outlined.ArrowForwardIos, contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(12.dp))
+            CanonRow("Theme follows system", icon = pencil(R.drawable.pencil_contrast))
+            CanonRow("Home order", Modifier.canonClickable(onClick = onHomeOrder), icon = pencil(R.drawable.pencil_list_ordered)) {
+                Icon(pencil(R.drawable.pencil_chevron_right), contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(12.dp))
             }
             ThemePicker(Modifier.fillMaxWidth().background(c.card))
             Text(
@@ -219,7 +209,7 @@ private fun SettingsBody(onHomeOrder: () -> Unit, onWhatsNew: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Icon(Icons.Outlined.StarBorder, contentDescription = null, tint = c.destructive, modifier = Modifier.size(20.dp))
+                Icon(pencil(R.drawable.pencil_star_off), contentDescription = null, tint = c.destructive, modifier = Modifier.size(20.dp))
                 Text("Clear All Favourites", style = CanonText.body, color = c.destructive)
             }
         }
@@ -229,7 +219,7 @@ private fun SettingsBody(onHomeOrder: () -> Unit, onWhatsNew: () -> Unit) {
             CanonRow("Version") {
                 Text(remember { versionName(context) }, style = CanonText.body, color = c.mutedForeground)
             }
-            CanonRow("What’s New", Modifier.canonClickable(onClick = onWhatsNew), icon = Icons.Outlined.Celebration)
+            CanonRow("What’s New", Modifier.canonClickable(onClick = onWhatsNew), icon = pencil(R.drawable.pencil_party_popper))
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -239,7 +229,7 @@ private fun SettingsBody(onHomeOrder: () -> Unit, onWhatsNew: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Icon(Icons.Outlined.GppGood, contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(20.dp))
+                Icon(pencil(R.drawable.pencil_shield_check), contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(20.dp))
                 Text("No analytics. No tracking. Ever.", style = CanonText.body, color = c.mutedForeground)
             }
         }
@@ -325,16 +315,16 @@ private fun HomeOrderPage() {
         // ponytail: up and down buttons; iOS drags rows by their handles
         CanonRows(Modifier.widthIn(max = 720.dp)) {
             order.forEachIndexed { index, category ->
-                CanonRow(category.title, flush = true, icon = category.icon) {
+                CanonRow(category.title, flush = true, icon = pencil(category.icon)) {
                     CanonGrid {
-                        OrderButton(Icons.Outlined.ArrowUpward, "Up", index > 0) { stores.moveCategory(index, index - 1) }
-                        OrderButton(Icons.Outlined.ArrowDownward, "Down", index < order.lastIndex) { stores.moveCategory(index, index + 1) }
+                        OrderButton(pencil(R.drawable.pencil_arrow_up), "Up", index > 0) { stores.moveCategory(index, index - 1) }
+                        OrderButton(pencil(R.drawable.pencil_arrow_down), "Down", index < order.lastIndex) { stores.moveCategory(index, index + 1) }
                     }
                 }
             }
         }
         CanonRows(Modifier.widthIn(max = 720.dp)) {
-            CanonButton("Reset order", kind = CanonButtonKind.Secondary, enabled = !stores.isDefaultOrder, icon = Icons.Outlined.Restore) {
+            CanonButton("Reset order", kind = CanonButtonKind.Secondary, enabled = !stores.isDefaultOrder, icon = pencil(R.drawable.pencil_rotate_ccw)) {
                 stores.resetOrder()
             }
         }

@@ -15,11 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -39,6 +34,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasBoxing
@@ -62,6 +58,7 @@ import com.delphi.delphitools.canon.CanonStepper
 import com.delphi.delphitools.canon.CanonSwitch
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.LocalCanonPatternSymbol
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.canon.rememberCanonGlyphFlowState
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -220,7 +217,7 @@ fun LayoutGallery() {
             }
         },
     )
-    CompositionLocalProvider(LocalCanonPatternSymbol provides Icons.Outlined.Dashboard) {
+    CompositionLocalProvider(LocalCanonPatternSymbol provides pencil(R.drawable.pencil_layout_grid)) {
         CanonSplit(
             sidebar = if (picture) listOf(pictureCanvas) else listOf(rows),
             main = if (picture) listOf(rows) + main else main,
@@ -242,9 +239,9 @@ fun LayoutGallery() {
             isFooterHidden = footerHidden,
             footer = {
                 CanonGrid {
-                    CanonButton("Loop", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Filled.Repeat) {}
-                    CanonButton("Play", Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Primary, icon = Icons.Filled.PlayArrow) {}
-                    CanonButton("Stop", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Filled.Stop) {}
+                    CanonButton("Loop", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_repeat)) {}
+                    CanonButton("Play", Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Primary, icon = pencil(R.drawable.pencil_play)) {}
+                    CanonButton("Stop", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_square)) {}
                 }
             },
         )

@@ -20,11 +20,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Collections
-import androidx.compose.material.icons.outlined.ContentPaste
-import androidx.compose.material.icons.outlined.Folder
-import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,6 +46,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.Dispatchers
@@ -78,7 +74,7 @@ private fun decodeImage(resolver: ContentResolver, uri: Uri): ImageBitmap? = run
 fun CanonDropZone(
     prompt: String,
     modifier: Modifier = Modifier,
-    icon: ImageVector = Icons.Outlined.Collections,
+    icon: ImageVector = pencil(R.drawable.pencil_images),
     mimeTypes: Array<String> = arrayOf("image/*"),
     photos: PickVisualMedia.VisualMediaType? = PickVisualMedia.ImageOnly,
     multiple: Boolean = false,
@@ -167,16 +163,16 @@ fun CanonDropZone(
         CanonGrid {
             val cell = Modifier.weight(1f).fillMaxHeight()
             if (photos != null) {
-                CanonButton("Photos", cell, icon = Icons.Outlined.PhotoLibrary) {
+                CanonButton("Photos", cell, icon = pencil(R.drawable.pencil_images)) {
                     val request = PickVisualMediaRequest(photos)
                     if (multiple) pickPhotos.launch(request) else pickPhoto.launch(request)
                 }
             }
-            CanonButton("Files", cell, icon = Icons.Outlined.Folder) {
+            CanonButton("Files", cell, icon = pencil(R.drawable.pencil_folder)) {
                 if (multiple) pickFiles.launch(mimeTypes) else pickFile.launch(mimeTypes)
             }
             if (paste) {
-                CanonButton("Paste", cell, icon = Icons.Outlined.ContentPaste) {
+                CanonButton("Paste", cell, icon = pencil(R.drawable.pencil_clipboard)) {
                     scope.launch { pasteFrom(clipboard.getClipEntry()?.clipData, resolver, mimeTypes)?.let { deliver(it, true) } }
                 }
             }

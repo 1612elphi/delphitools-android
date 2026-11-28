@@ -25,12 +25,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.OpenWith
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -74,6 +68,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -101,6 +96,7 @@ import com.delphi.delphitools.canon.canonDimensionLines
 import com.delphi.delphitools.canon.canonDisplayName
 import com.delphi.delphitools.canon.canonGrabPan
 import com.delphi.delphitools.canon.canonPlaced
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -310,7 +306,7 @@ fun ImageMasker(model: ImageMaskerModel = viewModel()) {
                 CanonDropZone("Drop an image", paste = false, onFiles = { uris -> uris.firstOrNull()?.let(model::load) })
             } else {
                 CanonRow(model.name, detail = "${pixels.width} × ${pixels.height}", flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
             }
             model.failedName?.let { CanonStatusRow("Could not read $it", CanonTone.Warn) }
@@ -345,7 +341,7 @@ fun ImageMasker(model: ImageMaskerModel = viewModel()) {
                     "Reset",
                     Modifier.weight(1f).fillMaxHeight(),
                     enabled = loaded && (spec.zoom != 1.0 || spec.offsetX != 0.0 || spec.offsetY != 0.0),
-                    icon = Icons.Rounded.RestartAlt,
+                    icon = pencil(R.drawable.pencil_rotate_ccw),
                     onClick = model::reset,
                 )
             }
@@ -358,13 +354,13 @@ fun ImageMasker(model: ImageMaskerModel = viewModel()) {
             CanonSegmented(scales.map { "${TraceSettings.number(it)}×" }, scales.indexOf(spec.scale).takeIf { it >= 0 } ?: 1, onSelect = model::chooseScale)
             CanonTiles(listOf(CanonTile("Size", "$side × $side px"), CanonTile("Shape", model.shape.title)))
             CanonGrid {
-                CanonButton("Copy", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Rounded.ContentCopy, flashesCopied = true) { model.copy(context) }
+                CanonButton("Copy", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_copy), flashesCopied = true) { model.copy(context) }
                 CanonButton(
                     "Export PNG",
                     Modifier.weight(1f).fillMaxHeight(),
                     kind = CanonButtonKind.Primary,
                     enabled = !model.exporting,
-                    icon = Icons.Outlined.Share,
+                    icon = pencil(R.drawable.pencil_share),
                     oversized = true,
                 ) { model.export(context) }
             }
@@ -492,7 +488,7 @@ private fun MaskHint(square: Rect, visible: Boolean) {
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Outlined.OpenWith, null, tint = c.foreground, modifier = Modifier.size(14.dp))
+                Icon(pencil(R.drawable.pencil_move), null, tint = c.foreground, modifier = Modifier.size(14.dp))
                 Text("Drag to reposition", style = CanonText.captionSemibold, color = c.foreground, maxLines = 1)
             }
         },

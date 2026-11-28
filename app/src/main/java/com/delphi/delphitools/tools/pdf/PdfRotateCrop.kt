@@ -6,15 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.outlined.RotateLeft
-import androidx.compose.material.icons.automirrored.outlined.RotateRight
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.CropRotate
-import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.FilterNone
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,6 +24,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonDecimalField
@@ -46,6 +38,7 @@ import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSplit
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.images.ImageCropCanvas
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -216,7 +209,7 @@ fun PdfRotateCrop(model: PdfRotateCropModel = viewModel()) {
             if (!loaded) {
                 CanonDropZone(
                     "Drop PDF here",
-                    icon = Icons.Outlined.Description,
+                    icon = pencil(R.drawable.pencil_file),
                     mimeTypes = arrayOf(PdfDocuments.MIME),
                     photos = null,
                     paste = false,
@@ -235,8 +228,8 @@ fun PdfRotateCrop(model: PdfRotateCropModel = viewModel()) {
                 CanonRow(title, flush = true) {
                     CanonGrid {
                         val cell = Modifier.weight(1f).fillMaxHeight()
-                        CanonButton("", cell, icon = Icons.AutoMirrored.Outlined.RotateLeft, contentDescription = "Rotate left", enabled = ready) { model.rotate(-90, all) }
-                        CanonButton("", cell, icon = Icons.AutoMirrored.Outlined.RotateRight, contentDescription = "Rotate right", enabled = ready) { model.rotate(90, all) }
+                        CanonButton("", cell, icon = pencil(R.drawable.pencil_rotate_ccw), contentDescription = "Rotate left", enabled = ready) { model.rotate(-90, all) }
+                        CanonButton("", cell, icon = pencil(R.drawable.pencil_rotate_cw), contentDescription = "Rotate right", enabled = ready) { model.rotate(90, all) }
                     }
                 }
             }
@@ -266,21 +259,21 @@ fun PdfRotateCrop(model: PdfRotateCropModel = viewModel()) {
             CanonRow("Crop to size", flush = true) {
                 CanonButton(
                     model.papers[page]?.title(null) ?: "None",
-                    icon = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                    icon = pencil(R.drawable.pencil_chevron_right),
                     enabled = ready,
                 ) { picking = true }
             }
             CanonGrid {
                 val cell = Modifier.weight(1f).fillMaxHeight()
-                CanonButton("All pages", cell, icon = Icons.Outlined.FilterNone, enabled = ready, onClick = model::cropAllPages)
-                CanonButton("Clear", cell, icon = Icons.Outlined.Close, enabled = ready && model.edits[page].crop != null) { model.setCrop(null) }
+                CanonButton("All pages", cell, icon = pencil(R.drawable.pencil_copy), enabled = ready, onClick = model::cropAllPages)
+                CanonButton("Clear", cell, icon = pencil(R.drawable.pencil_x), enabled = ready && model.edits[page].crop != null) { model.setCrop(null) }
             }
         }
     }
 
     val action = CanonSection.of {
         CanonRows {
-            PdfJobPanel(model.job, "Export PDF", Icons.Outlined.CropRotate, "Save failed", enabled = ready && loader.source != null, onStart = model::export)
+            PdfJobPanel(model.job, "Export PDF", pencil(R.drawable.pencil_crop), "Save failed", enabled = ready && loader.source != null, onStart = model::export)
         }
     }
 
@@ -311,13 +304,13 @@ fun PdfRotateCrop(model: PdfRotateCropModel = viewModel()) {
         CanonRows {
             CanonGrid {
                 val count = model.edits.size
-                CanonButton("", Modifier.fillMaxHeight(), icon = Icons.AutoMirrored.Outlined.KeyboardArrowLeft, contentDescription = "Previous page", enabled = page > 0) {
+                CanonButton("", Modifier.fillMaxHeight(), icon = pencil(R.drawable.pencil_chevron_left), contentDescription = "Previous page", enabled = page > 0) {
                     model.select(page - 1)
                 }
                 Box(Modifier.weight(1f).fillMaxHeight().background(c.card), contentAlignment = Alignment.Center) {
                     Text(if (count == 0) "" else "${page + 1} / $count", style = CanonText.bodySemibold, color = c.foreground)
                 }
-                CanonButton("", Modifier.fillMaxHeight(), icon = Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = "Next page", enabled = page < count - 1) {
+                CanonButton("", Modifier.fillMaxHeight(), icon = pencil(R.drawable.pencil_chevron_right), contentDescription = "Next page", enabled = page < count - 1) {
                     model.select(page + 1)
                 }
             }

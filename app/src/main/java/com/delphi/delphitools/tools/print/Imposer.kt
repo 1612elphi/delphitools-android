@@ -2,10 +2,6 @@ package com.delphi.delphitools.tools.print
 
 import android.app.Application
 import android.net.Uri
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.Print
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasBoxing
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -44,6 +41,7 @@ import com.delphi.delphitools.canon.CanonSwitch
 import com.delphi.delphitools.canon.CanonTile
 import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.CanonTone
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.pdf.PaperChoice
 import com.delphi.delphitools.tools.pdf.PaperSizePicker
 import com.delphi.delphitools.tools.pdf.PdfDocuments
@@ -215,7 +213,7 @@ fun Imposer(model: ImposerModel = viewModel()) {
             if (!loaded) {
                 CanonDropZone(
                     "Drop PDF here",
-                    icon = Icons.Outlined.Description,
+                    icon = pencil(R.drawable.pencil_file),
                     mimeTypes = arrayOf(PdfDocuments.MIME),
                     photos = null,
                     paste = false,
@@ -270,7 +268,7 @@ fun Imposer(model: ImposerModel = viewModel()) {
     val paper = CanonSection.of {
         CanonRows {
             CanonHeading("Paper")
-            CanonButton(model.paper.title(null), icon = Icons.AutoMirrored.Outlined.KeyboardArrowRight) { picking = true }
+            CanonButton(model.paper.title(null), icon = pencil(R.drawable.pencil_chevron_right)) { picking = true }
             CanonHeading("Orientation")
             CanonSegmented(listOf("Portrait", "Landscape"), model.orientation.ordinal) { model.change { orientation = ImpositionOrientation.entries[it] } }
             CanonHeading("Scaling")
@@ -304,7 +302,7 @@ fun Imposer(model: ImposerModel = viewModel()) {
 
     val action = CanonSection.of {
         CanonRows {
-            PdfJobPanel(model.job, "Export PDF", Icons.Outlined.Print, "Failed", enabled = loader.source != null, onStart = model::export)
+            PdfJobPanel(model.job, "Export PDF", pencil(R.drawable.pencil_printer), "Failed", enabled = loader.source != null, onStart = model::export)
         }
     }
 

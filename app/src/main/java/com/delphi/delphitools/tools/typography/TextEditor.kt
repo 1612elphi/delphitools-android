@@ -39,14 +39,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Folder
-import androidx.compose.material.icons.outlined.IosShare
-import androidx.compose.material.icons.outlined.OpenInFull
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -117,6 +109,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -129,6 +122,7 @@ import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSegmented
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSlider
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonSwitchGrid
@@ -138,6 +132,7 @@ import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.MenuCellItem
 import com.delphi.delphitools.canon.MenuCellPopup
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.canon.rememberCanonTextFilePicker
 import com.delphi.delphitools.colour.rgbOf
 import com.delphi.delphitools.tools.FileExport
@@ -301,6 +296,7 @@ fun TextEditor(model: TextEditorModel = viewModel()) {
     }
     val history = model.state.undoState
     ToolUndoActions(history.canUndo, history.canRedo, history::undo, history::redo)
+    CanonSharedText(model::replace)
     var anchor by remember { mutableStateOf<Int?>(null) }
     val empty = model.text.isEmpty()
     val picker = rememberCanonTextFilePicker(arrayOf("text/plain", "text/markdown", "text/x-markdown", "text/*")) { model.replace(it) }
@@ -313,15 +309,15 @@ fun TextEditor(model: TextEditorModel = viewModel()) {
         CanonRows {
             CanonHeading("Document")
             CanonGrid(columns = 2) {
-                CanonButton("Files", icon = Icons.Outlined.Folder, onClick = picker::open)
-                CanonButton("Clear", icon = Icons.Outlined.Delete, enabled = !empty) { model.replace("") }
-                CanonButton("Full Screen", icon = Icons.Outlined.OpenInFull) { model.fullScreen = true }
-                CanonButton("Preview", icon = Icons.Outlined.Visibility, selected = model.previewShown) { model.previewShown = !model.previewShown }
+                CanonButton("Files", icon = pencil(R.drawable.pencil_folder), onClick = picker::open)
+                CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), enabled = !empty) { model.replace("") }
+                CanonButton("Full Screen", icon = pencil(R.drawable.pencil_maximize_2)) { model.fullScreen = true }
+                CanonButton("Preview", icon = pencil(R.drawable.pencil_eye), selected = model.previewShown) { model.previewShown = !model.previewShown }
             }
             CanonGrid {
                 var open by remember { mutableStateOf(false) }
                 Box(Modifier.weight(1f).fillMaxHeight()) {
-                    CanonButton("Share", Modifier.fillMaxSize(), icon = Icons.Outlined.IosShare, enabled = !empty) { open = true }
+                    CanonButton("Share", Modifier.fillMaxSize(), icon = pencil(R.drawable.pencil_share), enabled = !empty) { open = true }
                     MenuCellPopup(open, { open = false }) {
                         val exports = listOf<Triple<String, String, String>>(
                             Triple("Markdown", "md", "text/markdown"),
@@ -356,7 +352,7 @@ fun TextEditor(model: TextEditorModel = viewModel()) {
                     Modifier.weight(1f).fillMaxHeight(),
                     kind = CanonButtonKind.Primary,
                     enabled = !empty,
-                    icon = Icons.Rounded.ContentCopy,
+                    icon = pencil(R.drawable.pencil_copy),
                     oversized = true,
                     flashesCopied = true,
                 ) {
@@ -824,7 +820,7 @@ private fun FullScreenEditor(model: TextEditorModel, onClose: () -> Unit) {
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Outlined.Close, contentDescription = null, tint = c.mutedForeground.copy(alpha = 0.55f), modifier = Modifier.size(20.dp))
+                Icon(pencil(R.drawable.pencil_x), contentDescription = null, tint = c.mutedForeground.copy(alpha = 0.55f), modifier = Modifier.size(20.dp))
             }
         }
     }

@@ -27,16 +27,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Movie
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -67,6 +57,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonBar
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
@@ -83,6 +74,7 @@ import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.CanonTransport
 import com.delphi.delphitools.canon.canonDisplayName
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -377,7 +369,7 @@ internal fun AVEditPageEffects(playback: AVEditPlayback?, close: () -> Unit) {
 internal fun AVEditDrop(onFile: (Uri) -> Unit) {
     CanonDropZone(
         "Choose video file",
-        icon = Icons.Outlined.Movie,
+        icon = pencil(R.drawable.pencil_film),
         mimeTypes = arrayOf("video/*"),
         photos = PickVisualMedia.VideoOnly,
         paste = false,
@@ -394,7 +386,7 @@ internal fun AVEditFileRow(name: String, detail: String, warning: String?, onCle
         detail = warning ?: detail.ifEmpty { " " },
         detailColour = if (warning != null) c.destructive else null,
         flush = true,
-    ) { CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = onClear) }
+    ) { CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = onClear) }
 }
 
 @Composable
@@ -636,7 +628,7 @@ internal fun AVEditJobPanel(job: AVEditJob, title: String, icon: androidx.compos
             }
         }
         CanonBar(job.progress, Modifier.fillMaxWidth().height(8.dp))
-        CanonButton("Cancel", icon = Icons.Outlined.Close, onClick = job::reset)
+        CanonButton("Cancel", icon = pencil(R.drawable.pencil_x), onClick = job::reset)
         return
     }
     CanonButton(title, kind = CanonButtonKind.Primary, enabled = enabled, icon = icon, oversized = oversized, followsWorkflow = false, onClick = onStart)
@@ -645,8 +637,8 @@ internal fun AVEditJobPanel(job: AVEditJob, title: String, icon: androidx.compos
     CanonHeading("Result")
     CanonRow(output.name, detail = "${output.extension} · ${Formatter.formatShortFileSize(context, output.length())}")
     CanonGrid {
-        CanonButton("Preview", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.Visibility) { preview(context, output) }
-        CanonButton("Share", Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Primary, icon = Icons.Outlined.Share) { avEditShare(context, output) }
+        CanonButton("Preview", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_eye)) { preview(context, output) }
+        CanonButton("Share", Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Primary, icon = pencil(R.drawable.pencil_share)) { avEditShare(context, output) }
     }
 }
 
@@ -666,7 +658,7 @@ internal fun AVEditDetails(sections: List<AVEditProbeSection>) {
 
 @Composable
 internal fun RowScope.AVEditLoopButton(playback: AVEditPlayback, enabled: Boolean) {
-    CanonButton("Loop", Modifier.weight(1f).fillMaxHeight(), selected = playback.looping, enabled = enabled, icon = Icons.Filled.Repeat) {
+    CanonButton("Loop", Modifier.weight(1f).fillMaxHeight(), selected = playback.looping, enabled = enabled, icon = pencil(R.drawable.pencil_repeat)) {
         playback.looping = !playback.looping
     }
 }
@@ -678,12 +670,12 @@ internal fun RowScope.AVEditPlayButton(playback: AVEditPlayback, enabled: Boolea
         Modifier.weight(1f).fillMaxHeight(),
         kind = CanonButtonKind.Primary,
         enabled = enabled,
-        icon = if (playback.playing) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+        icon = if (playback.playing) pencil(R.drawable.pencil_pause) else pencil(R.drawable.pencil_play),
         onClick = onPlay,
     )
 }
 
 @Composable
 internal fun RowScope.AVEditStopButton(playback: AVEditPlayback) {
-    CanonButton("Stop", Modifier.weight(1f).fillMaxHeight(), enabled = playback.playing || playback.paused, icon = Icons.Filled.Stop, onClick = playback::stop)
+    CanonButton("Stop", Modifier.weight(1f).fillMaxHeight(), enabled = playback.playing || playback.paused, icon = pencil(R.drawable.pencil_square), onClick = playback::stop)
 }

@@ -1,5 +1,7 @@
 package com.delphi.delphitools.tools.audiovideo
 
+import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -17,8 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -135,7 +135,7 @@ fun TimecodeCalc() {
                 "Copy",
                 kind = CanonButtonKind.Primary,
                 enabled = frames != null,
-                icon = Icons.Rounded.ContentCopy,
+                icon = pencil(R.drawable.pencil_copy),
                 oversized = true,
                 flashesCopied = true,
             ) {

@@ -21,12 +21,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.PanTool
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.Transform
-import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -74,6 +68,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasBoxing
@@ -100,6 +95,7 @@ import com.delphi.delphitools.canon.canonDisplayName
 import com.delphi.delphitools.canon.canonGrabPan
 import com.delphi.delphitools.canon.canonLoupeFrame
 import com.delphi.delphitools.canon.canonPlaced
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.tools.colour.PixelPickerSampler
 import com.delphi.delphitools.ui.theme.CanonText
@@ -289,10 +285,10 @@ fun ImageDeskewer(model: ImageDeskewerModel = viewModel()) {
             CanonHeading("Source")
             val pixels = model.filePixels
             if (!loaded || pixels == null) {
-                CanonDropZone("Drop an image", icon = Icons.Outlined.Transform, paste = false, onFiles = { uris -> uris.firstOrNull()?.let(model::load) })
+                CanonDropZone("Drop an image", icon = pencil(R.drawable.pencil_box_select), paste = false, onFiles = { uris -> uris.firstOrNull()?.let(model::load) })
             } else {
                 CanonRow(model.fileName, detail = "${pixels.width} × ${pixels.height}", flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
             }
             if (model.unreadable && !loaded) CanonStatusRow("That file can't be read as an image", CanonTone.Warn)
@@ -311,14 +307,14 @@ fun ImageDeskewer(model: ImageDeskewerModel = viewModel()) {
                 model.choose(DeskewAspect.all[it])
             }
             CanonRow("Corners", flush = true) {
-                CanonButton("Reset", enabled = loaded, icon = Icons.Rounded.RestartAlt, onClick = model::reset)
+                CanonButton("Reset", enabled = loaded, icon = pencil(R.drawable.pencil_rotate_ccw), onClick = model::reset)
             }
             if (loaded && !valid) CanonStatusRow("Don't let the streams cross!", CanonTone.Warn)
             CanonButton(
                 "Export PNG",
                 kind = CanonButtonKind.Primary,
                 enabled = loaded && valid && model.result != null && !model.isExporting,
-                icon = Icons.Outlined.Share,
+                icon = pencil(R.drawable.pencil_share),
                 oversized = true,
             ) { model.export(context) }
             if (model.isExporting) {
@@ -534,7 +530,7 @@ private fun DeskewHint(image: Rect, quad: List<Offset>, visible: Boolean) {
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Outlined.PanTool, null, tint = c.foreground, modifier = Modifier.size(14.dp))
+                Icon(pencil(R.drawable.pencil_signature), null, tint = c.foreground, modifier = Modifier.size(14.dp))
                 Text("Drag the corners", style = CanonText.captionSemibold, color = c.foreground, maxLines = 1)
             }
         },

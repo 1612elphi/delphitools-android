@@ -26,19 +26,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.East
-import androidx.compose.material.icons.outlined.FormatListNumbered
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.North
-import androidx.compose.material.icons.outlined.NorthEast
-import androidx.compose.material.icons.outlined.NorthWest
-import androidx.compose.material.icons.outlined.Remove
-import androidx.compose.material.icons.outlined.South
-import androidx.compose.material.icons.outlined.SouthEast
-import androidx.compose.material.icons.outlined.SouthWest
-import androidx.compose.material.icons.outlined.West
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -79,6 +66,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonDropZone
@@ -98,6 +86,7 @@ import com.delphi.delphitools.canon.CanonSwitch
 import com.delphi.delphitools.canon.CanonTextCell
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.MenuCellPopup
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiMono
@@ -116,10 +105,10 @@ import kotlin.math.roundToInt
 
 private typealias Section = PdfStampEngine.NumberSection
 
-private val anchorIcons = listOf(
-    Icons.Outlined.NorthWest, Icons.Outlined.North, Icons.Outlined.NorthEast,
-    Icons.Outlined.West, Icons.Filled.Circle, Icons.Outlined.East,
-    Icons.Outlined.SouthWest, Icons.Outlined.South, Icons.Outlined.SouthEast,
+private val anchorIcons @Composable get() = listOf(
+    pencil(R.drawable.pencil_arrow_up_left), pencil(R.drawable.pencil_arrow_up), pencil(R.drawable.pencil_arrow_up_right),
+    pencil(R.drawable.pencil_arrow_left), Icons.Filled.Circle, pencil(R.drawable.pencil_arrow_right),
+    pencil(R.drawable.pencil_arrow_down_left), pencil(R.drawable.pencil_arrow_down), pencil(R.drawable.pencil_arrow_down_right),
 )
 private val anchorLabels = PdfStampEngine.Anchor.entries.map { it.label }
 private const val PREVIEW_DELAY_MS = 100L
@@ -298,7 +287,7 @@ fun PdfPageNumberer(model: PdfPageNumbererModel = viewModel()) {
             if (!loaded) {
                 CanonDropZone(
                     "Drop PDF here",
-                    icon = Icons.Outlined.Description,
+                    icon = pencil(R.drawable.pencil_file),
                     mimeTypes = arrayOf(PdfDocuments.MIME),
                     photos = null,
                     paste = false,
@@ -320,7 +309,7 @@ fun PdfPageNumberer(model: PdfPageNumbererModel = viewModel()) {
                         CanonTextCell(template, { template = it }, Modifier.fillMaxHeight(), placeholder = "{n} / {N}")
                         CanonRule(vertical = true)
                         Box {
-                            CanonButton("", Modifier.width(52.dp).fillMaxHeight(), icon = Icons.Outlined.Info, contentDescription = "Format") { tip = true }
+                            CanonButton("", Modifier.width(52.dp).fillMaxHeight(), icon = pencil(R.drawable.pencil_info), contentDescription = "Format") { tip = true }
                             MenuCellPopup(tip, { tip = false }) {
                                 Column(Modifier.widthIn(max = 280.dp).padding(horizontal = CanonMetrics.panelPadding, vertical = 10.dp)) {
                                     Text("Format", style = CanonText.bodySemibold, color = c.foreground)
@@ -359,8 +348,8 @@ fun PdfPageNumberer(model: PdfPageNumbererModel = viewModel()) {
             }
             CanonGrid {
                 val cell = Modifier.weight(1f).fillMaxHeight()
-                CanonButton("Add section", cell, icon = Icons.Outlined.Add, enabled = sizes.isNotEmpty(), onClick = model::addSection)
-                CanonButton("Remove section", cell, icon = Icons.Outlined.Remove, enabled = options.sections.size > 1, onClick = model::removeSection)
+                CanonButton("Add section", cell, icon = pencil(R.drawable.pencil_plus), enabled = sizes.isNotEmpty(), onClick = model::addSection)
+                CanonButton("Remove section", cell, icon = pencil(R.drawable.pencil_minus), enabled = options.sections.size > 1, onClick = model::removeSection)
             }
         }
     }
@@ -406,7 +395,7 @@ fun PdfPageNumberer(model: PdfPageNumbererModel = viewModel()) {
 
     val action = CanonSection.of {
         CanonRows {
-            PdfJobPanel(model.job, "Export PDF", Icons.Outlined.FormatListNumbered, "Failed", enabled = loader.source != null, onStart = model::export)
+            PdfJobPanel(model.job, "Export PDF", pencil(R.drawable.pencil_hash), "Failed", enabled = loader.source != null, onStart = model::export)
         }
     }
 

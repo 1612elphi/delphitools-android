@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:drawable="@drawable/widget_flap"
+        android:left="1dp"
+        android:right="23dp" />
+    <item
+        android:drawable="@drawable/widget_flap"
+        android:left="23dp"
+        android:right="1dp" />
+</layer-list>

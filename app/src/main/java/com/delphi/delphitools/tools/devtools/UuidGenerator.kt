@@ -4,10 +4,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -18,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -33,6 +30,7 @@ import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonSwitch
 import com.delphi.delphitools.canon.CanonValueLayout
 import com.delphi.delphitools.canon.CanonValueLine
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import java.util.Locale
 
@@ -119,7 +117,7 @@ fun UuidGenerator(model: UuidGeneratorModel = viewModel()) {
             CanonButton(
                 "Regenerate",
                 kind = CanonButtonKind.Primary,
-                icon = Icons.Outlined.Refresh,
+                icon = pencil(R.drawable.pencil_rotate_cw),
                 oversized = true,
                 onClick = model::regenerate,
             )
@@ -133,10 +131,10 @@ fun UuidGenerator(model: UuidGeneratorModel = viewModel()) {
                 CanonNumberField(model.count, model::resize, Modifier.fillMaxSize(), range = UuidEngine.COUNT_MIN..UuidEngine.COUNT_MAX)
             }
             CanonGrid {
-                CanonButton("Copy all", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.ContentCopy, flashesCopied = true) {
+                CanonButton("Copy all", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_copy), flashesCopied = true) {
                     context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("", joined))
                 }
-                CanonButton("Share", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.Share) {
+                CanonButton("Share", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_share)) {
                     FileExport.shareText(context, joined)
                 }
             }

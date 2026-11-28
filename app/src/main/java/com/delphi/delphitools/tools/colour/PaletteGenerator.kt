@@ -3,9 +3,6 @@ package com.delphi.delphitools.tools.colour
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,6 +14,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonNameDialog
@@ -31,6 +29,7 @@ import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSegmented
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.LocalCanonCanvas
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.colour.rememberUserPalettes
 import com.delphi.delphitools.tools.ToolUndoActions
@@ -131,7 +130,7 @@ fun PaletteGenerator(model: PaletteGeneratorModel = viewModel()) {
             }
             CanonRow("Colours", flush = true) { CanonNumberField(state.count, model::resize, range = 3..12) }
             CanonGrid {
-                CanonButton("Save", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.FavoriteBorder) { saving = true }
+                CanonButton("Save", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_heart)) { saving = true }
                 PaletteExportButton({ model.paletteName }, { model.state.palette }, Modifier.weight(1f).fillMaxHeight(), css = { model.state.css })
             }
         }
@@ -145,7 +144,7 @@ fun PaletteGenerator(model: PaletteGeneratorModel = viewModel()) {
         halves = true,
         collapsesTo = 240.dp,
         footer = {
-            CanonButton("Regenerate", kind = CanonButtonKind.Primary, icon = Icons.Rounded.Refresh, oversized = true, onClick = model::roll)
+            CanonButton("Regenerate", kind = CanonButtonKind.Primary, icon = pencil(R.drawable.pencil_rotate_cw), oversized = true, onClick = model::roll)
         },
     )
 

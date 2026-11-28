@@ -9,11 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Dangerous
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonDropZone
@@ -48,6 +44,7 @@ import com.delphi.delphitools.canon.CanonStatusRow
 import com.delphi.delphitools.canon.CanonTile
 import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.CanonTone
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.Dispatchers
@@ -156,7 +153,7 @@ fun PdfPreflight(model: PdfPreflightModel = viewModel()) {
             if (!loaded) {
                 CanonDropZone(
                     "Drop PDF here",
-                    icon = Icons.Outlined.Description,
+                    icon = pencil(R.drawable.pencil_file),
                     mimeTypes = arrayOf(PdfDocuments.MIME),
                     photos = null,
                     paste = false,
@@ -179,7 +176,7 @@ fun PdfPreflight(model: PdfPreflightModel = viewModel()) {
         CanonRows {
             CanonHeading("Page")
             CanonRow("Page ${(page ?: 0) + 1}", flush = true) {
-                CanonButton("All pages", icon = Icons.Outlined.Close) { model.page = null }
+                CanonButton("All pages", icon = pencil(R.drawable.pencil_x)) { model.page = null }
             }
         }
     }
@@ -319,7 +316,7 @@ private fun ResultRow(result: PdfPreflightEngine.Result) {
         verticalAlignment = Alignment.Top,
     ) {
         Icon(
-            if (error) Icons.Filled.Dangerous else Icons.Filled.Warning,
+            if (error) pencil(R.drawable.pencil_circle_x) else pencil(R.drawable.pencil_triangle_alert),
             null,
             tint = if (error) c.destructive else c.foreground,
             modifier = Modifier.padding(top = 1.dp).size(16.dp),

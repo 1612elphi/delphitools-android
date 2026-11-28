@@ -25,12 +25,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.outlined.GraphicEq
-import androidx.compose.material.icons.outlined.ZoomIn
-import androidx.compose.material.icons.outlined.ZoomOut
-import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -68,6 +62,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasBoxing
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -85,6 +80,7 @@ import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.canonDisplayName
 import com.delphi.delphitools.canon.canonSidewaysPan
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.images.ImageFiles
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiMono
@@ -431,7 +427,7 @@ fun AudioAtlas(model: AudioAtlasModel = viewModel()) {
             if (!loaded) {
                 CanonDropZone(
                     "Choose audio file",
-                    icon = Icons.Outlined.GraphicEq,
+                    icon = pencil(R.drawable.pencil_audio_waveform),
                     mimeTypes = arrayOf("audio/*"),
                     photos = null,
                     paste = false,
@@ -447,9 +443,9 @@ fun AudioAtlas(model: AudioAtlasModel = viewModel()) {
                 ) {
                     CanonGrid {
                         val cell = Modifier.weight(1f).fillMaxHeight()
-                        CanonButton("", cell, enabled = ready && model.isZoomed, icon = Icons.Outlined.ZoomOut, contentDescription = "Zoom out", onClick = model::zoomOut)
-                        CanonButton("", cell, enabled = ready, icon = Icons.Outlined.ZoomIn, contentDescription = "Zoom in", onClick = model::zoomIn)
-                        CanonButton("", cell, enabled = ready && model.isZoomed, icon = Icons.Outlined.SwapHoriz, contentDescription = "Fit", onClick = model::fit)
+                        CanonButton("", cell, enabled = ready && model.isZoomed, icon = pencil(R.drawable.pencil_zoom_out), contentDescription = "Zoom out", onClick = model::zoomOut)
+                        CanonButton("", cell, enabled = ready, icon = pencil(R.drawable.pencil_zoom_in), contentDescription = "Zoom in", onClick = model::zoomIn)
+                        CanonButton("", cell, enabled = ready && model.isZoomed, icon = pencil(R.drawable.pencil_arrow_left_right), contentDescription = "Fit", onClick = model::fit)
                     }
                 }
             }
@@ -488,7 +484,7 @@ fun AudioAtlas(model: AudioAtlasModel = viewModel()) {
         isFooterHidden = !loaded,
         footer = {
             CanonGrid {
-                CanonButton("Loop", Modifier.weight(1f).fillMaxHeight(), selected = playback.looping, enabled = ready, icon = Icons.Filled.Repeat, onClick = model::toggleLoop)
+                CanonButton("Loop", Modifier.weight(1f).fillMaxHeight(), selected = playback.looping, enabled = ready, icon = pencil(R.drawable.pencil_repeat), onClick = model::toggleLoop)
                 AVEditPlayButton(playback, ready)
                 AVEditStopButton(playback)
             }

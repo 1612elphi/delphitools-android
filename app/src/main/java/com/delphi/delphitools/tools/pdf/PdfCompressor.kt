@@ -6,9 +6,6 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Compress
-import androidx.compose.material.icons.outlined.Description
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -23,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonCanvasBoxing
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonCompressionScale
@@ -42,6 +40,7 @@ import com.delphi.delphitools.canon.CanonStatusRow
 import com.delphi.delphitools.canon.CanonSwitch
 import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.LocalCanonCanvas
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.images.ImageCompressEngine
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.Dispatchers
@@ -205,7 +204,7 @@ fun PdfCompressor(model: PdfCompressorModel = viewModel()) {
             if (!loaded) {
                 CanonDropZone(
                     "Drop PDF here",
-                    icon = Icons.Outlined.Description,
+                    icon = pencil(R.drawable.pencil_file),
                     mimeTypes = arrayOf(PdfDocuments.MIME),
                     photos = null,
                     paste = false,
@@ -245,7 +244,7 @@ fun PdfCompressor(model: PdfCompressorModel = viewModel()) {
 
     val action = CanonSection.of {
         CanonRows {
-            PdfJobPanel(model.job, "Compress", Icons.Outlined.Compress, "Failed", enabled = loader.source != null, onStart = model::compress)
+            PdfJobPanel(model.job, "Compress", pencil(R.drawable.pencil_minimize_2), "Failed", enabled = loader.source != null, onStart = model::compress)
         }
     }
 

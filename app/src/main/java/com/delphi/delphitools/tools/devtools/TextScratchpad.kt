@@ -18,13 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Folder
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.SubdirectoryArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -63,6 +57,7 @@ import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonRule
 import com.delphi.delphitools.canon.CanonSection
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonStatus
 import com.delphi.delphitools.canon.CanonStatusRow
@@ -72,6 +67,7 @@ import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.CanonValueLayout
 import com.delphi.delphitools.canon.CanonValueLine
 import com.delphi.delphitools.canon.LocalCanonCanvas
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.canon.rememberCanonTextFilePicker
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
@@ -85,7 +81,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 
-private const val STORAGE_KEY = "delphitools-scratchpad"
+internal const val SCRATCHPAD_KEY = "delphitools-scratchpad"
 private const val SAVE_DELAY_MS = 1000L
 private const val LISTED = 50
 private val editorFont = TextStyle(fontFamily = DelphiMono, fontSize = 16.sp)
@@ -96,7 +92,7 @@ private class FoundIn(val text: String, val find: String, val isRegex: Boolean, 
 /** dt-ios TextScratchpadViewModel: the draft, saved a second after the last edit, and the find state. */
 class TextScratchpadModel(app: Application) : AndroidViewModel(app) {
     private val prefs = app.getSharedPreferences("delphitools", Context.MODE_PRIVATE)
-    var text by mutableStateOf(prefs.getString(STORAGE_KEY, "") ?: "")
+    var text by mutableStateOf(prefs.getString(SCRATCHPAD_KEY, "") ?: "")
         private set
     var find by mutableStateOf("")
         private set
@@ -193,7 +189,7 @@ class TextScratchpadModel(app: Application) : AndroidViewModel(app) {
         saving?.cancel()
         saving = viewModelScope.launch {
             delay(SAVE_DELAY_MS)
-            prefs.edit().putString(STORAGE_KEY, text).apply()
+            prefs.edit().putString(SCRATCHPAD_KEY, text).apply()
         }
     }
 
@@ -216,7 +212,7 @@ class TextScratchpadModel(app: Application) : AndroidViewModel(app) {
     }
 
     override fun onCleared() {
-        if (saving?.isActive == true) prefs.edit().putString(STORAGE_KEY, text).apply()
+        if (saving?.isActive == true) prefs.edit().putString(SCRATCHPAD_KEY, text).apply()
     }
 }
 
@@ -238,6 +234,7 @@ private fun counted(count: Int) = String.format("%,d", count)
 fun TextScratchpad(model: TextScratchpadModel = viewModel()) {
     val context = LocalContext.current
     ToolUndoActions(model.history.canUndo, model.history.canRedo, model::undo, model::redo)
+    CanonSharedText(model::replace)
     val picker = rememberCanonTextFilePicker(onText = model::replace)
     val hasText = model.text.isNotEmpty()
 
@@ -247,11 +244,11 @@ fun TextScratchpad(model: TextScratchpadModel = viewModel()) {
         CanonRows {
             CanonHeading("Text")
             CanonGrid(columns = 2) {
-                CanonButton("Files", icon = Icons.Outlined.Folder) { picker.open() }
-                CanonButton("Clear", icon = Icons.Outlined.Delete, enabled = hasText) { model.replace("") }
+                CanonButton("Files", icon = pencil(R.drawable.pencil_folder)) { picker.open() }
+                CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), enabled = hasText) { model.replace("") }
             }
             CanonGrid {
-                CanonButton("Share", Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Secondary, enabled = hasText, icon = Icons.Outlined.Share) {
+                CanonButton("Share", Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Secondary, enabled = hasText, icon = pencil(R.drawable.pencil_share)) {
                     val text = model.text
                     model.viewModelScope.launch { FileExport.share(context, text.toByteArray(), "scratchpad.txt", "text/plain") }
                 }
@@ -260,7 +257,7 @@ fun TextScratchpad(model: TextScratchpadModel = viewModel()) {
                     Modifier.weight(1f).fillMaxHeight(),
                     kind = CanonButtonKind.Primary,
                     enabled = hasText,
-                    icon = Icons.Outlined.ContentCopy,
+                    icon = pencil(R.drawable.pencil_copy),
                     oversized = true,
                     flashesCopied = true,
                 ) {
@@ -320,8 +317,8 @@ fun TextScratchpad(model: TextScratchpadModel = viewModel()) {
         val count = model.matchCount
         CanonRows {
             CanonHeading("Find & Replace")
-            FieldRow(Icons.Outlined.Search, model.find, model::typeFind, "Find")
-            FieldRow(Icons.Outlined.SubdirectoryArrowRight, model.replacement, { model.replacement = it }, "Replace")
+            FieldRow(pencil(R.drawable.pencil_search), model.find, model::typeFind, "Find")
+            FieldRow(pencil(R.drawable.pencil_corner_down_right), model.replacement, { model.replacement = it }, "Replace")
             Row(Modifier.fillMaxWidth().background(c.card), verticalAlignment = Alignment.CenterVertically) {
                 CanonRow("Regex", Modifier.weight(1f)) { CanonSwitch(model.regex, onCheckedChange = model::toggleRegex) }
                 if (model.badPattern) {
@@ -351,7 +348,7 @@ fun TextScratchpad(model: TextScratchpadModel = viewModel()) {
                     CanonEmptyRow("None")
                 } else {
                     results.take(LISTED).forEachIndexed { index, value -> CanonValueLine("${index + 1}", value, layout = CanonValueLayout.Numbered) }
-                    CanonButton("Copy All", icon = Icons.Outlined.ContentCopy, flashesCopied = true) {
+                    CanonButton("Copy All", icon = pencil(R.drawable.pencil_copy), flashesCopied = true) {
                         runCatching { context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("", results.joinToString("\n"))) }
                     }
                 }

@@ -27,10 +27,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -60,6 +56,7 @@ import androidx.core.graphics.scale
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -77,6 +74,7 @@ import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonClickable
 import com.delphi.delphitools.canon.canonDisplayName
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiMono
@@ -193,7 +191,7 @@ fun Base64ImageEncoder(model: Base64ImageEncoderModel = viewModel()) {
                 model.skipped.forEach { CanonStatusRow(it, CanonTone.Warn) }
             }
             if (images.isNotEmpty() || model.skipped.isNotEmpty()) {
-                CanonButton("Clear all", icon = Icons.Outlined.Delete, onClick = model::clearAll)
+                CanonButton("Clear all", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clearAll)
             }
         }
     }
@@ -266,7 +264,7 @@ private fun EncodedBlock(image: Base64Image, lit: Boolean, onSelect: () -> Unit,
                     )
                 }
             }
-            CanonButton("", Modifier.width(56.dp).fillMaxHeight(), icon = Icons.Outlined.Close, contentDescription = "Remove", onClick = onRemove)
+            CanonButton("", Modifier.width(56.dp).fillMaxHeight(), icon = pencil(R.drawable.pencil_x), contentDescription = "Remove", onClick = onRemove)
         }
         Text(
             image.preview,
@@ -278,8 +276,8 @@ private fun EncodedBlock(image: Base64Image, lit: Boolean, onSelect: () -> Unit,
         )
         CanonGrid {
             val cell = Modifier.weight(1f).fillMaxHeight()
-            CanonButton("Copy Raw Base64", cell, icon = Icons.Rounded.ContentCopy, flashesCopied = fits) { onCopy(image.raw) }
-            CanonButton("Copy Data URI", cell, kind = CanonButtonKind.Primary, icon = Icons.Rounded.ContentCopy, flashesCopied = fits) {
+            CanonButton("Copy Raw Base64", cell, icon = pencil(R.drawable.pencil_copy), flashesCopied = fits) { onCopy(image.raw) }
+            CanonButton("Copy Data URI", cell, kind = CanonButtonKind.Primary, icon = pencil(R.drawable.pencil_copy), flashesCopied = fits) {
                 onCopy(image.dataUri)
             }
         }

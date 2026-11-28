@@ -15,10 +15,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -60,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -84,6 +81,7 @@ import com.delphi.delphitools.canon.canonDimensionLines
 import com.delphi.delphitools.canon.canonDimensionSheet
 import com.delphi.delphitools.canon.canonDisplayName
 import com.delphi.delphitools.canon.canonPlaced
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.ui.theme.DelphiMono
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -214,7 +212,7 @@ fun ImageClipper(model: ImageClipperModel = viewModel()) {
                 CanonDropZone("Drop a transparent PNG to clip", paste = false, onFiles = { uris -> uris.firstOrNull()?.let(model::load) })
             } else {
                 CanonRow(model.name, detail = "${size.width} × ${size.height}", flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
             }
             model.failedName?.let { CanonStatusRow("Could not read $it", CanonTone.Warn) }
@@ -256,7 +254,7 @@ fun ImageClipper(model: ImageClipperModel = viewModel()) {
                     "Copy",
                     Modifier.weight(1f).fillMaxHeight(),
                     enabled = kept != null,
-                    icon = Icons.Rounded.ContentCopy,
+                    icon = pencil(R.drawable.pencil_copy),
                     flashesCopied = true,
                 ) { model.copy(context) }
                 CanonButton(
@@ -264,7 +262,7 @@ fun ImageClipper(model: ImageClipperModel = viewModel()) {
                     Modifier.weight(1f).fillMaxHeight(),
                     kind = CanonButtonKind.Primary,
                     enabled = kept != null && !model.exporting,
-                    icon = Icons.Outlined.Share,
+                    icon = pencil(R.drawable.pencil_share),
                     oversized = true,
                 ) { model.export(context) }
             }

@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,7 +26,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonMetrics
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -112,7 +111,7 @@ internal fun AVEditTrimEditor(
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        if (onLeft) Icons.Filled.ChevronLeft else Icons.Filled.ChevronRight,
+                        if (onLeft) pencil(R.drawable.pencil_chevron_left) else pencil(R.drawable.pencil_chevron_right),
                         contentDescription = null,
                         tint = c.primaryForeground,
                         modifier = Modifier.size(16.dp),

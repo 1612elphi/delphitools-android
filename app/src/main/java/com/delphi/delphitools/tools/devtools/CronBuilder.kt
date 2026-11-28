@@ -1,5 +1,7 @@
 package com.delphi.delphitools.tools.devtools
 
+import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -25,9 +27,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -322,7 +321,7 @@ fun CronBuilder(model: CronBuilderModel = viewModel()) {
     }
     val action = CanonSection.of {
         CanonRows {
-            CanonButton("Copy", kind = CanonButtonKind.Primary, icon = Icons.Outlined.ContentCopy, oversized = true, enabled = canonical != null, flashesCopied = true) {
+            CanonButton("Copy", kind = CanonButtonKind.Primary, icon = pencil(R.drawable.pencil_copy), oversized = true, enabled = canonical != null, flashesCopied = true) {
                 if (canonical != null) context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("", canonical))
             }
         }
@@ -450,7 +449,7 @@ private fun CronFieldEditor(model: CronBuilderModel, index: Int, kind: CronField
                 Text(name, style = CanonText.bodySemibold, color = if (isOpen) c.primary else c.foreground)
                 Text(detail, style = CanonText.caption, color = if (problem != null) c.destructive else c.mutedForeground, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            Icon(Icons.Outlined.ExpandMore, null, tint = c.mutedForeground, modifier = Modifier.size(16.dp).rotate(chevron))
+            Icon(pencil(R.drawable.pencil_chevron_down), null, tint = c.mutedForeground, modifier = Modifier.size(16.dp).rotate(chevron))
         }
         DraftCell(
             if (editable) model.source(kind) else "",

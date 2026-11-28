@@ -26,13 +26,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Colorize
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.LockOpen
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -67,12 +60,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonCopyFeedback
 import com.delphi.delphitools.canon.CanonHeading
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.MenuCellItem
 import com.delphi.delphitools.canon.MenuCellPopup
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.canon.toCanonColor
 import com.delphi.delphitools.colour.ColourFormat
 import com.delphi.delphitools.colour.ContrastLevel
@@ -278,7 +273,7 @@ private fun ReelColumn(
                     .semantics { contentDescription = if (isLocked) "Unlock" else "Lock" },
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(if (isLocked) Icons.Rounded.Lock else Icons.Outlined.LockOpen, null, Modifier.size(20.dp), tint = ink.copy(alpha = if (isLocked) 1f else 0.4f))
+                Icon(if (isLocked) pencil(R.drawable.pencil_lock) else pencil(R.drawable.pencil_lock_open), null, Modifier.size(20.dp), tint = ink.copy(alpha = if (isLocked) 1f else 0.4f))
             }
         }
         val valueStyle = TextStyle(fontFamily = DelphiMono, fontSize = valueSize.sp, fontWeight = FontWeight.SemiBold, color = ink, textAlign = TextAlign.Center)
@@ -309,7 +304,7 @@ private fun ReelColumn(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(value, style = valueStyle, maxLines = 1, softWrap = false)
-                    if (isWidened) Icon(Icons.Outlined.Colorize, null, Modifier.padding(start = 4.dp).size(14.dp), tint = ink.copy(alpha = 0.7f))
+                    if (isWidened) Icon(pencil(R.drawable.pencil_pipette), null, Modifier.padding(start = 4.dp).size(14.dp), tint = ink.copy(alpha = 0.7f))
                 }
                 Text(name, style = TextStyle(fontFamily = DelphiFont, fontSize = nameSize.sp, fontWeight = FontWeight.Medium, color = ink, textAlign = TextAlign.Center), maxLines = 1)
             }
@@ -328,21 +323,21 @@ private fun ReelColumn(
         }
         MenuCellPopup(menu, { menu = false }) {
             CanonHeading(name)
-            MenuCellItem("Copy", icon = Icons.Rounded.ContentCopy) {
+            MenuCellItem("Copy", icon = pencil(R.drawable.pencil_copy)) {
                 menu = false
                 CanonCopyFeedback.copy(view, value)
             }
-            MenuCellItem("Edit colour", icon = Icons.Outlined.Colorize) {
+            MenuCellItem("Edit colour", icon = pencil(R.drawable.pencil_pipette)) {
                 menu = false
                 actions.onEdit(index)
             }
-            MenuCellItem(if (isLocked) "Unlock" else "Lock", icon = if (isLocked) Icons.Outlined.LockOpen else Icons.Outlined.Lock) {
+            MenuCellItem(if (isLocked) "Unlock" else "Lock", icon = if (isLocked) pencil(R.drawable.pencil_lock_open) else pencil(R.drawable.pencil_lock)) {
                 menu = false
                 actions.onLock(index)
             }
             // ponytail: iOS shows Remove dimmed at three colours; MenuCellItem has no disabled state, so it is left out
             if (actions.onRemove != null && count > 3) {
-                MenuCellItem("Remove", icon = Icons.Outlined.Delete) {
+                MenuCellItem("Remove", icon = pencil(R.drawable.pencil_trash_2)) {
                     menu = false
                     actions.onRemove.invoke(index)
                 }

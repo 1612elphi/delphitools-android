@@ -26,16 +26,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.UnfoldMore
-import androidx.compose.material.icons.filled.WbSunny
-import androidx.compose.material.icons.rounded.CalendarMonth
-import androidx.compose.material.icons.rounded.ContentPaste
-import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material.icons.rounded.SwapVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -89,6 +79,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonBigNumberField
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -110,6 +101,7 @@ import com.delphi.delphitools.canon.CanonValueLine
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.MenuCellPopup
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import com.delphi.delphitools.tools.devtools.JwtEngine
 import com.delphi.delphitools.tools.images.WorldMap
@@ -347,8 +339,8 @@ fun TimeCalc(model: TimeCalcModel = viewModel()) {
                     )
                     if (epoch == null && model.epochInput.isNotEmpty()) CanonStatusRow("Numbers only", CanonTone.Warn)
                     CanonGrid {
-                        CanonButton("Now", Modifier.weight(1f), icon = Icons.Rounded.Schedule, onClick = model::fillNow)
-                        CanonButton("Paste", Modifier.weight(1f), icon = Icons.Rounded.ContentPaste) {
+                        CanonButton("Now", Modifier.weight(1f), icon = pencil(R.drawable.pencil_clock), onClick = model::fillNow)
+                        CanonButton("Paste", Modifier.weight(1f), icon = pencil(R.drawable.pencil_clipboard)) {
                             val clip = context.getSystemService(ClipboardManager::class.java)?.primaryClip
                             val text = clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(context)?.toString() ?: return@CanonButton
                             model.setEpoch(text.trim())
@@ -376,7 +368,7 @@ fun TimeCalc(model: TimeCalcModel = viewModel()) {
                         TimeZoneCell(model.toZone, instant, "To", model::pickTo)
                     }
                     CanonGrid {
-                        CanonButton("Swap", Modifier.weight(1f), icon = Icons.Rounded.SwapVert, onClick = model::swapZones)
+                        CanonButton("Swap", Modifier.weight(1f), icon = pencil(R.drawable.pencil_arrow_up_down), onClick = model::swapZones)
                     }
                 }
             }
@@ -435,7 +427,7 @@ private fun TimeDateCell(millis: Long, label: String, onChange: (Long) -> Unit) 
         DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, Locale.getDefault()).format(Date(millis))
     }.getOrDefault(DASH)
     CanonGrid {
-        CanonButton(text, Modifier.weight(1f), icon = Icons.Rounded.CalendarMonth, contentDescription = label) {
+        CanonButton(text, Modifier.weight(1f), icon = pencil(R.drawable.pencil_calendar), contentDescription = label) {
             val current = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault())
             // ponytail: the platform dialogs, date then time; iOS shows one inline calendar picker in a popover
             DatePickerDialog(context, { _, year, month, day ->
@@ -474,7 +466,7 @@ private fun TimeZoneCell(zone: String, millis: Long, label: String, onPick: (Str
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Text(title, style = CanonText.bodyMedium, color = c.foreground, maxLines = 1)
-            Icon(Icons.Filled.UnfoldMore, contentDescription = null, tint = c.foreground, modifier = Modifier.size(14.dp))
+            Icon(pencil(R.drawable.pencil_chevrons_up_down), contentDescription = null, tint = c.foreground, modifier = Modifier.size(14.dp))
         }
         MenuCellPopup(open, { open = false }) {
             fun pick(id: String) {
@@ -522,7 +514,7 @@ private fun ZoneItem(title: String, detail: String, checked: Boolean, onClick: (
             Text(title, style = CanonText.body, color = c.foreground)
             Text(detail, style = CanonText.caption, color = c.mutedForeground)
         }
-        if (checked) Icon(Icons.Filled.Check, contentDescription = null, tint = c.primary, modifier = Modifier.size(18.dp))
+        if (checked) Icon(pencil(R.drawable.pencil_check), contentDescription = null, tint = c.primary, modifier = Modifier.size(18.dp))
     }
 }
 
@@ -538,9 +530,9 @@ private fun ZoneFolder(title: String, forward: Boolean, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        if (!forward) Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null, tint = c.foreground, modifier = Modifier.size(18.dp))
+        if (!forward) Icon(pencil(R.drawable.pencil_arrow_left), contentDescription = null, tint = c.foreground, modifier = Modifier.size(18.dp))
         Text(title, style = if (forward) CanonText.body else CanonText.bodySemibold, color = c.foreground, modifier = Modifier.weight(1f))
-        if (forward) Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(18.dp))
+        if (forward) Icon(pencil(R.drawable.pencil_chevron_right), contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(18.dp))
     }
 }
 
@@ -632,7 +624,7 @@ private fun TimePicture(scene: TimeScene, changedAt: Double, land: List<FloatArr
     val windowHeight = LocalWindowInfo.current.containerSize.height / density
     // measures in dp
     val measurer = remember(resolver) { TextMeasurer(resolver, Density(1f), LayoutDirection.Ltr) }
-    val sun = rememberVectorPainter(Icons.Filled.WbSunny)
+    val sun = rememberVectorPainter(pencil(R.drawable.pencil_sun))
 
     var now by remember { mutableDoubleStateOf(System.currentTimeMillis() / 1000.0) }
     LaunchedEffect(Unit) {

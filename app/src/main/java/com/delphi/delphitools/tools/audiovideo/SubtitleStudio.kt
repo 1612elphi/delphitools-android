@@ -25,15 +25,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material.icons.filled.SkipPrevious
-import androidx.compose.material.icons.outlined.Subtitles
-import androidx.compose.material.icons.outlined.VerticalAlignBottom
-import androidx.compose.material.icons.outlined.VerticalAlignCenter
-import androidx.compose.material.icons.outlined.VerticalAlignTop
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -66,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasBoxing
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -91,6 +83,7 @@ import com.delphi.delphitools.canon.canonDisplayName
 import com.delphi.delphitools.canon.canonGrabPan
 import com.delphi.delphitools.canon.canonSidewaysPan
 import com.delphi.delphitools.canon.canonSmpte
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiMono
@@ -223,7 +216,7 @@ fun SubtitleStudio(model: SubtitleStudioModel = viewModel()) {
             if (cues.isEmpty()) {
                 CanonDropZone(
                     "SRT or VTT",
-                    icon = Icons.Outlined.Subtitles,
+                    icon = pencil(R.drawable.pencil_captions),
                     mimeTypes = arrayOf("text/*", "application/x-subrip", "application/octet-stream"),
                     photos = null,
                     paste = false,
@@ -278,9 +271,9 @@ fun SubtitleStudio(model: SubtitleStudioModel = viewModel()) {
             CanonGrid {
                 val cell = Modifier.weight(1f).fillMaxHeight()
                 listOf(
-                    Triple("Top", Icons.Outlined.VerticalAlignTop, 0),
-                    Triple("Middle", Icons.Outlined.VerticalAlignCenter, 1),
-                    Triple("Bottom", Icons.Outlined.VerticalAlignBottom, 2),
+                    Triple("Top", pencil(R.drawable.pencil_arrow_up_to_line), 0),
+                    Triple("Middle", pencil(R.drawable.pencil_arrow_up_down), 1),
+                    Triple("Bottom", pencil(R.drawable.pencil_arrow_down_to_line), 2),
                 ).forEach { (title, icon, index) ->
                     CanonButton(title, cell, enabled = cues.isNotEmpty(), icon = icon) { model.place(index) }
                 }
@@ -324,11 +317,11 @@ fun SubtitleStudio(model: SubtitleStudioModel = viewModel()) {
         footer = {
             CanonGrid {
                 val cell = Modifier.weight(1f).fillMaxHeight()
-                CanonButton("", cell, enabled = ready && cues.isNotEmpty(), icon = Icons.Filled.SkipPrevious, contentDescription = "Previous cue") { model.jump(-1) }
-                CanonButton("", cell, enabled = ready, icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft, repeats = true, contentDescription = "Back one frame") { playback.step(-1) }
+                CanonButton("", cell, enabled = ready && cues.isNotEmpty(), icon = pencil(R.drawable.pencil_skip_back), contentDescription = "Previous cue") { model.jump(-1) }
+                CanonButton("", cell, enabled = ready, icon = pencil(R.drawable.pencil_chevron_left), repeats = true, contentDescription = "Back one frame") { playback.step(-1) }
                 AVEditPlayButton(playback, ready)
-                CanonButton("", cell, enabled = ready, icon = Icons.AutoMirrored.Filled.KeyboardArrowRight, repeats = true, contentDescription = "Forward one frame") { playback.step(1) }
-                CanonButton("", cell, enabled = ready && cues.isNotEmpty(), icon = Icons.Filled.SkipNext, contentDescription = "Next cue") { model.jump(1) }
+                CanonButton("", cell, enabled = ready, icon = pencil(R.drawable.pencil_chevron_right), repeats = true, contentDescription = "Forward one frame") { playback.step(1) }
+                CanonButton("", cell, enabled = ready && cues.isNotEmpty(), icon = pencil(R.drawable.pencil_skip_forward), contentDescription = "Next cue") { model.jump(1) }
             }
         },
     )

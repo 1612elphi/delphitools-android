@@ -33,14 +33,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Camera
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.PhotoCamera
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -83,6 +75,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -104,6 +97,7 @@ import com.delphi.delphitools.canon.MenuCellItem
 import com.delphi.delphitools.canon.MenuCellPopup
 import com.delphi.delphitools.canon.canonLoupeFrame
 import com.delphi.delphitools.canon.canonPlaced
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.canon.toCanonColor
 import com.delphi.delphitools.colour.LocalColourFormats
 import com.delphi.delphitools.colour.Rgb
@@ -344,12 +338,12 @@ fun ColourCamera(model: ColourCameraModel = viewModel()) {
             if (!(colourMode && model.captured.isEmpty())) {
                 CanonGrid {
                     val cell = Modifier.weight(1f).fillMaxHeight()
-                    CanonButton("Save", cell, icon = Icons.Outlined.FavoriteBorder, enabled = shown.isNotEmpty(), flashesCopied = true, flashTitle = "Saved") {
+                    CanonButton("Save", cell, icon = pencil(R.drawable.pencil_heart), enabled = shown.isNotEmpty(), flashesCopied = true, flashTitle = "Saved") {
                         store.add("Camera Palette", model.shownPalette, "Camera")
                         view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                     }
                     PaletteExportButton({ "Camera Palette" }, { model.shownPalette }, cell)
-                    if (colourMode) CanonButton("Clear", cell, icon = Icons.Outlined.Delete) { model.captured.clear() }
+                    if (colourMode) CanonButton("Clear", cell, icon = pencil(R.drawable.pencil_trash_2)) { model.captured.clear() }
                 }
             }
         }
@@ -378,7 +372,7 @@ fun ColourCamera(model: ColourCameraModel = viewModel()) {
                     if (retakes) "Retake" else "Capture",
                     Modifier.weight(1f),
                     kind = CanonButtonKind.Primary,
-                    icon = if (retakes) Icons.Outlined.Refresh else Icons.Outlined.Camera,
+                    icon = if (retakes) pencil(R.drawable.pencil_rotate_ccw) else pencil(R.drawable.pencil_circle_dot),
                     oversized = true,
                     enabled = hasStill || model.streaming,
                 ) { shoot() }
@@ -478,7 +472,7 @@ private fun ColourCameraViewfinder(model: ColourCameraModel, foreground: Boolean
                 verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Icon(Icons.Outlined.PhotoCamera, null, tint = c.mutedForeground, modifier = Modifier.size(34.dp))
+                Icon(pencil(R.drawable.pencil_camera), null, tint = c.mutedForeground, modifier = Modifier.size(34.dp))
                 Text(if (denied) "Camera Access Required" else "Camera", style = CanonText.bodySemibold.copy(fontSize = 17.sp), color = c.mutedForeground, textAlign = TextAlign.Center)
                 if (denied) {
                     Text(
@@ -487,7 +481,7 @@ private fun ColourCameraViewfinder(model: ColourCameraModel, foreground: Boolean
                         color = c.mutedForeground,
                         textAlign = TextAlign.Center,
                     )
-                    CanonButton("Open Settings", icon = Icons.Outlined.Settings) {
+                    CanonButton("Open Settings", icon = pencil(R.drawable.pencil_settings)) {
                         context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)))
                     }
                 }
@@ -631,11 +625,11 @@ private fun CapturedSwatch(colour: Rgb, modifier: Modifier, onRemove: () -> Unit
     ) {
         Text(hex, style = CanonColourType.mono11, color = if (colour.takesBlackInk) Color.Black else Color.White, maxLines = 1)
         MenuCellPopup(menu, { menu = false }) {
-            MenuCellItem("Copy", icon = Icons.Outlined.ContentCopy) {
+            MenuCellItem("Copy", icon = pencil(R.drawable.pencil_copy)) {
                 menu = false
                 CanonCopyFeedback.copy(view, hex)
             }
-            MenuCellItem("Remove", icon = Icons.Outlined.Delete) {
+            MenuCellItem("Remove", icon = pencil(R.drawable.pencil_trash_2)) {
                 menu = false
                 onRemove()
             }

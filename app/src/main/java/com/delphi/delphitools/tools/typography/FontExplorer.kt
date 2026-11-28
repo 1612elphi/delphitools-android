@@ -1,5 +1,7 @@
 package com.delphi.delphitools.tools.typography
 
+import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.app.Application
 import android.graphics.Paint
@@ -23,9 +25,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.TextFormat
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -203,13 +202,13 @@ fun FontExplorer(model: FontExplorerModel = viewModel()) {
     val source = CanonSection.of {
         CanonRows {
             if (info == null) {
-                CanonDropZone("Drop a font", icon = Icons.Outlined.TextFormat, mimeTypes = fontTypes, photos = null, paste = false) { uris ->
+                CanonDropZone("Drop a font", icon = pencil(R.drawable.pencil_type), mimeTypes = fontTypes, photos = null, paste = false) { uris ->
                     uris.firstOrNull()?.let(model::load)
                 }
             } else {
                 CanonHeading("Font")
                 CanonRow(info.fullName, detail = info.fileName, flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
                 CanonHeading("Preview")
                 CanonTextCell(

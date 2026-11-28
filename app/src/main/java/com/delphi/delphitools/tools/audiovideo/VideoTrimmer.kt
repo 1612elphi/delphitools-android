@@ -4,12 +4,6 @@ import android.app.Application
 import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FirstPage
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.LastPage
-import androidx.compose.material.icons.outlined.ContentCut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -24,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasBoxing
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -38,6 +33,7 @@ import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.canonSmpte
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.launch
 import java.io.File
@@ -184,10 +180,10 @@ fun VideoTrimmer(model: VideoTrimmerModel = viewModel()) {
                 )
             }
             CanonGrid {
-                CanonButton("Set in", Modifier.weight(1f).fillMaxHeight(), enabled = hasPlayhead, icon = Icons.AutoMirrored.Filled.LastPage) {
+                CanonButton("Set in", Modifier.weight(1f).fillMaxHeight(), enabled = hasPlayhead, icon = pencil(R.drawable.pencil_arrow_right_to_line)) {
                     playback.playhead?.let { model.select(it, model.end) }
                 }
-                CanonButton("Set out", Modifier.weight(1f).fillMaxHeight(), enabled = hasPlayhead, icon = Icons.Filled.FirstPage) {
+                CanonButton("Set out", Modifier.weight(1f).fillMaxHeight(), enabled = hasPlayhead, icon = pencil(R.drawable.pencil_arrow_left_to_line)) {
                     playback.playhead?.let { model.select(model.start, it) }
                 }
             }
@@ -195,7 +191,7 @@ fun VideoTrimmer(model: VideoTrimmerModel = viewModel()) {
     }
     // ponytail: no MP4/MOV choice; MediaMuxer writes MP4 only, add MOV with a muxer that writes QuickTime
     val settings = CanonSection.of {
-        CanonRows { AVEditJobPanel(job, "Trim", Icons.Outlined.ContentCut, "Couldn't write the trimmed file.", enabled = ready, onStart = model::trim) }
+        CanonRows { AVEditJobPanel(job, "Trim", pencil(R.drawable.pencil_scissors), "Couldn't write the trimmed file.", enabled = ready, onStart = model::trim) }
     }
     val info = CanonSection.of { CanonRows { AVEditDetails(model.details) } }
     val banner = CanonSection.canvas(CanonCanvasSize.Fixed(STRIP_HEIGHT + CanonReadoutRowHeight)) {
@@ -223,7 +219,7 @@ fun VideoTrimmer(model: VideoTrimmerModel = viewModel()) {
                     "",
                     Modifier.weight(1f).fillMaxHeight(),
                     enabled = ready,
-                    icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                    icon = pencil(R.drawable.pencil_chevron_left),
                     repeats = true,
                     contentDescription = "Back one frame",
                 ) { playback.step(-1) }
@@ -234,7 +230,7 @@ fun VideoTrimmer(model: VideoTrimmerModel = viewModel()) {
                     "",
                     Modifier.weight(1f).fillMaxHeight(),
                     enabled = ready,
-                    icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    icon = pencil(R.drawable.pencil_chevron_right),
                     repeats = true,
                     contentDescription = "Forward one frame",
                 ) { playback.step(1) }

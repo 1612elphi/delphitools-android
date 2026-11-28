@@ -34,16 +34,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.RadioButtonChecked
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.MoreHoriz
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -82,6 +72,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -101,6 +92,7 @@ import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.CanonTransport
 import com.delphi.delphitools.canon.MenuCellItem
 import com.delphi.delphitools.canon.MenuCellPopup
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.CoroutineScope
@@ -516,7 +508,7 @@ fun VoiceRecorder(model: VoiceRecorderModel = viewModel()) {
         CanonRows {
             if (model.permission == VoicePermission.Denied) {
                 CanonStatusRow("Microphone access is off. Turn it on in Settings to record.", CanonTone.Warn)
-                CanonButton("Open Settings", kind = CanonButtonKind.Primary, icon = Icons.Outlined.Settings) {
+                CanonButton("Open Settings", kind = CanonButtonKind.Primary, icon = pencil(R.drawable.pencil_settings)) {
                     context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)))
                 }
             }
@@ -567,11 +559,11 @@ fun VoiceRecorder(model: VoiceRecorderModel = viewModel()) {
                 }
                 CanonGrid {
                     if (!active) {
-                        CanonButton("Record", Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Primary, icon = Icons.Filled.RadioButtonChecked) {
+                        CanonButton("Record", Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Primary, icon = pencil(R.drawable.pencil_circle_dot)) {
                             if (model.permission == VoicePermission.Granted) model.start() else ask.launch(Manifest.permission.RECORD_AUDIO)
                         }
                     } else {
-                        CanonButton("", Modifier.width(64.dp).fillMaxHeight(), icon = Icons.Filled.Stop, contentDescription = "Stop") {
+                        CanonButton("", Modifier.width(64.dp).fillMaxHeight(), icon = pencil(R.drawable.pencil_square), contentDescription = "Stop") {
                             if (playing) model.stopPlayback() else model.stop()
                         }
                         VoicePlatter(
@@ -601,7 +593,7 @@ fun VoiceRecorder(model: VoiceRecorderModel = viewModel()) {
                         CanonButton(
                             "",
                             Modifier.width(64.dp).fillMaxHeight(),
-                            icon = if (held) Icons.Filled.PlayArrow else Icons.Filled.Pause,
+                            icon = pencil(if (held) R.drawable.pencil_play else R.drawable.pencil_pause),
                             contentDescription = if (held) "Resume" else "Pause",
                         ) {
                             when {
@@ -744,7 +736,7 @@ private fun VoiceTakeRow(
         CanonButton(
             "",
             Modifier.width(52.dp).fillMaxHeight(),
-            icon = if (isPlaying) Icons.Filled.Stop else Icons.Filled.PlayArrow,
+            icon = pencil(if (isPlaying) R.drawable.pencil_square else R.drawable.pencil_play),
             contentDescription = if (isPlaying) "Stop" else "Play",
             onClick = onPlay,
         )
@@ -761,17 +753,17 @@ private fun VoiceTakeRow(
             )
         }
         Box(Modifier.width(52.dp).fillMaxHeight()) {
-            CanonButton("", Modifier.fillMaxSize(), icon = Icons.Outlined.MoreHoriz, contentDescription = "More") { menu = true }
+            CanonButton("", Modifier.fillMaxSize(), icon = pencil(R.drawable.pencil_ellipsis), contentDescription = "More") { menu = true }
             MenuCellPopup(menu, { menu = false }) {
-                MenuCellItem("Rename", icon = Icons.Outlined.Edit) {
+                MenuCellItem("Rename", icon = pencil(R.drawable.pencil_pencil)) {
                     menu = false
                     onRename()
                 }
-                MenuCellItem("Share", icon = Icons.Outlined.Share) {
+                MenuCellItem("Share", icon = pencil(R.drawable.pencil_share)) {
                     menu = false
                     onShare()
                 }
-                MenuCellItem("Delete", icon = Icons.Outlined.Delete) {
+                MenuCellItem("Delete", icon = pencil(R.drawable.pencil_trash_2)) {
                     menu = false
                     onDelete()
                 }

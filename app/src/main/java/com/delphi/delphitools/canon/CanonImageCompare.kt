@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Height
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
@@ -43,6 +40,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.launch
@@ -141,7 +139,7 @@ fun CanonImageCompare(
                 .border(CanonMetrics.frame, c.foreground),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Filled.Height, contentDescription = null, tint = c.foreground, modifier = Modifier.size(18.dp).rotate(90f))
+            Icon(pencil(R.drawable.pencil_arrow_left_right), contentDescription = null, tint = c.foreground, modifier = Modifier.size(18.dp))
         }
         CompareTag(beforeTitle, Modifier.align(Alignment.TopStart))
         CompareTag(afterTitle, Modifier.align(Alignment.TopEnd))

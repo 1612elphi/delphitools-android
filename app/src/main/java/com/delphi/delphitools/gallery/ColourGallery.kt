@@ -6,10 +6,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonColourCard
 import com.delphi.delphitools.canon.CanonColourCardLayout
@@ -39,6 +36,7 @@ import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSegmented
 import com.delphi.delphitools.canon.CanonSwitch
 import com.delphi.delphitools.canon.CanonValueLine
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.colour.fromOklch
 import com.delphi.delphitools.colour.hex
@@ -127,11 +125,11 @@ fun ColourGallery() {
             harmony,
             picker = { CanonSegmented(listOf("Analogous", "Split"), harmonyKind) { harmonyKind = it } },
             actions = {
-                CanonButton("Copy", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.ContentCopy) {
+                CanonButton("Copy", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_copy)) {
                     CanonCopyFeedback.copy(view, harmony.joinToString("\n") { it.hex })
                 }
-                CanonButton("Export", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.IosShare) {}
-                CanonButton("Save", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.Download) {}
+                CanonButton("Export", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_share)) {}
+                CanonButton("Save", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_download)) {}
             },
         )
         CanonPaletteCard("Shades", shades(colour), height = 120.dp)

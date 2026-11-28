@@ -26,10 +26,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -64,6 +60,7 @@ import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.LayoutBackDismiss
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.delay
@@ -152,7 +149,7 @@ internal fun FavourBanner(text: String, modifier: Modifier = Modifier, onClick: 
             modifier = Modifier.size(36.dp),
         )
         Text(text, style = CanonText.bodySemibold, color = c.primaryForeground, modifier = Modifier.weight(1f))
-        Icon(Icons.AutoMirrored.Outlined.ArrowForwardIos, contentDescription = null, tint = c.primaryForeground, modifier = Modifier.size(12.dp))
+        Icon(pencil(R.drawable.pencil_chevron_right), contentDescription = null, tint = c.primaryForeground, modifier = Modifier.size(12.dp))
     }
 }
 
@@ -239,7 +236,7 @@ internal fun FavourSheet(dialogue: FavourDialogue, onDismiss: () -> Unit) {
                             CanonButton(
                                 choice.text,
                                 kind = if (review) CanonButtonKind.Primary else CanonButtonKind.Secondary,
-                                icon = if (review) Icons.Filled.Star else null,
+                                icon = if (review) pencil(R.drawable.pencil_star) else null,
                                 oversized = review,
                             ) { pick(choice) }
                         }
@@ -255,7 +252,7 @@ internal fun FavourSheet(dialogue: FavourDialogue, onDismiss: () -> Unit) {
                 .canonClickable(onClick = onDismiss),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Outlined.Close, contentDescription = "Close", tint = c.foreground, modifier = Modifier.size(22.dp))
+            Icon(pencil(R.drawable.pencil_x), contentDescription = "Close", tint = c.foreground, modifier = Modifier.size(22.dp))
         }
     }
 }

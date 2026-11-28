@@ -15,12 +15,6 @@ import androidx.compose.foundation.draganddrop.dragAndDropTarget
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentPaste
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -51,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -68,6 +63,7 @@ import com.delphi.delphitools.canon.CanonTile
 import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonPlaced
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.Dispatchers
@@ -224,7 +220,7 @@ fun PasteImage(model: PasteImageModel = viewModel()) {
             CanonHeading("Pasted Image")
             if (loaded) {
                 CanonRow(model.kind, detail = model.sizeLabel, flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
             }
             CanonGrid {
@@ -232,7 +228,7 @@ fun PasteImage(model: PasteImageModel = viewModel()) {
                     "Paste",
                     Modifier.weight(1f).fillMaxHeight(),
                     enabled = model.clipboardHasImage,
-                    icon = Icons.Outlined.ContentPaste,
+                    icon = pencil(R.drawable.pencil_clipboard),
                     onClick = model::paste,
                 )
             }
@@ -253,7 +249,7 @@ fun PasteImage(model: PasteImageModel = viewModel()) {
                     "Reset",
                     Modifier.weight(1f).fillMaxHeight(),
                     enabled = model.isCropped,
-                    icon = Icons.Rounded.Replay,
+                    icon = pencil(R.drawable.pencil_rotate_ccw),
                     onClick = model::reset,
                 )
             }
@@ -268,7 +264,7 @@ fun PasteImage(model: PasteImageModel = viewModel()) {
                     "Copy",
                     Modifier.weight(1f).fillMaxHeight(),
                     enabled = loaded && !model.exporting,
-                    icon = Icons.Rounded.ContentCopy,
+                    icon = pencil(R.drawable.pencil_copy),
                     flashesCopied = true,
                 ) { model.copy(context) }
                 CanonButton(
@@ -276,7 +272,7 @@ fun PasteImage(model: PasteImageModel = viewModel()) {
                     Modifier.weight(1f).fillMaxHeight(),
                     kind = CanonButtonKind.Primary,
                     enabled = loaded && !model.exporting,
-                    icon = Icons.Outlined.Download,
+                    icon = pencil(R.drawable.pencil_download),
                     oversized = true,
                     followsWorkflow = true,
                 ) { model.save(context) }
@@ -342,7 +338,7 @@ private fun PasteImagePicture(
                     )
                 }
                 Icon(
-                    Icons.Outlined.ContentPaste,
+                    pencil(R.drawable.pencil_clipboard),
                     contentDescription = null,
                     tint = c.mutedForeground.copy(alpha = 0.6f),
                     modifier = Modifier.canonPlaced(CanonDimensionPlacement(box.center, Size(44.dp.toPx(), 44.dp.toPx()))),

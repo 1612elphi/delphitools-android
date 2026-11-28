@@ -18,9 +18,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -48,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasBoxing
@@ -73,6 +71,7 @@ import com.delphi.delphitools.canon.CanonToast
 import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonDisplayName
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.tools.images.ImageCompressEngine
 import com.delphi.delphitools.tools.images.ImageFiles
@@ -281,7 +280,7 @@ fun ScrollGenerator(model: ScrollGeneratorModel = viewModel()) {
                 CanonDropZone("Drop an image here", paste = false, onFiles = { uris -> uris.firstOrNull()?.let(model::load) })
             } else {
                 CanonRow(model.name, detail = "${pixels.width} × ${pixels.height} px", flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
             }
             if (model.failed) CanonStatusRow("That file can't be read as an image", CanonTone.Warn)
@@ -300,7 +299,7 @@ fun ScrollGenerator(model: ScrollGeneratorModel = viewModel()) {
                 "Export All",
                 kind = CanonButtonKind.Primary,
                 enabled = model.loaded && !model.exporting,
-                icon = Icons.Outlined.Share,
+                icon = pencil(R.drawable.pencil_share),
                 oversized = true,
             ) { model.export(context) }
             if (model.exporting) {

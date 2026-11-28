@@ -12,10 +12,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -33,6 +29,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasBoxing
@@ -45,6 +42,7 @@ import com.delphi.delphitools.canon.CanonHeading
 import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonStatusRow
 import com.delphi.delphitools.canon.CanonTextInput
@@ -53,6 +51,7 @@ import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonChecks
 import com.delphi.delphitools.canon.canonDisplayName
 import com.delphi.delphitools.canon.decodeTextFile
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.Deferred
@@ -146,6 +145,10 @@ class SvgOptimiserModel(application: Application) : AndroidViewModel(application
 
 @Composable
 fun SvgOptimiser(model: SvgOptimiserModel = viewModel()) {
+    CanonSharedText {
+        model.typed = it
+        model.optimise(it)
+    }
     val c = LocalDelphiColours.current
     val context = LocalContext.current
     val output = model.output
@@ -157,7 +160,7 @@ fun SvgOptimiser(model: SvgOptimiserModel = viewModel()) {
             if (fileName == null) {
                 CanonDropZone(
                     "Drop an SVG",
-                    icon = Icons.Outlined.Description,
+                    icon = pencil(R.drawable.pencil_file_image),
                     mimeTypes = arrayOf("image/svg+xml"),
                     photos = null,
                     paste = false,
@@ -166,7 +169,7 @@ fun SvgOptimiser(model: SvgOptimiserModel = viewModel()) {
                 CanonTextInput(model.typed, { model.typed = it }, model::optimise)
             } else {
                 CanonRow(fileName, detail = Formatter.formatShortFileSize(context, model.inputBytes), flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
             }
         }
@@ -193,7 +196,7 @@ fun SvgOptimiser(model: SvgOptimiserModel = viewModel()) {
                         if (failure != null) CanonStatusRow(failure, CanonTone.Warn)
                         if (output != null) {
                             CanonCodeBlock(model.outline, maxHeight = 320.dp, copyText = output)
-                            CanonButton("Export", kind = CanonButtonKind.Primary, icon = Icons.Outlined.Share, oversized = true) {
+                            CanonButton("Export", kind = CanonButtonKind.Primary, icon = pencil(R.drawable.pencil_share), oversized = true) {
                                 model.export(context)
                             }
                         }

@@ -23,12 +23,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Palette
-import androidx.compose.material.icons.outlined.PhotoLibrary
-import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -58,6 +52,7 @@ import androidx.core.graphics.scale
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonBar
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -83,6 +78,7 @@ import com.delphi.delphitools.canon.MenuCellItem
 import com.delphi.delphitools.canon.canonClickable
 import com.delphi.delphitools.canon.canonDisplayName
 import com.delphi.delphitools.canon.colourNamesOrNull
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.canon.toCanonColor
 import com.delphi.delphitools.colour.LocalColourFormats
 import com.delphi.delphitools.colour.Rgb
@@ -272,7 +268,7 @@ fun PaletteExtractor(model: PaletteExtractorModel = viewModel()) {
             Box(Modifier.fillMaxWidth().weight(1f).padding(top = LocalCanonCanvas.current.top), contentAlignment = Alignment.Center) {
                 if (!loaded) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Outlined.Palette, null, tint = c.mutedForeground, modifier = Modifier.size(34.dp))
+                        Icon(pencil(R.drawable.pencil_palette), null, tint = c.mutedForeground, modifier = Modifier.size(34.dp))
                         Text("Image", style = CanonText.bodySemibold.copy(fontSize = 17.sp), color = c.mutedForeground)
                     }
                 } else {
@@ -290,7 +286,7 @@ fun PaletteExtractor(model: PaletteExtractorModel = viewModel()) {
                 CanonDropZone("Drop an image", onFiles = { uris -> model.load(uris.firstOrNull()) })
             } else {
                 CanonRow("Image", detail = "${size.width} × ${size.height}", flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete) { model.load(null) }
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2)) { model.load(null) }
                 }
             }
         }
@@ -318,11 +314,11 @@ fun PaletteExtractor(model: PaletteExtractorModel = viewModel()) {
             colours.forEachIndexed { index, colour -> PaletteShareRow(colour, shares.getOrElse(index) { 0.0 }) }
             CanonGrid {
                 val cell = Modifier.weight(1f).fillMaxHeight()
-                CanonButton("Shuffle", cell, enabled = !model.extracting, icon = Icons.Rounded.Shuffle) {
+                CanonButton("Shuffle", cell, enabled = !model.extracting, icon = pencil(R.drawable.pencil_shuffle)) {
                     view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                     model.extract()
                 }
-                CanonButton("Save", cell, icon = Icons.Outlined.FavoriteBorder, flashesCopied = true, flashTitle = "Saved") {
+                CanonButton("Save", cell, icon = pencil(R.drawable.pencil_heart), flashesCopied = true, flashTitle = "Saved") {
                     store.add(model.strategy.title, model.palette.map { it.colour })
                     view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                 }
@@ -331,7 +327,7 @@ fun PaletteExtractor(model: PaletteExtractorModel = viewModel()) {
                     { if (model.exporting) emptyList() else model.palette.map { it.colour } },
                     cell,
                     extra = { close ->
-                        MenuCellItem("Palettised Image", icon = Icons.Outlined.PhotoLibrary) {
+                        MenuCellItem("Palettised Image", icon = pencil(R.drawable.pencil_images)) {
                             close()
                             model.exportPalettised(context)
                         }

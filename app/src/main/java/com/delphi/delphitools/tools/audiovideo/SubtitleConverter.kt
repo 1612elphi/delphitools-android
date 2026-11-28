@@ -1,5 +1,7 @@
 package com.delphi.delphitools.tools.audiovideo
 
+import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.app.Application
 import android.content.ClipboardManager
@@ -7,11 +9,6 @@ import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentPaste
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.Subtitles
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
@@ -167,7 +164,7 @@ fun SubtitleConverter(model: SubtitleConverterModel = viewModel()) {
             if (!model.hasInput) {
                 CanonDropZone(
                     "SRT or VTT",
-                    icon = Icons.Outlined.Subtitles,
+                    icon = pencil(R.drawable.pencil_captions),
                     mimeTypes = arrayOf("text/*", "application/x-subrip", "application/octet-stream"),
                     photos = null,
                     paste = false,
@@ -176,13 +173,13 @@ fun SubtitleConverter(model: SubtitleConverterModel = viewModel()) {
             }
             CanonTextArea(model.draft, model::type, placeholder = "Paste subtitles here…", label = "Subtitle input")
             CanonGrid {
-                CanonButton("Paste", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.ContentPaste) {
+                CanonButton("Paste", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_clipboard)) {
                     context.getSystemService(ClipboardManager::class.java)?.primaryClip
                         ?.takeIf { it.itemCount > 0 }
                         ?.getItemAt(0)?.coerceToText(context)?.toString()
                         ?.let { model.setInput(it, "") }
                 }
-                CanonButton("Clear", Modifier.weight(1f).fillMaxHeight(), enabled = model.hasInput, icon = Icons.Outlined.Delete) {
+                CanonButton("Clear", Modifier.weight(1f).fillMaxHeight(), enabled = model.hasInput, icon = pencil(R.drawable.pencil_trash_2)) {
                     model.setInput("", "")
                 }
             }
@@ -247,7 +244,7 @@ fun SubtitleConverter(model: SubtitleConverterModel = viewModel()) {
                 "Export",
                 kind = CanonButtonKind.Primary,
                 enabled = output.isNotEmpty(),
-                icon = Icons.Outlined.Share,
+                icon = pencil(R.drawable.pencil_share),
                 oversized = true,
             ) { model.export(context, output) }
         }

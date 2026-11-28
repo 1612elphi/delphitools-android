@@ -28,11 +28,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -76,6 +71,7 @@ import androidx.core.graphics.scale
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -91,6 +87,7 @@ import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonDisplayName
 import com.delphi.delphitools.canon.canonGrabPan
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiMono
@@ -239,7 +236,7 @@ fun FaviconGenerator(model: FaviconGeneratorModel = viewModel()) {
                     detail = "${pixels.width} × ${pixels.height} → ${square.width} × ${square.width}",
                     flush = true,
                 ) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
                 FaviconCrop(preview, pixels, square, model::changeSquare)
                 CanonGrid {
@@ -247,14 +244,14 @@ fun FaviconGenerator(model: FaviconGeneratorModel = viewModel()) {
                         "favicon.ico",
                         Modifier.weight(1f).fillMaxHeight(),
                         enabled = model.ready,
-                        icon = Icons.Outlined.Download,
+                        icon = pencil(R.drawable.pencil_download),
                     ) { model.shareIco(context) }
                     CanonButton(
                         "Export All",
                         Modifier.weight(1f).fillMaxHeight(),
                         kind = CanonButtonKind.Primary,
                         enabled = model.ready,
-                        icon = Icons.Outlined.Share,
+                        icon = pencil(R.drawable.pencil_share),
                         oversized = true,
                     ) { model.shareAll(context) }
                 }
@@ -305,7 +302,7 @@ private fun FaviconSizeRow(size: Int, image: ImageBitmap?, onShare: () -> Unit) 
             Text("$size × $size", style = TextStyle(fontFamily = DelphiMono, fontSize = 15.sp), color = c.foreground)
             FaviconEngine.role(size)?.let { Text(it, style = CanonText.caption, color = c.mutedForeground) }
         }
-        CanonButton("", Modifier.width(60.dp).fillMaxHeight(), enabled = image != null, icon = Icons.Outlined.Share, contentDescription = "Share", onClick = onShare)
+        CanonButton("", Modifier.width(60.dp).fillMaxHeight(), enabled = image != null, icon = pencil(R.drawable.pencil_share), contentDescription = "Share", onClick = onShare)
     }
 }
 
@@ -479,7 +476,7 @@ private fun SceneWindow(width: Dp, tab: ImageBitmap?, name: String?) {
                         overflow = TextOverflow.Ellipsis,
                     )
                     Spacer(Modifier.width(16.dp))
-                    Icon(Icons.Rounded.Close, null, Modifier.size(14.dp).padding(2.dp), tint = c.mutedForeground)
+                    Icon(pencil(R.drawable.pencil_x), null, Modifier.size(14.dp).padding(2.dp), tint = c.mutedForeground)
                     Spacer(Modifier.width(10.dp))
                 }
             }

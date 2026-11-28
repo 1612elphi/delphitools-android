@@ -10,11 +10,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.LastPage
-import androidx.compose.material.icons.filled.FirstPage
-import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -39,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasBoxing
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -53,6 +49,7 @@ import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSlider
 import com.delphi.delphitools.canon.CanonSplit
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import java.util.Locale
 import kotlin.math.abs
@@ -157,7 +154,7 @@ fun AudioTrimmer(model: AudioTrimmerModel = viewModel()) {
     val controls = CanonSection.of {
         CanonRows {
             if (!loaded) {
-                AVEditAudioDrop(Icons.Outlined.GraphicEq, model::load)
+                AVEditAudioDrop(pencil(R.drawable.pencil_audio_waveform), model::load)
             } else {
                 CanonHeading("Source")
                 AVEditFileRow(source.name, scan?.let(AVEditAudioEngine::audioDetail) ?: "", if (source.failed) "Failed to decode audio." else null, model::clear)
@@ -186,7 +183,7 @@ fun AudioTrimmer(model: AudioTrimmerModel = viewModel()) {
                 AVEditJobPanel(
                     job,
                     "Export WAV",
-                    Icons.Outlined.Download,
+                    pencil(R.drawable.pencil_download),
                     "Couldn't write the trimmed file.",
                     enabled = ready && model.end > model.start,
                     oversized = false,
@@ -219,10 +216,10 @@ fun AudioTrimmer(model: AudioTrimmerModel = viewModel()) {
                 )
             }
             CanonGrid {
-                CanonButton("Set in", Modifier.weight(1f).fillMaxHeight(), enabled = hasPlayhead, icon = Icons.AutoMirrored.Filled.LastPage) {
+                CanonButton("Set in", Modifier.weight(1f).fillMaxHeight(), enabled = hasPlayhead, icon = pencil(R.drawable.pencil_arrow_right_to_line)) {
                     playback.playhead?.let { model.select(it, model.end, keepsPlayback = true) }
                 }
-                CanonButton("Set out", Modifier.weight(1f).fillMaxHeight(), enabled = hasPlayhead, icon = Icons.Filled.FirstPage) {
+                CanonButton("Set out", Modifier.weight(1f).fillMaxHeight(), enabled = hasPlayhead, icon = pencil(R.drawable.pencil_arrow_left_to_line)) {
                     playback.playhead?.let { model.select(model.start, it, keepsPlayback = true) }
                 }
             }

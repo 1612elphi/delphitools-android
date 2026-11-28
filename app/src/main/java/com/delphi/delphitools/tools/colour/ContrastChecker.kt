@@ -33,16 +33,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.CompareArrows
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.StarOutline
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.AutoFixHigh
-import androidx.compose.material.icons.rounded.CheckBox
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.RadioButtonChecked
-import androidx.compose.material.icons.rounded.ToggleOn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -79,6 +70,7 @@ import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonColourControls
@@ -91,9 +83,11 @@ import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSegmented
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.canon.toCanonColor
 import com.delphi.delphitools.colour.ContrastLevel
 import com.delphi.delphitools.colour.Rgb
@@ -101,6 +95,7 @@ import com.delphi.delphitools.colour.SolidSpace
 import com.delphi.delphitools.colour.contrastFigure
 import com.delphi.delphitools.colour.contrastRatio
 import com.delphi.delphitools.colour.hex
+import com.delphi.delphitools.colour.parseColour
 import com.delphi.delphitools.colour.parseHex
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiFont
@@ -231,6 +226,7 @@ private class ChangePace {
 
 @Composable
 fun ContrastChecker(model: ContrastCheckerModel = viewModel()) {
+    CanonSharedText { text -> parseColour(text)?.let { model.apply(false, it) } }
     val view = LocalView.current
     val network = model.network
     val colours = model.colours
@@ -370,7 +366,7 @@ private fun ContrastWells(fg: Rgb, bg: Rgb, editsBackground: Boolean, onSelect: 
         )
         Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(CanonMetrics.hairline)) {
             Well("Foreground", fg, !editsBackground, Modifier.weight(1f)) { onSelect(false) }
-            CanonButton("", Modifier.width(52.dp).fillMaxHeight(), icon = Icons.AutoMirrored.Rounded.CompareArrows, contentDescription = "Flip", onClick = onFlip)
+            CanonButton("", Modifier.width(52.dp).fillMaxHeight(), icon = pencil(R.drawable.pencil_arrow_left_right), contentDescription = "Flip", onClick = onFlip)
             Well("Background", bg, editsBackground, Modifier.weight(1f)) { onSelect(true) }
         }
         Box(Modifier.offset(x = indicator).width(wellWidth).height(3.dp).background(c.primary))
@@ -436,12 +432,12 @@ private fun ContrastList(
                 Chip(colour, 28)
                 Text(colour.hex, style = listHex, color = if (isSelected) c.primary else c.foreground, maxLines = 1)
             }
-            CanonButton("", Modifier.width(52.dp).fillMaxHeight(), enabled = canRemove, icon = Icons.Rounded.Close, contentDescription = "Remove") {
+            CanonButton("", Modifier.width(52.dp).fillMaxHeight(), enabled = canRemove, icon = pencil(R.drawable.pencil_x), contentDescription = "Remove") {
                 onRemove(index)
             }
         }
     }
-    CanonButton("Add", Modifier.fillMaxWidth(), enabled = canAdd, icon = Icons.Rounded.Add, onClick = onAdd)
+    CanonButton("Add", Modifier.fillMaxWidth(), enabled = canAdd, icon = pencil(R.drawable.pencil_plus), onClick = onAdd)
 }
 
 private val headWidth = 44.dp
@@ -526,13 +522,13 @@ private val specimenLines = listOf(
     Triple("Normal", TextStyle(fontFamily = DelphiFont, fontSize = 16.sp), "12 pt"),
     Triple("Aa Bb Cc Dd Ee Ff Gg 0123456789", TextStyle(fontFamily = DelphiFont, fontSize = 16.sp), ""),
 )
-private val specimenGlyphs = listOf(
-    Icons.Rounded.CheckBox,
+private val specimenGlyphs @Composable get() = listOf(
+    pencil(R.drawable.pencil_square_check),
     Icons.Rounded.RadioButtonChecked,
-    Icons.Rounded.ToggleOn,
-    Icons.Outlined.StarOutline,
-    Icons.Outlined.Search,
-    Icons.Outlined.Notifications,
+    pencil(R.drawable.pencil_toggle_right),
+    pencil(R.drawable.pencil_star),
+    pencil(R.drawable.pencil_search),
+    pencil(R.drawable.pencil_bell),
 )
 
 @Composable
@@ -741,7 +737,7 @@ private fun SuggestionRow(target: Suggestion, candidate: Rgb?, current: Rgb, fix
                 Text("${target.level} · ${shown.hex}", style = suggestionDetail, color = c.mutedForeground)
             }
             Text(ratioText, style = suggestionRatio, color = c.foreground)
-            if (enabled) Icon(Icons.Rounded.AutoFixHigh, null, Modifier.size(16.dp), tint = c.primary)
+            if (enabled) Icon(pencil(R.drawable.pencil_wand_sparkles), null, Modifier.size(16.dp), tint = c.primary)
         }
     }
 }

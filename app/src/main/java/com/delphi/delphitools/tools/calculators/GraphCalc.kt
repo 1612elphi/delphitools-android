@@ -33,13 +33,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -91,6 +84,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -109,6 +103,7 @@ import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.MenuCellItem
 import com.delphi.delphitools.canon.MenuCellPopup
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.colour.takesBlackInk
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
@@ -393,7 +388,7 @@ fun GraphCalc(model: GraphCalcModel = viewModel()) {
                     FunctionRow(curve, GraphCurve.name(index), removable, curve.id in model.editing, model, handles.getOrPut(curve.id) { CanonMathFieldHandle() })
                 }
             }
-            CanonButton("Add function", Modifier.fillMaxWidth(), icon = Icons.Outlined.Add) { model.add("") }
+            CanonButton("Add function", Modifier.fillMaxWidth(), icon = pencil(R.drawable.pencil_plus)) { model.add("") }
         }
     }
 
@@ -494,11 +489,11 @@ private fun FunctionRow(curve: GraphCurve, name: String, removable: Boolean, edi
             CanonButton(
                 "",
                 Modifier.width(44.dp).fillMaxHeight(),
-                icon = if (curve.isVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+                icon = if (curve.isVisible) pencil(R.drawable.pencil_eye) else pencil(R.drawable.pencil_eye_off),
                 contentDescription = if (curve.isVisible) "Hide" else "Show",
             ) { model.toggleVisible(curve.id) }
             if (removable) {
-                CanonButton("", Modifier.width(44.dp).fillMaxHeight(), icon = Icons.Outlined.Delete, contentDescription = "Remove") { model.remove(curve.id) }
+                CanonButton("", Modifier.width(44.dp).fillMaxHeight(), icon = pencil(R.drawable.pencil_trash_2), contentDescription = "Remove") { model.remove(curve.id) }
             }
         }
         if (curve.isInvalid && !editing) CanonStatusRow("Invalid expression", CanonTone.Warn)
@@ -544,7 +539,7 @@ private fun SwatchCell(curve: GraphCurve, name: String, onPick: (Int) -> Unit) {
                                     .semantics { contentDescription = "Colour ${index + 1}" },
                                 contentAlignment = Alignment.Center,
                             ) {
-                                if (index == curve.colour) Icon(Icons.Outlined.Check, null, tint = check, modifier = Modifier.size(20.dp))
+                                if (index == curve.colour) Icon(pencil(R.drawable.pencil_check), null, tint = check, modifier = Modifier.size(20.dp))
                             }
                         }
                     }
@@ -616,7 +611,7 @@ private fun Stepper(value: String, onCommit: (String) -> Unit, onStep: (Int) -> 
         modifier.height(IntrinsicSize.Min).heightIn(min = CanonMetrics.controlHeight).background(c.border),
         horizontalArrangement = Arrangement.spacedBy(CanonMetrics.hairline),
     ) {
-        CanonButton("", Modifier.width(44.dp).fillMaxHeight(), icon = Icons.Rounded.Remove, repeats = true, contentDescription = "Decrease") { onStep(-1) }
+        CanonButton("", Modifier.width(44.dp).fillMaxHeight(), icon = pencil(R.drawable.pencil_minus), repeats = true, contentDescription = "Decrease") { onStep(-1) }
         Row(
             Modifier.weight(1f).fillMaxHeight().background(c.card).padding(horizontal = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -625,7 +620,7 @@ private fun Stepper(value: String, onCommit: (String) -> Unit, onStep: (Int) -> 
             if (lead != null) Text(lead, style = CanonText.bodySemibold, color = c.mutedForeground)
             NumberField(value, onCommit, label, Modifier.weight(1f))
         }
-        CanonButton("", Modifier.width(44.dp).fillMaxHeight(), icon = Icons.Outlined.Add, repeats = true, contentDescription = "Increase") { onStep(1) }
+        CanonButton("", Modifier.width(44.dp).fillMaxHeight(), icon = pencil(R.drawable.pencil_plus), repeats = true, contentDescription = "Increase") { onStep(1) }
     }
 }
 

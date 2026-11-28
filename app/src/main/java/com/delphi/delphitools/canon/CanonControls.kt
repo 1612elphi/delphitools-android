@@ -28,9 +28,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -67,6 +64,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.delay
@@ -241,7 +239,7 @@ fun CanonStepper(
         CanonButton(
             "",
             Modifier.width(44.dp).fillMaxHeight(),
-            icon = Icons.Rounded.Remove,
+            icon = pencil(R.drawable.pencil_minus),
             repeats = true,
             contentDescription = "Decrease",
         ) { onValueChange(value - step) }
@@ -272,7 +270,7 @@ fun CanonStepper(
         CanonButton(
             "",
             Modifier.width(44.dp).fillMaxHeight(),
-            icon = Icons.Rounded.Add,
+            icon = pencil(R.drawable.pencil_plus),
             repeats = true,
             contentDescription = "Increase",
         ) { onValueChange(value + step) }

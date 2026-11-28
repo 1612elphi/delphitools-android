@@ -1,5 +1,7 @@
 package com.delphi.delphitools.tools.devtools
 
+import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
@@ -18,11 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -133,7 +130,7 @@ fun HttpStatus(model: HttpStatusModel = viewModel()) {
                 Modifier.fillMaxWidth().background(c.card).padding(start = CanonMetrics.panelPadding),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Rounded.Search, null, tint = c.mutedForeground, modifier = Modifier.size(16.dp))
+                Icon(pencil(R.drawable.pencil_search), null, tint = c.mutedForeground, modifier = Modifier.size(16.dp))
                 CanonTextCell(
                     model.field,
                     model::type,
@@ -146,7 +143,7 @@ fun HttpStatus(model: HttpStatusModel = viewModel()) {
                     ),
                 )
                 if (model.field.isNotEmpty()) {
-                    CanonButton("", icon = Icons.Filled.Cancel, contentDescription = "Clear", onClick = model::clear)
+                    CanonButton("", icon = pencil(R.drawable.pencil_circle_x), contentDescription = "Clear", onClick = model::clear)
                 }
             }
             CanonHeading("Class")
@@ -215,7 +212,7 @@ private fun HttpStatusRow(entry: HttpStatusEntry, isLit: Boolean, onSelect: () -
         CanonButton(
             "",
             Modifier.padding(start = CanonMetrics.hairline).width(CanonMetrics.controlHeight + 8.dp).fillMaxHeight(),
-            icon = if (copies > 0) Icons.Rounded.Check else Icons.Outlined.ContentCopy,
+            icon = if (copies > 0) pencil(R.drawable.pencil_check) else pencil(R.drawable.pencil_copy),
             contentDescription = "Copy",
         ) {
             CanonCopyFeedback.copy(view, "${entry.code}")

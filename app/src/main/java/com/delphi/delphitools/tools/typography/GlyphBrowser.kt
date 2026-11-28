@@ -1,5 +1,7 @@
 package com.delphi.delphitools.tools.typography
 
+import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.app.Application
 import android.graphics.Paint
@@ -40,10 +42,6 @@ import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.GridOn
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -105,6 +103,7 @@ import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonRule
 import com.delphi.delphitools.canon.CanonSection
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonTextCell
 import com.delphi.delphitools.canon.CanonValueLayout
@@ -194,6 +193,11 @@ fun GlyphBrowser(model: GlyphBrowserModel = viewModel()) {
     val c = LocalDelphiColours.current
     val scope = rememberCoroutineScope()
     val chart = remember { GlyphChartState() }
+    CanonSharedText {
+        val found = GlyphEngine.find(it, model.blocks) as? GlyphEngine.Find.CodePoint ?: return@CanonSharedText
+        model.select(found.value)
+        scope.launch { chart.reveal(found.value) }
+    }
     val density = LocalDensity.current
     val window = LocalWindowInfo.current.containerSize
     val statusBar = WindowInsets.statusBars.getTop(density)
@@ -241,7 +245,7 @@ fun GlyphBrowser(model: GlyphBrowserModel = viewModel()) {
                     onEndEditing = { search(reveal = true) },
                 )
                 CanonRule(vertical = true)
-                CanonButton("Table", icon = Icons.Outlined.GridOn) { if (blocks.isNotEmpty()) table = true }
+                CanonButton("Table", icon = pencil(R.drawable.pencil_grid_3x3)) { if (blocks.isNotEmpty()) table = true }
             }
         }
     }
@@ -635,7 +639,7 @@ private fun GlyphTable(model: GlyphBrowserModel, onDismiss: () -> Unit, onPick: 
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text("Glyphs", Modifier.weight(1f), style = TextStyle(fontFamily = DelphiFont, fontSize = 17.sp, fontWeight = FontWeight.Bold), color = c.foreground)
-                CanonButton("", icon = Icons.Rounded.Close, contentDescription = "Close", onClick = onDismiss)
+                CanonButton("", icon = pencil(R.drawable.pencil_x), contentDescription = "Close", onClick = onDismiss)
             }
             Box(Modifier.weight(1f).fillMaxWidth().onGloballyPositioned { viewport = it.size.height }) {
                 Column(Modifier.fillMaxSize().background(c.card).verticalScroll(scroll)) {
@@ -701,6 +705,6 @@ private fun GlyphStrip(codePoint: Int, modifier: Modifier, onCopy: () -> Unit) {
                 Text(GlyphEngine.name(codePoint), style = factsStyle, color = c.mutedForeground, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
-        CanonButton("Copy", Modifier.background(c.card), icon = Icons.Outlined.ContentCopy, onClick = onCopy)
+        CanonButton("Copy", Modifier.background(c.card), icon = pencil(R.drawable.pencil_copy), onClick = onCopy)
     }
 }

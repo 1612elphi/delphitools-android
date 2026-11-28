@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Colorize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,6 +33,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.colour.hex
 import com.delphi.delphitools.colour.parseColour
@@ -147,7 +146,7 @@ fun CanonColourNotationInput(
                 .width(CanonMetrics.controlHeight)
                 .fillMaxHeight()
                 .semantics { contentDescription = "Colour" },
-            icon = Icons.Outlined.Colorize,
+            icon = pencil(R.drawable.pencil_pipette),
         ) { picking = pickerColour?.invoke() ?: state.shown }
     }
     picking?.let { initial -> CanonColourPickerDialog(initial, onColour) { picking = null } }

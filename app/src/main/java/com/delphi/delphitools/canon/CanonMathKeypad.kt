@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.activity.compose.PredictiveBackHandler
+import com.delphi.delphitools.R
 import kotlin.coroutines.cancellation.CancellationException
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -24,12 +25,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Backspace
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -246,7 +241,7 @@ private fun MathKeyCell(
                 is KeyFace.Symbol -> Icon(face.vector, contentDescription = null, tint = colours.ink, modifier = Modifier.size(24.dp))
                 is KeyFace.Word -> Text(face.text, style = CanonText.bodySemibold.copy(fontSize = 20.sp), color = colours.ink, maxLines = 1)
             }
-            if (opensMenu) Icon(Icons.Filled.ExpandLess, contentDescription = null, tint = colours.ink.copy(alpha = 0.6f), modifier = Modifier.size(14.dp))
+            if (opensMenu) Icon(pencil(R.drawable.pencil_chevron_up), contentDescription = null, tint = colours.ink.copy(alpha = 0.6f), modifier = Modifier.size(14.dp))
         }
     }
 }
@@ -547,10 +542,10 @@ internal fun MathRail(short: Boolean, onStep: (CanonMathKey) -> Boolean) {
             }
         }
         listOf(
-            Triple(Icons.Filled.ChevronLeft, CanonMathKey.Left, "Left"),
-            Triple(Icons.Filled.ExpandLess, CanonMathKey.Up, "Up"),
-            Triple(Icons.Filled.ExpandMore, CanonMathKey.Down, "Down"),
-            Triple(Icons.Filled.ChevronRight, CanonMathKey.Right, "Right"),
+            Triple(pencil(R.drawable.pencil_chevron_left), CanonMathKey.Left, "Left"),
+            Triple(pencil(R.drawable.pencil_chevron_up), CanonMathKey.Up, "Up"),
+            Triple(pencil(R.drawable.pencil_chevron_down), CanonMathKey.Down, "Down"),
+            Triple(pencil(R.drawable.pencil_chevron_right), CanonMathKey.Right, "Right"),
         ).forEach { (icon, key, name) ->
             Box(
                 Modifier
@@ -754,7 +749,7 @@ fun CanonMathKeypad(
                 verticalArrangement = Arrangement.spacedBy(CanonMetrics.hairline),
             ) {
                 val fill = Modifier.fillMaxWidth()
-                MathKeyCell(KeyFace.Symbol(Icons.AutoMirrored.Outlined.Backspace), MathFamily.Operation, "Delete", fill.weight(1f), repeats = true) {
+                MathKeyCell(KeyFace.Symbol(pencil(R.drawable.pencil_delete)), MathFamily.Operation, "Delete", fill.weight(1f), repeats = true) {
                     onKey(CanonMathKey.Delete)
                 }
                 MathKeyCell(KeyFace.Math(label(CanonMathKey.Clear, variable, labelSize * 0.9f)), MathFamily.Clear, "Clear", fill.weight(1f)) {

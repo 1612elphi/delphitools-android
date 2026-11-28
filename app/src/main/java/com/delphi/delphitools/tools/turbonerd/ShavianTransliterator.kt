@@ -20,14 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Folder
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Photo
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -75,6 +67,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonGlyphFlow
@@ -89,6 +82,7 @@ import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSegmented
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonTextInput
 import com.delphi.delphitools.canon.CanonTextOutput
@@ -96,6 +90,7 @@ import com.delphi.delphitools.canon.CanonTile
 import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.MenuCellPopup
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.canon.rememberCanonGlyphFlowState
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.tools.ToolUndoActions
@@ -227,6 +222,10 @@ private fun legend(c: DelphiColours) = buildAnnotatedString {
 
 @Composable
 fun ShavianTransliterator(model: ShavianTransliteratorModel = viewModel()) {
+    CanonSharedText {
+        model.field = it
+        model.settle(it)
+    }
     val c = LocalDelphiColours.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -264,10 +263,10 @@ fun ShavianTransliterator(model: ShavianTransliteratorModel = viewModel()) {
                             .padding(horizontal = CanonMetrics.panelPadding, vertical = 10.dp),
                     )
                     CanonGrid {
-                        CanonButton("Share image", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.Photo, followsWorkflow = true) {
+                        CanonButton("Share image", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_image), followsWorkflow = true) {
                             scope.launch { FileExport.share(context, glossPng(context, tokens), IMAGE_NAME, "image/png") }
                         }
-                        CanonButton("Save to Files…", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.Folder) {
+                        CanonButton("Save to Files…", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_folder)) {
                             save.launch(IMAGE_NAME)
                         }
                     }
@@ -305,7 +304,7 @@ private fun WordBlock(model: ShavianTransliteratorModel, slot: Int, word: GlossW
     CanonRows {
         CanonHeading("Word")
         CanonRow(word.latin, detail = "/${word.ipa}/", flush = true) {
-            CanonButton("", Modifier.width(52.dp), icon = Icons.Rounded.Close, contentDescription = "Close") { model.select(null) }
+            CanonButton("", Modifier.width(52.dp), icon = pencil(R.drawable.pencil_x), contentDescription = "Close") { model.select(null) }
         }
         CanonGrid(columns = 5) {
             word.phonemes.forEachIndexed { index, phoneme ->
@@ -320,7 +319,7 @@ private fun WordBlock(model: ShavianTransliteratorModel, slot: Int, word: GlossW
         }
         CanonRow("Marker", flush = true) {
             Box(propagateMinConstraints = true) {
-                CanonButton("", Modifier.width(52.dp), icon = Icons.Outlined.Info, contentDescription = "Marker") { tip = true }
+                CanonButton("", Modifier.width(52.dp), icon = pencil(R.drawable.pencil_info), contentDescription = "Marker") { tip = true }
                 MenuCellPopup(tip, { tip = false }) { MarkerTip() }
             }
         }
@@ -395,9 +394,9 @@ private fun LetterCell(
                     }
                 }
                 else -> {
-                    MenuRow("Insert before", trailing = Icons.AutoMirrored.Rounded.KeyboardArrowRight) { menu = LetterMenu.Before }
-                    MenuRow("Insert after", trailing = Icons.AutoMirrored.Rounded.KeyboardArrowRight) { menu = LetterMenu.After }
-                    MenuRow("Remove", trailing = Icons.Outlined.Delete, destructive = true, enabled = canRemove) {
+                    MenuRow("Insert before", trailing = pencil(R.drawable.pencil_chevron_right)) { menu = LetterMenu.Before }
+                    MenuRow("Insert after", trailing = pencil(R.drawable.pencil_chevron_right)) { menu = LetterMenu.After }
+                    MenuRow("Remove", trailing = pencil(R.drawable.pencil_trash_2), destructive = true, enabled = canRemove) {
                         close()
                         onRemove()
                     }
@@ -455,7 +454,7 @@ private fun LetterItem(shavian: String, name: String, ipa: String, checked: Bool
             Text(name, style = CanonText.body, color = c.foreground)
             Text("/$ipa/", style = CanonText.caption, color = c.mutedForeground)
         }
-        if (checked) Icon(Icons.Rounded.Check, contentDescription = null, tint = c.primary, modifier = Modifier.size(18.dp))
+        if (checked) Icon(pencil(R.drawable.pencil_check), contentDescription = null, tint = c.primary, modifier = Modifier.size(18.dp))
     }
 }
 

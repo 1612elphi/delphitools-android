@@ -1,5 +1,7 @@
 package com.delphi.delphitools.tools.images
 
+import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.app.Application
 import android.content.ClipData
@@ -21,9 +23,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -292,14 +291,14 @@ fun PlaceholderGenerator(model: PlaceholderGeneratorModel = viewModel()) {
                 CanonButton(
                     "Copy Data URI",
                     Modifier.weight(1f).fillMaxHeight(),
-                    icon = Icons.Rounded.ContentCopy,
+                    icon = pencil(R.drawable.pencil_copy),
                     flashesCopied = true,
                 ) { model.copyDataUri(context) }
                 CanonButton(
                     "Export",
                     Modifier.weight(1f).fillMaxHeight(),
                     kind = CanonButtonKind.Primary,
-                    icon = Icons.Outlined.Share,
+                    icon = pencil(R.drawable.pencil_share),
                     oversized = true,
                 ) { model.export(context) }
             }

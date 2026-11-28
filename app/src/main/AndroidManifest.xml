@@ -23,6 +23,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:launchMode="singleTask"
             android:theme="@style/Theme.Delphitools"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -30,7 +31,298 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
+                <data android:mimeType="audio/*" />
+                <data android:mimeType="text/*" />
+                <data android:mimeType="font/*" />
+                <data android:mimeType="application/pdf" />
+                <data android:mimeType="application/json" />
+                <data android:mimeType="application/x-subrip" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="image/*" />
+                <data android:mimeType="application/pdf" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
+        <activity
+            android:name=".widgets.WidgetToolPicker"
+            android:exported="true"
+            android:theme="@style/Theme.Delphitools">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".widgets.ProcessTextActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.NoDisplay" />
+        <activity-alias
+            android:name=".process.WordCounter"
+            android:exported="true"
+            android:label="Count words"
+            android:targetActivity=".widgets.ProcessTextActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <meta-data
+                android:name="tool"
+                android:value="word-counter" />
+        </activity-alias>
+        <activity-alias
+            android:name=".process.LargeType"
+            android:exported="true"
+            android:label="Large Type"
+            android:targetActivity=".widgets.ProcessTextActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <meta-data
+                android:name="tool"
+                android:value="large-type" />
+        </activity-alias>
+        <activity-alias
+            android:name=".process.QrCode"
+            android:exported="true"
+            android:label="QR code"
+            android:targetActivity=".widgets.ProcessTextActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <meta-data
+                android:name="tool"
+                android:value="qr-genny" />
+        </activity-alias>
+        <activity-alias
+            android:name=".process.Shavian"
+            android:exported="true"
+            android:label="To Shavian"
+            android:targetActivity=".widgets.ProcessTextActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <meta-data
+                android:name="tool"
+                android:value="shavian-transliterator" />
+        </activity-alias>
+        <activity-alias
+            android:name=".process.Base64"
+            android:exported="true"
+            android:label="Base64 encode"
+            android:targetActivity=".widgets.ProcessTextActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <meta-data
+                android:name="tool"
+                android:value="encoder" />
+            <meta-data
+                android:name="transform"
+                android:value="base64" />
+        </activity-alias>
+        <activity-alias
+            android:name=".process.UrlEncode"
+            android:exported="true"
+            android:label="URL encode"
+            android:targetActivity=".widgets.ProcessTextActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <meta-data
+                android:name="tool"
+                android:value="encoder" />
+            <meta-data
+                android:name="transform"
+                android:value="url" />
+        </activity-alias>
+        <activity-alias
+            android:name=".process.Braille"
+            android:exported="true"
+            android:label="To Braille"
+            android:targetActivity=".widgets.ProcessTextActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <meta-data
+                android:name="tool"
+                android:value="braille-converter" />
+            <meta-data
+                android:name="transform"
+                android:value="braille" />
+        </activity-alias>
+        <receiver
+            android:name=".widgets.QuickLaunchWidget"
+            android:exported="true"
+            android:label="Quick Launch">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_quick_launch" />
+        </receiver>
+        <receiver
+            android:name=".widgets.ToolGridWidget"
+            android:exported="true"
+            android:label="Tool Grid">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_tool_grid" />
+        </receiver>
+        <receiver
+            android:name=".widgets.ColourOfDayWidget"
+            android:exported="true"
+            android:label="Colour of the Day">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_colour_of_day" />
+        </receiver>
+        <receiver
+            android:name=".widgets.PaletteWidget"
+            android:exported="true"
+            android:label="Palette">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_palette" />
+        </receiver>
+        <receiver
+            android:name=".widgets.PinnedCodeWidget"
+            android:exported="true"
+            android:label="Pinned Code">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_pinned_code" />
+        </receiver>
+        <receiver
+            android:name=".widgets.ScratchpadWidget"
+            android:exported="true"
+            android:label="Scratchpad">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_scratchpad" />
+        </receiver>
+        <receiver
+            android:name=".widgets.TwoDialsWidget"
+            android:enabled="@bool/widget_dials"
+            android:exported="true"
+            android:label="Two Dials">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_two_dials" />
+        </receiver>
+        <receiver
+            android:name=".widgets.BoardingPassWidget"
+            android:exported="true"
+            android:label="Boarding Pass">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_boarding_pass" />
+        </receiver>
+        <receiver
+            android:name=".widgets.SplitFlapWidget"
+            android:exported="true"
+            android:label="Split-flap Board">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_split_flap" />
+        </receiver>
+        <receiver
+            android:name=".widgets.OverlapRulerWidget"
+            android:exported="true"
+            android:label="Overlap Ruler">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_overlap_ruler" />
+        </receiver>
+        <activity
+            android:name=".widgets.WidgetCityPicker"
+            android:exported="true"
+            android:theme="@style/Theme.Delphitools">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+        <receiver
+            android:name=".widgets.CodePlaced"
+            android:exported="false" />
         <activity
             android:name=".tools.SaveToFiles"
             android:exported="false"

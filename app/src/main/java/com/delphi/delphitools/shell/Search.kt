@@ -19,8 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,10 +37,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonHeading
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.LayoutBackDismiss
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 
@@ -92,7 +92,7 @@ internal fun SearchOverlay(onOpen: (Tool) -> Unit, onDismiss: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Icon(Icons.Outlined.Search, contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(20.dp))
+                Icon(pencil(R.drawable.pencil_search), contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(20.dp))
                 Box(Modifier.weight(1f)) {
                     if (query.isEmpty()) Text("Search tools…", style = CanonText.body, color = c.mutedForeground)
                     BasicTextField(
@@ -121,7 +121,7 @@ internal fun SearchOverlay(onOpen: (Tool) -> Unit, onDismiss: () -> Unit) {
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            Icon(Icons.Outlined.Search, contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(36.dp))
+                            Icon(pencil(R.drawable.pencil_search), contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(36.dp))
                             Text("No Results", style = CanonText.bodySemibold, color = c.foreground)
                             Text("No tools match \"$trimmed\".", style = CanonText.caption, color = c.mutedForeground)
                         }
@@ -134,7 +134,7 @@ internal fun SearchOverlay(onOpen: (Tool) -> Unit, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun SearchRow(tool: Tool, onClick: () -> Unit) {
+internal fun SearchRow(tool: Tool, onClick: () -> Unit) {
     val c = LocalDelphiColours.current
     Row(
         Modifier
@@ -145,7 +145,7 @@ private fun SearchRow(tool: Tool, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Icon(tool.icon, contentDescription = null, tint = c.primary, modifier = Modifier.size(24.dp))
+        Icon(pencil(tool.icon), contentDescription = null, tint = c.primary, modifier = Modifier.size(24.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(tool.name, style = CanonText.bodyMedium, color = c.foreground)
             Text(tool.description, style = CanonText.caption, color = c.mutedForeground, maxLines = 1, overflow = TextOverflow.Ellipsis)

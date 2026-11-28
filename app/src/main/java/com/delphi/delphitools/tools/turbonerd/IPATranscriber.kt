@@ -45,6 +45,7 @@ import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonTextInput
 import com.delphi.delphitools.canon.CanonTextOutput
@@ -135,6 +136,10 @@ private fun legend(c: DelphiColours) = buildAnnotatedString {
 
 @Composable
 fun IPATranscriber(model: IPATranscriberModel = viewModel()) {
+    CanonSharedText {
+        model.field = it
+        model.settle(it)
+    }
     val c = LocalDelphiColours.current
     val tokens = model.tokens
     val words = tokens.filterIsInstance<Token.Word>()

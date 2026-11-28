@@ -1,18 +1,6 @@
 package com.delphi.delphitools.tools.devtools
 
 import android.graphics.BlurMaskFilter
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.HourglassEmpty
-import androidx.compose.material.icons.filled.Keyboard
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.OpenInFull
-import androidx.compose.material.icons.filled.PanTool
-import androidx.compose.material.icons.filled.SwapHoriz
-import androidx.compose.material.icons.filled.SwapVert
-import androidx.compose.material.icons.filled.TouchApp
-import androidx.compose.material.icons.outlined.DesktopWindows
-import androidx.compose.material.icons.outlined.PhoneIphone
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.geometry.CornerRadius
@@ -48,6 +36,8 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
+import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.ceil
@@ -193,20 +183,20 @@ data class TailwindInks(
     val destructive: Color,
 )
 
-/** SF Symbols of the iOS drawings, as Material icons. */
+/** SF Symbols of the iOS drawings, as pencil icons. */
 @Composable
 fun rememberTailwindSymbols(): Map<String, Painter> = mapOf(
-    "desktopcomputer" to rememberVectorPainter(Icons.Outlined.DesktopWindows),
-    "iphone" to rememberVectorPainter(Icons.Outlined.PhoneIphone),
-    "hand.point.up.left.fill" to rememberVectorPainter(Icons.Filled.TouchApp),
-    "nosign" to rememberVectorPainter(Icons.Filled.Block),
-    "hourglass" to rememberVectorPainter(Icons.Filled.HourglassEmpty),
-    "hand.raised.fill" to rememberVectorPainter(Icons.Filled.PanTool),
-    "keyboard" to rememberVectorPainter(Icons.Filled.Keyboard),
-    "arrow.left.and.right" to rememberVectorPainter(Icons.Filled.SwapHoriz),
-    "arrow.up.and.down" to rememberVectorPainter(Icons.Filled.SwapVert),
-    "arrow.up.left.and.arrow.down.right" to rememberVectorPainter(Icons.Filled.OpenInFull),
-    "lock.fill" to rememberVectorPainter(Icons.Filled.Lock),
+    "desktopcomputer" to rememberVectorPainter(pencil(R.drawable.pencil_monitor)),
+    "iphone" to rememberVectorPainter(pencil(R.drawable.pencil_smartphone)),
+    "hand.point.up.left.fill" to rememberVectorPainter(pencil(R.drawable.pencil_pointer)),
+    "nosign" to rememberVectorPainter(pencil(R.drawable.pencil_ban)),
+    "hourglass" to rememberVectorPainter(pencil(R.drawable.pencil_hourglass)),
+    "hand.raised.fill" to rememberVectorPainter(pencil(R.drawable.pencil_hand)),
+    "keyboard" to rememberVectorPainter(pencil(R.drawable.pencil_keyboard)),
+    "arrow.left.and.right" to rememberVectorPainter(pencil(R.drawable.pencil_arrow_left_right)),
+    "arrow.up.and.down" to rememberVectorPainter(pencil(R.drawable.pencil_arrow_up_down)),
+    "arrow.up.left.and.arrow.down.right" to rememberVectorPainter(pencil(R.drawable.pencil_maximize_2)),
+    "lock.fill" to rememberVectorPainter(pencil(R.drawable.pencil_lock)),
 )
 
 /** Draws [item]'s specimen fitted in [rect]. [omitsMotion] leaves out what the stage animates. */

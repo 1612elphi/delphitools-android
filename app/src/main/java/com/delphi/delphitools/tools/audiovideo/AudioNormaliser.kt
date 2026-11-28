@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonEmptyRow
 import com.delphi.delphitools.canon.CanonFigure
@@ -43,6 +42,7 @@ import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonTile
 import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.LocalCanonCanvas
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import java.util.Locale
@@ -119,7 +119,7 @@ fun AudioNormaliser(model: AudioNormaliserModel = viewModel()) {
     val controls = CanonSection.of {
         CanonRows {
             if (!loaded) {
-                AVEditAudioDrop(Icons.Outlined.Speed, model::load)
+                AVEditAudioDrop(pencil(R.drawable.pencil_gauge), model::load)
             } else {
                 CanonHeading("Source")
                 AVEditFileRow(source.name, scan?.let(AVEditAudioEngine::audioDetail) ?: "", if (source.failed) "Failed to decode audio." else null, model::clear)
@@ -128,7 +128,7 @@ fun AudioNormaliser(model: AudioNormaliserModel = viewModel()) {
                 }
                 CanonHeading("Format")
                 CanonSegmented(formats.map { it.label }, formats.indexOf(model.format)) { model.selectFormat(formats[it]) }
-                AVEditJobPanel(model.job, "Normalise", Icons.Outlined.Speed, "Couldn't write the normalised file.", enabled = plan != null, onStart = model::normalise)
+                AVEditJobPanel(model.job, "Normalise", pencil(R.drawable.pencil_gauge), "Couldn't write the normalised file.", enabled = plan != null, onStart = model::normalise)
             }
         }
     }

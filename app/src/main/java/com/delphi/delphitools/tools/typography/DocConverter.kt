@@ -32,13 +32,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.outlined.ContentPaste
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Folder
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Transform
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -71,6 +64,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasBoxing
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -87,6 +81,7 @@ import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonRule
 import com.delphi.delphitools.canon.CanonSection
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonSwitch
 import com.delphi.delphitools.canon.CanonTextArea
@@ -95,6 +90,7 @@ import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.MenuCellPopup
 import com.delphi.delphitools.canon.CanonTextFilePicker
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.canon.rememberCanonTextFilePicker
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import com.delphi.delphitools.tools.audiovideo.AVEditJob
@@ -332,18 +328,19 @@ fun DocConverter(model: DocConverterModel = viewModel()) {
     val text = model.text
     lateinit var picker: CanonTextFilePicker
     picker = rememberCanonTextFilePicker(arrayOf("text/plain", "text/html", "text/markdown", "text/*")) { model.load(it, picker.fileName) }
+    CanonSharedText { model.load(it, null) }
 
     val input = CanonSection.of {
         CanonRows {
             CanonHeading("Source")
             CanonTextArea(text, model::type, placeholder = "Paste or type text here…", height = 240.dp, label = "Source")
             CanonGrid(columns = 3) {
-                CanonButton("Paste", icon = Icons.Outlined.ContentPaste) {
+                CanonButton("Paste", icon = pencil(R.drawable.pencil_clipboard)) {
                     val clip = context.getSystemService(ClipboardManager::class.java)?.primaryClip
                     clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(context)?.toString()?.let { model.load(it, null) }
                 }
-                CanonButton("Files", icon = Icons.Outlined.Folder) { picker.open() }
-                CanonButton("Clear", icon = Icons.Outlined.Delete, enabled = text.isNotEmpty()) { model.load("", null) }
+                CanonButton("Files", icon = pencil(R.drawable.pencil_folder)) { picker.open() }
+                CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), enabled = text.isNotEmpty()) { model.load("", null) }
             }
         }
     }
@@ -365,7 +362,7 @@ fun DocConverter(model: DocConverterModel = viewModel()) {
 
     val action = CanonSection.of {
         CanonRows {
-            AVEditJobPanel(model.job, "Convert", Icons.Outlined.Transform, "Failed", enabled = text.isNotEmpty(), onStart = model::convert)
+            AVEditJobPanel(model.job, "Convert", pencil(R.drawable.pencil_clipboard_paste), "Failed", enabled = text.isNotEmpty(), onStart = model::convert)
         }
     }
 
@@ -440,7 +437,7 @@ private fun StandaloneRow(on: Boolean, onChange: (Boolean) -> Unit) {
             Box(Modifier.padding(horizontal = 16.dp)) { CanonSwitch(on, onCheckedChange = onChange) }
             CanonRule(vertical = true)
             Box(propagateMinConstraints = true) {
-                CanonButton("", Modifier.width(52.dp).fillMaxHeight(), icon = Icons.Outlined.Info, contentDescription = "Standalone") { tip = true }
+                CanonButton("", Modifier.width(52.dp).fillMaxHeight(), icon = pencil(R.drawable.pencil_info), contentDescription = "Standalone") { tip = true }
                 MenuCellPopup(tip, { tip = false }) {
                     Column(Modifier.widthIn(max = 300.dp).padding(CanonMetrics.panelPadding), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text("Standalone", style = CanonText.bodySemibold, color = c.foreground)
@@ -553,7 +550,7 @@ private fun LedgerRow(row: DocLedgerRow, from: DocFormat, to: DocFormat) {
     Row(Modifier.fillMaxWidth().height(ledgerRow), verticalAlignment = Alignment.CenterVertically) {
         Text(row.element.mark, Modifier.width(28.dp), style = CanonText.captionSemibold, color = c.mutedForeground, maxLines = 1)
         Text(DocConvertEngine.sample(row.example, from), Modifier.weight(1f).padding(end = 8.dp), style = sampleMono, color = c.mutedForeground, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Icon(Icons.AutoMirrored.Outlined.ArrowForward, null, Modifier.width(24.dp).height(12.dp).padding(end = 6.dp), tint = c.mutedForeground)
+        Icon(pencil(R.drawable.pencil_arrow_right), null, Modifier.width(24.dp).height(12.dp).padding(end = 6.dp), tint = c.mutedForeground)
         val ink = if (lost) c.mutedForeground.copy(alpha = 0.6f) else if (rich) c.foreground else c.primary
         val target = if (rich) {
             richString(DocConvertEngine.richSample(row.example), ink, if (lost) ink else c.primary, underlinesLinks = true)

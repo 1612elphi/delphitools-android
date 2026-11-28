@@ -1,11 +1,10 @@
 package com.delphi.delphitools.tools.devtools
 
+import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.content.ClipboardManager
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentPaste
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
@@ -25,6 +24,7 @@ import com.delphi.delphitools.canon.CanonGrid
 import com.delphi.delphitools.canon.CanonHeading
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonStatusRow
 import com.delphi.delphitools.canon.CanonTextArea
@@ -72,6 +72,7 @@ fun JwtDecoder(model: JwtDecoderModel = viewModel()) {
     val context = LocalContext.current
     val result = model.result
     val found = (result as? JwtResult.Segments)?.found
+    CanonSharedText { model.set(it.trim()) }
 
     val input = CanonSection.of {
         CanonRows {
@@ -80,13 +81,13 @@ fun JwtDecoder(model: JwtDecoderModel = viewModel()) {
             CanonTextArea(model.token, model::type, placeholder = "eyJhbGciOi…", height = 180.dp, label = "Token")
             if (found != null) CanonStatusRow("Segments $found / 3", CanonTone.Warn)
             CanonGrid {
-                CanonButton("Paste", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.ContentPaste) {
+                CanonButton("Paste", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_clipboard)) {
                     context.getSystemService(ClipboardManager::class.java)?.primaryClip
                         ?.takeIf { it.itemCount > 0 }
                         ?.getItemAt(0)?.coerceToText(context)?.toString()
                         ?.let(model::set)
                 }
-                CanonButton("Clear", Modifier.weight(1f).fillMaxHeight(), enabled = model.token.isNotEmpty(), icon = Icons.Outlined.Delete) {
+                CanonButton("Clear", Modifier.weight(1f).fillMaxHeight(), enabled = model.token.isNotEmpty(), icon = pencil(R.drawable.pencil_trash_2)) {
                     model.set("")
                 }
             }

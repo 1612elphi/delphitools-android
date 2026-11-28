@@ -35,12 +35,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.GpsFixed
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Stairs
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -96,6 +90,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasBoxing
@@ -118,12 +113,14 @@ import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonRule
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSegmented
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSlider
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonStatusRow
 import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.colourNamesOrNull
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.canon.toCanonColor
 import com.delphi.delphitools.colour.LocalColourFormats
 import com.delphi.delphitools.colour.Rgb
@@ -468,6 +465,7 @@ fun GradientGenerator(model: GradientGeneratorModel = viewModel()) {
     val type = model.type
     ToolUndoActions(model.undoStack.canUndo, model.undoStack.canRedo, model::undo, model::redo)
     LaunchedEffect(model) { WorkflowRun.takeColours()?.let { model.carry(it.mapNotNull(::parseColour)) } }
+    CanonSharedText { model.carry(it.split(" ").mapNotNull(::parseColour)) }
 
     LaunchedEffect(model) {
         snapshotFlow { Triple(model.meshPoints, model.width to model.height, model.dragging to model.type) }.collect { (_, _, state) ->
@@ -514,7 +512,7 @@ fun GradientGenerator(model: GradientGeneratorModel = viewModel()) {
             if (type == GradientType.Radial || type == GradientType.Conic) {
                 val detail = "${(model.centre.x * 100).roundToInt()} %, ${(model.centre.y * 100).roundToInt()} %"
                 CanonRow("Centre", detail = detail, flush = true) {
-                    CanonButton("Reset", icon = Icons.Outlined.GpsFixed, enabled = model.centre != centred) { model.edit { model.centre = centred } }
+                    CanonButton("Reset", icon = pencil(R.drawable.pencil_crosshair), enabled = model.centre != centred) { model.edit { model.centre = centred } }
                 }
             }
             if (mesh) {
@@ -544,12 +542,12 @@ fun GradientGenerator(model: GradientGeneratorModel = viewModel()) {
             }
             CanonGrid(columns = 2) {
                 if (!mesh) {
-                    CanonButton("Add Stop", icon = Icons.Rounded.Add) {
+                    CanonButton("Add Stop", icon = pencil(R.drawable.pencil_plus)) {
                         model.select(model.addStop(GradientStops.widestGap(model.stops.map { it.position })))
                     }
                 }
-                CanonButton("Remove", icon = Icons.Outlined.Delete, enabled = model.canRemove, onClick = model::removeSelected)
-                if (!mesh) CanonButton("Auto Step", icon = Icons.Rounded.Stairs, enabled = GradientStops.canAutoStep(model.stops.size), onClick = model::autoStep)
+                CanonButton("Remove", icon = pencil(R.drawable.pencil_trash_2), enabled = model.canRemove, onClick = model::removeSelected)
+                if (!mesh) CanonButton("Auto Step", icon = pencil(R.drawable.pencil_chart_no_axes_column_increasing), enabled = GradientStops.canAutoStep(model.stops.size), onClick = model::autoStep)
             }
         }
     }
@@ -567,7 +565,7 @@ fun GradientGenerator(model: GradientGeneratorModel = viewModel()) {
                 CanonSlider(model.noise, { model.noise = it }, Modifier.fillMaxSize(), range = 0f..100f, step = 1f, readout = "${model.noise.roundToInt()} %")
             }
             Box(contentAlignment = Alignment.CenterEnd) {
-                CanonButton("Export PNG", kind = CanonButtonKind.Primary, enabled = !model.exporting, icon = Icons.Outlined.Share, oversized = true) {
+                CanonButton("Export PNG", kind = CanonButtonKind.Primary, enabled = !model.exporting, icon = pencil(R.drawable.pencil_share), oversized = true) {
                     model.export(context)
                 }
                 if (model.exporting) CanonLoader(Modifier.padding(end = CanonMetrics.panelPadding))

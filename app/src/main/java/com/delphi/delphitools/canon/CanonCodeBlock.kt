@@ -18,9 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,6 +39,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import com.delphi.delphitools.ui.theme.DelphiDark
@@ -106,7 +104,7 @@ fun CanonCodeBlock(
                     .padding(horizontal = 12.dp, vertical = 8.dp),
             ) {
                 Icon(
-                    if (copied) Icons.Filled.Check else Icons.Outlined.ContentCopy,
+                    if (copied) pencil(R.drawable.pencil_check) else pencil(R.drawable.pencil_copy),
                     contentDescription = null,
                     tint = if (copied) copiedInk else c.mutedForeground,
                     modifier = Modifier.size(14.dp),

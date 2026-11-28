@@ -20,14 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Fullscreen
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -66,6 +58,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasBoxing
@@ -81,6 +74,7 @@ import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonTimecode
 import com.delphi.delphitools.canon.canonSmpte
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.DelphiMono
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import com.delphi.delphitools.ui.theme.selectedTheme
@@ -172,7 +166,7 @@ fun VideoAtlas(model: VideoAtlasModel = viewModel()) {
                     if (model.probeFailed) "This file's container can't be read." else null,
                     model::clear,
                 )
-                CanonButton("Copy report", kind = CanonButtonKind.Primary, enabled = model.sections.isNotEmpty(), icon = Icons.Outlined.ContentCopy, flashesCopied = true) {
+                CanonButton("Copy report", kind = CanonButtonKind.Primary, enabled = model.sections.isNotEmpty(), icon = pencil(R.drawable.pencil_copy), flashesCopied = true) {
                     context.getSystemService(ClipboardManager::class.java)
                         ?.setPrimaryClip(ClipData.newPlainText("", VideoAtlasEngine.report(model.sections)))
                 }
@@ -221,7 +215,7 @@ fun VideoAtlas(model: VideoAtlasModel = viewModel()) {
                     "",
                     Modifier.weight(1f).fillMaxHeight(),
                     enabled = playback.ready,
-                    icon = Icons.Filled.Fullscreen,
+                    icon = pencil(R.drawable.pencil_maximize_2),
                     contentDescription = "Full Screen",
                 ) { fullScreen = true }
             }
@@ -254,7 +248,7 @@ private fun VideoAtlasFullScreen(model: VideoAtlasModel, aspect: Float, format: 
                             .clickable(onClick = close),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White.copy(alpha = 0.55f))
+                        Icon(pencil(R.drawable.pencil_x), contentDescription = "Close", tint = Color.White.copy(alpha = 0.55f))
                     }
                     Row(
                         Modifier
@@ -272,12 +266,12 @@ private fun VideoAtlasFullScreen(model: VideoAtlasModel, aspect: Float, format: 
                                 cell,
                                 kind = CanonButtonKind.Segment,
                                 selected = playback.playing,
-                                icon = if (playback.playing) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                                icon = if (playback.playing) pencil(R.drawable.pencil_pause) else pencil(R.drawable.pencil_play),
                                 contentDescription = if (playback.playing) "Pause" else "Play",
                                 onClick = playback::toggle,
                             )
-                            CanonButton("", cell, kind = CanonButtonKind.Segment, enabled = playback.playing || playback.paused, icon = Icons.Filled.Stop, contentDescription = "Stop", onClick = playback::stop)
-                            CanonButton("", cell, kind = CanonButtonKind.Segment, selected = playback.looping, icon = Icons.Filled.Repeat, contentDescription = "Loop") {
+                            CanonButton("", cell, kind = CanonButtonKind.Segment, enabled = playback.playing || playback.paused, icon = pencil(R.drawable.pencil_square), contentDescription = "Stop", onClick = playback::stop)
+                            CanonButton("", cell, kind = CanonButtonKind.Segment, selected = playback.looping, icon = pencil(R.drawable.pencil_repeat), contentDescription = "Loop") {
                                 playback.looping = !playback.looping
                             }
                         }

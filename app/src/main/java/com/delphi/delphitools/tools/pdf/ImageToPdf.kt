@@ -8,15 +8,6 @@ import android.net.Uri
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.ArrowDownward
-import androidx.compose.material.icons.outlined.ArrowUpward
-import androidx.compose.material.icons.outlined.Collections
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.PictureAsPdf
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -34,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -51,6 +43,7 @@ import com.delphi.delphitools.canon.CanonSegmented
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonStatusRow
 import com.delphi.delphitools.canon.CanonTone
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.images.ImageFiles
 import com.delphi.delphitools.tools.print.PaperPick
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -263,7 +256,7 @@ fun ImageToPdf(model: ImageToPdfModel = viewModel()) {
                 CanonHeading("Images")
                 CanonDropZone(
                     "Drop images here",
-                    icon = Icons.Outlined.Collections,
+                    icon = pencil(R.drawable.pencil_images),
                     photos = PickVisualMedia.ImageOnly,
                     multiple = true,
                     paste = false,
@@ -272,9 +265,9 @@ fun ImageToPdf(model: ImageToPdfModel = viewModel()) {
                 if (model.items.isNotEmpty()) {
                     CanonGrid {
                         val cell = Modifier.weight(1f).fillMaxHeight()
-                        CanonButton("A–Z", cell, icon = Icons.Outlined.ArrowDownward, enabled = !busy) { model.sort(true) }
-                        CanonButton("Z–A", cell, icon = Icons.Outlined.ArrowUpward, enabled = !busy) { model.sort(false) }
-                        CanonButton("Clear", cell, icon = Icons.Outlined.Delete, enabled = !busy, onClick = model::clearImages)
+                        CanonButton("A–Z", cell, icon = pencil(R.drawable.pencil_arrow_down), enabled = !busy) { model.sort(true) }
+                        CanonButton("Z–A", cell, icon = pencil(R.drawable.pencil_arrow_up), enabled = !busy) { model.sort(false) }
+                        CanonButton("Clear", cell, icon = pencil(R.drawable.pencil_trash_2), enabled = !busy, onClick = model::clearImages)
                     }
                 }
             } else {
@@ -282,7 +275,7 @@ fun ImageToPdf(model: ImageToPdfModel = viewModel()) {
                 if (!model.opened.opened) {
                     CanonDropZone(
                         "Drop PDF here",
-                        icon = Icons.Outlined.Description,
+                        icon = pencil(R.drawable.pencil_file),
                         mimeTypes = arrayOf(PdfDocuments.MIME),
                         photos = null,
                         paste = false,
@@ -298,7 +291,7 @@ fun ImageToPdf(model: ImageToPdfModel = viewModel()) {
     val paper = CanonSection.of {
         CanonRows {
             CanonHeading("Page size")
-            CanonButton(model.paper.title(MATCH), Modifier.fillMaxWidth(), icon = Icons.AutoMirrored.Outlined.KeyboardArrowRight, enabled = !busy) {
+            CanonButton(model.paper.title(MATCH), Modifier.fillMaxWidth(), icon = pencil(R.drawable.pencil_chevron_right), enabled = !busy) {
                 picking = true
             }
             CanonHeading("Orientation")
@@ -313,7 +306,7 @@ fun ImageToPdf(model: ImageToPdfModel = viewModel()) {
     val export = CanonSection.of {
         CanonRows {
             if (!toImage) {
-                PdfJobPanel(model.job, "Export PDF", Icons.Outlined.PictureAsPdf, "Build failed", enabled = model.items.isNotEmpty(), onStart = model::buildPdf)
+                PdfJobPanel(model.job, "Export PDF", pencil(R.drawable.pencil_file_image), "Build failed", enabled = model.items.isNotEmpty(), onStart = model::buildPdf)
             } else {
                 CanonHeading("Resolution")
                 CanonSegmented(scales.map { "${(it * 72).toInt()} DPI" }, model.resolution) { model.resolution = it }
@@ -321,7 +314,7 @@ fun ImageToPdf(model: ImageToPdfModel = viewModel()) {
                     "Export All",
                     kind = CanonButtonKind.Primary,
                     enabled = model.opened.source != null && !model.rendering,
-                    icon = Icons.Outlined.Share,
+                    icon = pencil(R.drawable.pencil_share),
                     oversized = true,
                 ) { model.exportPngs(context, (0 until (model.opened.source?.pageCount ?: 0)).toList()) }
                 if (model.rendering) {

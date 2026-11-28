@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <share-target android:targetClass="com.delphi.delphitools.MainActivity">
+        <data android:mimeType="image/*" />
+        <category android:name="com.delphi.delphitools.share.Images" />
+    </share-target>
+    <share-target android:targetClass="com.delphi.delphitools.MainActivity">
+        <data android:mimeType="application/pdf" />
+        <category android:name="com.delphi.delphitools.share.Pdfs" />
+    </share-target>
+    <share-target android:targetClass="com.delphi.delphitools.MainActivity">
+        <data android:mimeType="video/*" />
+        <category android:name="com.delphi.delphitools.share.Movie" />
+    </share-target>
+    <share-target android:targetClass="com.delphi.delphitools.MainActivity">
+        <data android:mimeType="audio/*" />
+        <category android:name="com.delphi.delphitools.share.Audio" />
+    </share-target>
+    <share-target android:targetClass="com.delphi.delphitools.MainActivity">
+        <data android:mimeType="text/*" />
+        <category android:name="com.delphi.delphitools.share.Text" />
+    </share-target>
+</shortcuts>

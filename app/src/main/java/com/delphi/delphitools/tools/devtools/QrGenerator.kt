@@ -21,12 +21,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.QrCode
-import androidx.compose.material.icons.outlined.Verified
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -69,6 +63,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -82,6 +77,8 @@ import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSegmented
+import com.delphi.delphitools.canon.CanonPinnable
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonStatusRow
 import com.delphi.delphitools.canon.CanonSwitch
@@ -90,11 +87,14 @@ import com.delphi.delphitools.canon.CanonTile
 import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.canon.toCanonColor
 import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.colour.contrastFigure
 import com.delphi.delphitools.colour.contrastRatio
+import com.delphi.delphitools.shell.ShareKind
 import com.delphi.delphitools.tools.FileExport
+import com.delphi.delphitools.widgets.Shortcuts
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import com.delphi.delphitools.tools.ToolUndoActions
 import com.delphi.delphitools.tools.UndoStack
@@ -225,6 +225,15 @@ class QrGeneratorModel(application: Application) : AndroidViewModel(application)
             event = event.copy(location = locationField, notes = notesField)
             refresh()
         }
+    }
+
+    fun take(text: String) {
+        val url = text.trim().takeIf(ShareKind::isWebUrl)
+        typing?.cancel()
+        type = if (url != null) QrContentType.Url else QrContentType.Text
+        contentField = url ?: text
+        content = contentField
+        refresh()
     }
 
     fun chooseType(value: QrContentType) = change(record = true) { type = value }
@@ -400,6 +409,8 @@ fun QrGenerator(model: QrGeneratorModel = viewModel()) {
     val types = QrContentType.entries
     val type = model.type
     val sheet = model.sheet
+    CanonSharedText(model::take)
+    CanonPinnable("QR tag", model.matrix != null) { Shortcuts.pinCode(context, model.payload) }
     ToolUndoActions(model.history.canUndo, model.history.canRedo, { model.undo(false) }, { model.undo(true) })
     val keyboardOptions = { kind: KeyboardType, words: Boolean ->
         KeyboardOptions(
@@ -495,10 +506,10 @@ fun QrGenerator(model: QrGeneratorModel = viewModel()) {
             val logo = model.logo
             CanonHeading("Logo")
             if (logo == null) {
-                CanonDropZone("Add a logo to the centre", icon = Icons.Outlined.Verified, onImages = { images, _ -> images.firstOrNull()?.let(model::setLogo) })
+                CanonDropZone("Add a logo to the centre", icon = pencil(R.drawable.pencil_stamp), onImages = { images, _ -> images.firstOrNull()?.let(model::setLogo) })
             } else {
                 CanonRow("Logo", detail = "${logo.width} × ${logo.height} px", flush = true) {
-                    CanonButton("", icon = Icons.Outlined.Delete, contentDescription = "Remove", onClick = model::removeLogo)
+                    CanonButton("", icon = pencil(R.drawable.pencil_trash_2), contentDescription = "Remove", onClick = model::removeLogo)
                 }
                 val largest = max(5, QrEngine.largestLogo(model.matrix?.size ?: 21))
                 CanonRow("Logo size", flush = true) {
@@ -543,10 +554,10 @@ fun QrGenerator(model: QrGeneratorModel = viewModel()) {
             CanonHeading("Format")
             CanonSegmented(listOf("PNG", "SVG"), if (model.svg) 1 else 0, Modifier.semantics { contentDescription = "Format" }) { model.svg = it == 1 }
             CanonGrid {
-                CanonButton("Copy", Modifier.weight(1f).fillMaxHeight(), enabled = sheet != null, icon = Icons.Outlined.ContentCopy, flashesCopied = true) {
+                CanonButton("Copy", Modifier.weight(1f).fillMaxHeight(), enabled = sheet != null, icon = pencil(R.drawable.pencil_copy), flashesCopied = true) {
                     model.copy(context)
                 }
-                CanonButton("Export", Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Primary, enabled = sheet != null, icon = Icons.Outlined.Share, oversized = true) {
+                CanonButton("Export", Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Primary, enabled = sheet != null, icon = pencil(R.drawable.pencil_share), oversized = true) {
                     model.export(context)
                 }
             }
@@ -554,7 +565,7 @@ fun QrGenerator(model: QrGeneratorModel = viewModel()) {
     }
 
     val canvas = CanonSection.canvas(CanonCanvasSize.Aspect(1f), background = c.card, maxHeight = 520.dp) {
-        CodeSheetPicture(sheet, "QR code", sheet?.pixelSize(model.pixelsPerModule), Icons.Outlined.QrCode, model.payload.ifEmpty { null })
+        CodeSheetPicture(sheet, "QR code", sheet?.pixelSize(model.pixelsPerModule), pencil(R.drawable.pencil_qr_code), model.payload.ifEmpty { null })
     }
 
     CanonSplit(sidebar = listOf(canvas), main = listOf(contentBlock, styleBlock, logoBlock, outputBlock), halves = true, collapsesTo = 240.dp)

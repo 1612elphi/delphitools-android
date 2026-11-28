@@ -5,10 +5,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -21,6 +17,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -38,6 +35,7 @@ import com.delphi.delphitools.canon.CanonSwitch
 import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.CanonValueLayout
 import com.delphi.delphitools.canon.CanonValueLine
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.Dispatchers
@@ -208,7 +206,7 @@ fun PasswordGenerator(model: PasswordGeneratorModel = viewModel()) {
             CanonButton(
                 "Generate",
                 kind = CanonButtonKind.Primary,
-                icon = Icons.Outlined.Refresh,
+                icon = pencil(R.drawable.pencil_rotate_cw),
                 oversized = true,
                 enabled = !phrase || model.wordlist.isNotEmpty(),
             ) { model.regenerate() }
@@ -223,12 +221,12 @@ fun PasswordGenerator(model: PasswordGeneratorModel = viewModel()) {
                     "Copy all",
                     Modifier.weight(1f).fillMaxHeight(),
                     enabled = values.isNotEmpty(),
-                    icon = Icons.Outlined.ContentCopy,
+                    icon = pencil(R.drawable.pencil_copy),
                     flashesCopied = true,
                 ) {
                     context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("", joined))
                 }
-                CanonButton("Export", Modifier.weight(1f).fillMaxHeight(), enabled = values.isNotEmpty(), icon = Icons.Outlined.Share) {
+                CanonButton("Export", Modifier.weight(1f).fillMaxHeight(), enabled = values.isNotEmpty(), icon = pencil(R.drawable.pencil_share)) {
                     scope.launch { FileExport.share(context, joined.toByteArray(), "passwords.txt", "text/plain") }
                 }
             }

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:id="@+id/dials_box"
+        android:layout_width="210dp"
+        android:layout_height="145dp"
+        android:layout_gravity="center">
+
+        <AnalogClock
+            android:id="@+id/dial_a"
+            android:layout_width="145dp"
+            android:layout_height="145dp"
+            android:layout_gravity="start|top" />
+
+        <AnalogClock
+            android:id="@+id/dial_b"
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            android:layout_gravity="end|bottom" />
+    </FrameLayout>
+</FrameLayout>

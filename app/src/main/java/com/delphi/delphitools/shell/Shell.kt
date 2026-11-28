@@ -11,6 +11,18 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
+import kotlinx.coroutines.Job
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.animation.core.animate
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.util.lerp
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -53,16 +65,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.automirrored.outlined.Redo
-import androidx.compose.material.icons.automirrored.outlined.Undo
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.GridView
-import androidx.compose.material.icons.outlined.SaveAlt
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -122,6 +124,7 @@ import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonHeading
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
@@ -130,12 +133,14 @@ import com.delphi.delphitools.canon.CanonHost
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.LocalCanonPatternSymbol
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.gallery.galleryPages
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.tools.LocalToolUndo
 import com.delphi.delphitools.tools.ToolUndo
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
+import com.delphi.delphitools.widgets.Shortcuts
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -157,6 +162,12 @@ private val bandRow = 60.dp
 private val fadeHeight = 15.dp
 private val swapTravel = 14.dp
 private val previewCorner = 28.dp
+private const val MORPH_OPEN_MS = 380
+private const val MORPH_CLOSE_MS = 320
+private val morphEasing = CubicBezierEasing(0.2f, 0f, 0f, 1f)
+
+// fade onto the tile
+private const val MORPH_FADE_FROM = 0.55f
 
 // fits the 72 pt vertical item and the tab gap
 private val sideBar = 96.dp
@@ -181,6 +192,7 @@ private fun ShellFrame(startTool: String?) {
     var settingsOpen by rememberSaveable { mutableStateOf(false) }
     var searchOpen by rememberSaveable { mutableStateOf(false) }
     var favourOpen by remember { mutableStateOf(false) }
+    var pinning by remember { mutableStateOf(false) }
     var splashing by rememberSaveable { mutableStateOf(true) }
     val context = LocalContext.current
     var whatsNewDue by remember { mutableStateOf(false) }
@@ -197,31 +209,77 @@ private fun ShellFrame(startTool: String?) {
     val scope = rememberCoroutineScope()
     val back = remember { Animatable(0f) }
     var backEdge by remember { mutableIntStateOf(BackEventCompat.EDGE_LEFT) }
-    val previewing by remember { derivedStateOf { back.value > 0f } }
+    val origins = remember { TileOrigins() }
+    // 1: page on tile
+    var morph by remember { mutableFloatStateOf(0f) }
+    // one morph in flight
+    val morphing = remember { arrayOfNulls<Job>(1) }
+    var closing by remember { mutableStateOf(false) }
+    var tile by remember { mutableStateOf<Rect?>(null) }
+    var pageOrigin by remember { mutableStateOf(Offset.Zero) }
+    val previewing by remember { derivedStateOf { back.value > 0f || morph > 0f || closing } }
     PredictiveBackHandler(enabled = tool != null) { events ->
         try {
             events.collect {
                 backEdge = it.swipeEdge
                 back.snapTo(it.progress)
             }
+            morphing[0]?.cancel()
+            val leaving = toolId
+            // home places its tiles
+            closing = true
+            withFrameNanos {}
+            withFrameNanos {}
+            tile = origins.current()
+            if (tile != null) animate(morph, 1f, animationSpec = tween(MORPH_CLOSE_MS, easing = morphEasing)) { value, _ -> if (toolId == leaving) morph = value }
+            // another page opened meanwhile
+            if (toolId != leaving || !closing) return@PredictiveBackHandler
             toolId = null
             run.visit(null)
-            scope.launch {
+            morphing[0] = scope.launch {
                 delay(SWAP_MS.toLong())
                 back.snapTo(0f)
+                morph = 0f
+                closing = false
             }
         } catch (cancelled: CancellationException) {
-            scope.launch { back.animateTo(0f, spring()) }
+            closing = false
+            morphing[0] = scope.launch {
+                launch { animate(morph, 0f, animationSpec = spring()) { value, _ -> morph = value } }
+                back.animateTo(0f, spring())
+            }
             throw cancelled
         }
     }
-    val open: (Tool) -> Unit = {
-        stores.recordUsage(it.id)
-        scope.launch { back.snapTo(0f) }
-        toolId = it.id
+    val openFrom: (Tool, String?) -> Unit = open@{ opened, key ->
+        // closing home ignores taps
+        if (closing && key != null) return@open
+        ShareInbox.drop()
+        stores.recordUsage(opened.id)
+        val from = origins.open(key)
+        tile = from
+        closing = false
+        morph = if (from != null) 1f else 0f
+        morphing[0]?.cancel()
+        morphing[0] = scope.launch {
+            back.snapTo(0f)
+            if (from == null) return@launch
+            // page composes unseen
+            withFrameNanos {}
+            withFrameNanos {}
+            animate(1f, 0f, animationSpec = tween(MORPH_OPEN_MS, easing = morphEasing)) { value, _ -> morph = value }
+        }
+        toolId = opened.id
         // before the page composes
-        run.visit(it)
+        run.visit(opened)
     }
+    val open: (Tool) -> Unit = { openFrom(it, null) }
+    val openShared: (Tool) -> Unit = {
+        generation++
+        open(it)
+        ShareInbox.opened()
+    }
+    LaunchedEffect(ShareInbox.launch) { ShareInbox.launch?.let(openShared) }
     DisposableEffect(context) {
         val app = context.applicationContext
         run.attach(
@@ -234,8 +292,11 @@ private fun ShellFrame(startTool: String?) {
         )
         CanonHost.capturesFiles = { run.capturesFiles }
         CanonHost.pendingFiles = { types, multiple ->
-            run.pending(types, multiple).map { FileProvider.getUriForFile(app, "${app.packageName}.files", it) }
+            ShareInbox.takeFiles(types, multiple).ifEmpty {
+                run.pending(types, multiple).map { FileProvider.getUriForFile(app, "${app.packageName}.files", it) }
+            }
         }
+        CanonHost.pendingText = ShareInbox::takeText
         onDispose { run.detach() }
     }
 
@@ -274,15 +335,18 @@ private fun ShellFrame(startTool: String?) {
             Modifier
                 .absolutePadding(left = left, right = right, bottom = band)
                 .fillMaxSize()
+                .onGloballyPositioned { pageOrigin = it.positionInWindow() }
                 .background(if (previewing) Color.Transparent else c.background)
         ) {
             val pageFrame = Modifier.fillMaxSize().background(c.background).statusBarsPadding().padding(bottom = if (vertical) navigation else 0.dp)
-            if (previewing && tool != null) Box(pageFrame) { ToolLattice(lattice, open, onFavour = { favourOpen = true }) }
+            if (previewing && tool != null) Box(pageFrame) { ToolLattice(lattice, openFrom, origins, onFavour = { favourOpen = true }) }
             AnimatedContent(
                 tool to generation,
                 transitionSpec = {
+                    // home is drawn behind
+                    if (morph > 0f) (EnterTransition.None togetherWith ExitTransition.None).apply { if (targetState.first == null) targetContentZIndex = -1f }
                     // the home is already drawn behind the preview
-                    if (back.value > 0f) (EnterTransition.None togetherWith fadeOut(tween(SWAP_MS, easing = EaseOut))).apply { targetContentZIndex = -1f }
+                    else if (back.value > 0f) (EnterTransition.None togetherWith fadeOut(tween(SWAP_MS, easing = EaseOut))).apply { targetContentZIndex = -1f }
                     else (fadeIn(tween(SWAP_MS, easing = EaseOut)) + slideInVertically(tween(SWAP_MS, easing = EaseOut)) { travel })
                         .togetherWith(fadeOut(tween(SWAP_MS, easing = EaseOut)) + slideOutVertically(tween(SWAP_MS, easing = EaseOut)) { travel })
                 },
@@ -293,23 +357,34 @@ private fun ShellFrame(startTool: String?) {
                     Modifier
                         .graphicsLayer {
                             if (page == null) return@graphicsLayer
-                            // the system back-to-home preview: 90 % scale, a sideways shift of width / 20 - 8 dp
+                            // system back preview pose,
+                            // then cropped onto tile
                             val progress = back.value
+                            val target = tile
+                            val toTile = if (target != null) morph else 0f
+                            if (progress == 0f && toTile == 0f) return@graphicsLayer
                             val away = if (backEdge == BackEventCompat.EDGE_RIGHT) -1f else 1f
-                            scaleX = 1f - 0.1f * progress
-                            scaleY = 1f - 0.1f * progress
-                            transformOrigin = when (edge) {
-                                TabEdge.Bottom -> TransformOrigin(0.5f, 1f)
-                                TabEdge.Left -> TransformOrigin(0f, 0.5f)
-                                TabEdge.Right -> TransformOrigin(1f, 0.5f)
-                            }
-                            translationX = away * (size.width / 20f - 8.dp.toPx()) * progress
-                            shape = RoundedCornerShape(previewCorner * progress)
-                            clip = progress > 0f
+                            val preview = 1f - 0.1f * progress
+                            val x = when (edge) {
+                                TabEdge.Bottom -> size.width * (1 - preview) / 2
+                                TabEdge.Left -> 0f
+                                TabEdge.Right -> size.width * (1 - preview)
+                            } + away * (size.width / 20f - 8.dp.toPx()) * progress
+                            val y = if (edge == TabEdge.Bottom) size.height * (1 - preview) else size.height * (1 - preview) / 2
+                            val scale = lerp(size.width * preview, target?.width ?: 0f, toTile) / size.width
+                            val tall = lerp(size.height * preview, target?.height ?: 0f, toTile)
+                            scaleX = scale
+                            scaleY = scale
+                            transformOrigin = TransformOrigin(0f, 0f)
+                            translationX = lerp(x, (target?.left ?: 0f) - pageOrigin.x, toTile)
+                            translationY = lerp(y, (target?.top ?: 0f) - pageOrigin.y, toTile)
+                            shape = PageCrop(tall / scale, previewCorner.toPx() * progress * (1 - toTile) / scale)
+                            clip = true
+                            alpha = 1f - ((toTile - MORPH_FADE_FROM) / (1 - MORPH_FADE_FROM)).coerceIn(0f, 1f)
                         }
                         .then(pageFrame)
                 ) {
-                    if (page == null) ToolLattice(lattice, open, onFavour = { favourOpen = true })
+                    if (page == null) ToolLattice(lattice, openFrom, origins, onFavour = { favourOpen = true })
                     else ToolPage(page, fresh, undo, isOpen = { toolId == page.id && generation == fresh })
                 }
             }
@@ -329,26 +404,27 @@ private fun ShellFrame(startTool: String?) {
             val measured = with(density) { measurer.measure(name, pillName, maxLines = 1).size.width.toDp() }
             val items = buildList {
                 if (tool == null) {
-                    add(BarItem(Icons.Outlined.Search, "Search") { searchOpen = true })
-                    add(BarItem(Icons.Outlined.Settings, "Settings") { settingsOpen = true })
+                    add(BarItem(pencil(R.drawable.pencil_search), "Search") { searchOpen = true })
+                    add(BarItem(pencil(R.drawable.pencil_settings), "Settings") { settingsOpen = true })
                     return@buildList
                 }
                 if (!run.isOnStep && tool.id in toolPages) {
                     val starred = tool.id in stores.favourites
                     add(
                         BarItem(
-                            if (starred) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                            pencil(R.drawable.pencil_star),
                             if (starred) "Remove from favourites" else "Add to favourites",
                             tint = if (starred) starYellow else null,
                         ) { stores.toggleFavourite(tool.id) }
                     )
+                    add(BarItem(pencil(R.drawable.pencil_pin), "Pin to home") { if (CanonHost.pinnable == null) Shortcuts.pin(context, tool) else pinning = true })
                 }
-                undo.undo?.let { add(BarItem(Icons.AutoMirrored.Outlined.Undo, "Undo", enabled = undo.canUndo, onClick = it)) }
-                if (undo.canRedo) undo.redo?.let { add(BarItem(Icons.AutoMirrored.Outlined.Redo, "Redo", onClick = it)) }
+                undo.undo?.let { add(BarItem(pencil(R.drawable.pencil_undo_2), "Undo", enabled = undo.canUndo, onClick = it)) }
+                if (undo.canRedo) undo.redo?.let { add(BarItem(pencil(R.drawable.pencil_redo_2), "Redo", onClick = it)) }
                 if (run.isOnStep) {
                     add(
                         BarItem(
-                            if (run.isLast) Icons.Outlined.SaveAlt else Icons.AutoMirrored.Outlined.ArrowForward,
+                            pencil(if (run.isLast) R.drawable.pencil_download else R.drawable.pencil_arrow_right),
                             if (run.isLast) "Save" else "Next",
                             enabled = !run.isLanding && (run.capturesFiles || run.canAdvance),
                             prominent = true,
@@ -422,7 +498,7 @@ private fun ShellFrame(startTool: String?) {
             ) {
                 Crossfade(tool, animationSpec = tween(SWAP_MS), label = "pill") { shown ->
                     val leg = run.tools.indexOfFirst { it.id == shown?.id }.takeIf { it >= 0 }
-                    val icon = leg?.let { legIcon(it, it) } ?: shown?.icon ?: Icons.Outlined.GridView
+                    val icon = leg?.let { legIcon(it, it) } ?: pencil(shown?.icon ?: R.drawable.pencil_grid_2x2)
                     val label = shown?.name ?: "Tools"
                     if (vertical) VerticalPill(icon, label, if (barOnLeft) 90f else -90f, nameRoom) else Pill(icon, label, nameRoom)
                 }
@@ -462,8 +538,16 @@ private fun ShellFrame(startTool: String?) {
 
         SheetVisibility(settingsOpen) { SettingsPane { settingsOpen = false } }
         SheetVisibility(searchOpen) { SearchOverlay(open) { searchOpen = false } }
+        // list outlives the sheet
+        val offered = remember { arrayOf(emptyList<Tool>()) }
+        ShareInbox.offer?.let { offered[0] = it }
+        SheetVisibility(ShareInbox.offer != null) { ShareOverlay(offered[0], onOpen = openShared, onDismiss = ShareInbox::dismiss) }
         SheetVisibility(favourOpen) { stores.favourDialogue?.let { FavourSheet(it) { favourOpen = false } } }
         if (run.pendingDiscard != null) DiscardDialog(run::answerDiscard)
+        val pinnable = CanonHost.pinnable
+        if (pinning && tool != null && pinnable != null) {
+            PinDialog(pinnable.first, onTool = { Shortcuts.pin(context, tool) }, onOther = pinnable.second) { pinning = false }
+        }
         if (whatsNewDue) WhatsNewSheet { whatsNewDue = false }
         if (splashing) LaunchSplash { splashing = false }
     }
@@ -586,7 +670,7 @@ private fun ToolPage(tool: Tool, generation: Int, undo: ToolUndo, isOpen: () -> 
             if (!isOpen() && changingConfigurations?.isChangingConfigurations != true) stores.clear(key)
         }
     }
-    CompositionLocalProvider(LocalCanonPatternSymbol provides tool.icon, LocalViewModelStoreOwner provides owner, LocalToolUndo provides undo) {
+    CompositionLocalProvider(LocalCanonPatternSymbol provides pencil(tool.icon), LocalViewModelStoreOwner provides owner, LocalToolUndo provides undo) {
         when {
             tool.id == workflowsTool.id -> WorkflowsPage()
             tool.id == canonGallery.id && galleryPages.isNotEmpty() -> GalleryPages()
@@ -603,7 +687,7 @@ private fun EmptyPage(tool: Tool) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(tool.icon, contentDescription = null, tint = LocalDelphiColours.current.border, modifier = Modifier.padding(top = 96.dp).size(96.dp))
+        Icon(pencil(tool.icon), contentDescription = null, tint = LocalDelphiColours.current.border, modifier = Modifier.padding(top = 96.dp).size(96.dp))
         ToolSticker(tool, Modifier.fillMaxWidth())
     }
 }
@@ -649,6 +733,32 @@ private fun DiscardDialog(answer: (Boolean) -> Unit) {
             }
         }
     }
+}
+
+@Composable
+private fun PinDialog(other: String, onTool: () -> Unit, onOther: () -> Unit, close: () -> Unit) {
+    val c = LocalDelphiColours.current
+    Dialog(onDismissRequest = close) {
+        Column(Modifier.width(320.dp).background(c.border).padding(CanonMetrics.frame), verticalArrangement = Arrangement.spacedBy(CanonMetrics.hairline)) {
+            CanonHeading("Pin to home")
+            CanonGrid {
+                CanonButton("Tool", Modifier.weight(1f).fillMaxHeight()) {
+                    close()
+                    onTool()
+                }
+                CanonButton(other, Modifier.weight(1f).fillMaxHeight()) {
+                    close()
+                    onOther()
+                }
+            }
+        }
+    }
+}
+
+/** The page's top [tall] px with rounded corners; a rounded outline clips on the render thread on every API level. */
+private class PageCrop(val tall: Float, val corner: Float) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density) =
+        Outline.Rounded(RoundRect(0f, 0f, size.width, tall, CornerRadius(corner)))
 }
 
 /** A page over the shell that rises in and falls away. */

@@ -51,6 +51,7 @@ import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSegmented
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonTextInput
 import com.delphi.delphitools.canon.CanonTextOutput
@@ -74,6 +75,10 @@ fun NATOPhonetic() {
     var direction by rememberSaveable { mutableIntStateOf(AUTO) }
     var text by rememberSaveable { mutableStateOf("") }
     var settled by rememberSaveable { mutableStateOf("") }
+    CanonSharedText {
+        text = it
+        settled = it
+    }
     val alphabet = SpellingAlphabets.all[alphabetIndex]
 
     val reading = direction == READ || (direction == AUTO && SpellingAlphabets.looksSpelled(settled, alphabet))

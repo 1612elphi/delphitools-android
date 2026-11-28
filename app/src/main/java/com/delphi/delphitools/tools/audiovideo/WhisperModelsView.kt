@@ -18,11 +18,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowCircleDown
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.SyncProblem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,6 +44,7 @@ import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonStatusRow
 import com.delphi.delphitools.canon.CanonTone
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.shell.PaneBar
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -74,9 +70,9 @@ fun WhisperModelsList(actions: WhisperActions, heading: Boolean = true) {
             CanonRow(model.label, detail = Formatter.formatShortFileSize(context, model.bytes), flush = true) {
                 Box(Modifier.widthIn(min = CELL_WIDTH).height(CanonMetrics.rowHeight), contentAlignment = Alignment.Center) {
                     when (state) {
-                        WhisperState.Absent -> CanonButton("Download", Modifier.fillMaxSize(), icon = Icons.Outlined.ArrowCircleDown) { actions.download(model) }
-                        WhisperState.Installed -> CanonButton("Remove", Modifier.fillMaxSize(), icon = Icons.Outlined.Delete) { actions.remove(model) }
-                        is WhisperState.Failed -> CanonButton("Retry", Modifier.fillMaxSize(), icon = Icons.Outlined.SyncProblem) { actions.download(model) }
+                        WhisperState.Absent -> CanonButton("Download", Modifier.fillMaxSize(), icon = pencil(R.drawable.pencil_download)) { actions.download(model) }
+                        WhisperState.Installed -> CanonButton("Remove", Modifier.fillMaxSize(), icon = pencil(R.drawable.pencil_trash_2)) { actions.remove(model) }
+                        is WhisperState.Failed -> CanonButton("Retry", Modifier.fillMaxSize(), icon = pencil(R.drawable.pencil_refresh_cw)) { actions.download(model) }
                         is WhisperState.Downloading -> Row(
                             Modifier.fillMaxSize().background(LocalDelphiColours.current.card).padding(start = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -85,7 +81,7 @@ fun WhisperModelsList(actions: WhisperActions, heading: Boolean = true) {
                                 state.fraction.toFloat(),
                                 Modifier.weight(1f).height(8.dp).semantics { contentDescription = "Downloading" },
                             )
-                            CanonButton("", icon = Icons.Outlined.Close, contentDescription = "Cancel") { actions.cancel(model) }
+                            CanonButton("", icon = pencil(R.drawable.pencil_x), contentDescription = "Cancel") { actions.cancel(model) }
                         }
                     }
                 }

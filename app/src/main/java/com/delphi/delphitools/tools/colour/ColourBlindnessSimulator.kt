@@ -19,9 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -52,6 +49,7 @@ import android.view.HapticFeedbackConstants
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonColourControls
@@ -72,6 +70,7 @@ import com.delphi.delphitools.canon.CanonSegmented
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.canon.toCanonColor
 import com.delphi.delphitools.colour.ColourBlindness
 import com.delphi.delphitools.colour.LocalColourFormats
@@ -218,10 +217,10 @@ fun ColourBlindnessSimulator(model: ColourBlindnessSimulatorModel = viewModel())
                 CanonDropZone("Drop an image", onImages = { images, _ -> model.load(images.firstOrNull()) })
             } else {
                 CanonRow("Image", detail = "${image.width} × ${image.height}", flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete) { model.load(null) }
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2)) { model.load(null) }
                 }
                 CanonGrid {
-                    CanonButton("Share", Modifier.weight(1f).fillMaxHeight(), enabled = after != null, icon = Icons.Outlined.Share) {
+                    CanonButton("Share", Modifier.weight(1f).fillMaxHeight(), enabled = after != null, icon = pencil(R.drawable.pencil_share)) {
                         model.share(context)
                     }
                 }

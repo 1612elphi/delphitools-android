@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphitoolsTheme
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -118,7 +117,7 @@ object CanonToast {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Icon(Icons.Rounded.Check, null, tint = c.background, modifier = Modifier.size(16.dp))
+            Icon(pencil(R.drawable.pencil_check), null, tint = c.background, modifier = Modifier.size(16.dp))
             Text(
                 "Copied",
                 style = CanonText.subheadline.copy(fontWeight = FontWeight.SemiBold),

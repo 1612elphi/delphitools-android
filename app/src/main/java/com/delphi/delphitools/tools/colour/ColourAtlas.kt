@@ -45,6 +45,7 @@ import com.delphi.delphitools.canon.CanonPaletteCard
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSegmented
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonTile
 import com.delphi.delphitools.canon.CanonTiles
@@ -59,6 +60,7 @@ import com.delphi.delphitools.colour.contrastFigure
 import com.delphi.delphitools.colour.contrastRatio
 import com.delphi.delphitools.colour.hex
 import com.delphi.delphitools.colour.oklch
+import com.delphi.delphitools.colour.parseColour
 import com.delphi.delphitools.colour.parseHex
 import com.delphi.delphitools.colour.simulate
 import com.delphi.delphitools.ui.theme.CanonText
@@ -88,6 +90,7 @@ class ColourAtlasModel : ViewModel() {
 @Composable
 fun ColourAtlas(model: ColourAtlasModel = viewModel()) {
     val colour = model.solid.colour
+    CanonSharedText { parseColour(it)?.let(model.controls::use) }
     val offsets = harmonies[model.harmonyKind].second
     val rotated = ColourAtlasEngine.harmony(colour, offsets)
     LaunchedEffect(rotated.map { it.hex }) { model.solid.marks = rotated.zip(offsets).filter { it.second != 0.0 }.map { it.first } }

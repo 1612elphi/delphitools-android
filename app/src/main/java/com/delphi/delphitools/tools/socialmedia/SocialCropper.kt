@@ -19,13 +19,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.OpenWith
-import androidx.compose.material.icons.rounded.SwapHoriz
-import androidx.compose.material.icons.rounded.SwapVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -65,6 +58,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -83,6 +77,7 @@ import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonDisplayName
 import com.delphi.delphitools.canon.canonGrabPan
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.tools.images.ImageCrop
 import com.delphi.delphitools.tools.images.ImageFiles
@@ -207,7 +202,7 @@ fun SocialCropper(model: SocialCropperModel = viewModel()) {
                 CanonDropZone("Drop an image to crop", onFiles = { uris -> uris.firstOrNull()?.let(model::load) })
             } else {
                 CanonRow(model.name, detail = "${size.width.toInt()} × ${size.height.toInt()}", flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
             }
         }
@@ -241,7 +236,7 @@ fun SocialCropper(model: SocialCropperModel = viewModel()) {
                     "Copy",
                     Modifier.weight(1f).fillMaxHeight(),
                     enabled = loaded,
-                    icon = Icons.Rounded.ContentCopy,
+                    icon = pencil(R.drawable.pencil_copy),
                     flashesCopied = true,
                 ) { model.copy(context) }
                 CanonButton(
@@ -249,7 +244,7 @@ fun SocialCropper(model: SocialCropperModel = viewModel()) {
                     Modifier.weight(1f).fillMaxHeight(),
                     kind = CanonButtonKind.Primary,
                     enabled = loaded && !model.exporting,
-                    icon = Icons.Outlined.Share,
+                    icon = pencil(R.drawable.pencil_share),
                     oversized = true,
                 ) { model.export(context) }
             }
@@ -377,9 +372,9 @@ private fun SocialCropBoard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val icon = when {
-                sideways && upDown -> Icons.Rounded.OpenWith
-                sideways -> Icons.Rounded.SwapHoriz
-                else -> Icons.Rounded.SwapVert
+                sideways && upDown -> pencil(R.drawable.pencil_move)
+                sideways -> pencil(R.drawable.pencil_arrow_left_right)
+                else -> pencil(R.drawable.pencil_arrow_up_down)
             }
             Icon(icon, null, Modifier.size(14.dp), tint = c.foreground)
             Text(hintWords, style = hintStyle, color = c.foreground, maxLines = 1)

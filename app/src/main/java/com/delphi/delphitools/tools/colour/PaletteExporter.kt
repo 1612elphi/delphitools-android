@@ -7,11 +7,6 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Brush
-import androidx.compose.material.icons.outlined.Code
-import androidx.compose.material.icons.outlined.Image
-import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,11 +16,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonToast
 import com.delphi.delphitools.canon.MenuCellItem
 import com.delphi.delphitools.canon.MenuCellPopup
 import com.delphi.delphitools.canon.colourNamesOrNull
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.colour.ColourFormat
 import com.delphi.delphitools.colour.LocalColourFormats
 import com.delphi.delphitools.colour.Rgb
@@ -192,16 +189,16 @@ fun PaletteExportButton(
         scope.launch { action(context, palette) }
     }
     Box(modifier) {
-        CanonButton("Export", Modifier.fillMaxSize(), icon = Icons.Outlined.IosShare) { open = true }
+        CanonButton("Export", Modifier.fillMaxSize(), icon = pencil(R.drawable.pencil_share)) { open = true }
         MenuCellPopup(open, { open = false }) {
-            MenuCellItem("Copy CSS", icon = Icons.Outlined.Code) {
+            MenuCellItem("Copy CSS", icon = pencil(R.drawable.pencil_code)) {
                 chosen { _, palette ->
                     CanonToast.show(view)
                     view.context.getSystemService(android.content.ClipboardManager::class.java)
                         ?.setPrimaryClip(android.content.ClipData.newPlainText("", css?.invoke() ?: PaletteExporter.css(name(), palette)))
                 }
             }
-            MenuCellItem("Copy Image", icon = Icons.Outlined.Image) {
+            MenuCellItem("Copy Image", icon = pencil(R.drawable.pencil_image)) {
                 chosen { context, palette ->
                     val image = PaletteExporter.image(name(), palette, names, formats.primary, formats.secondary, view.resources.displayMetrics.density)
                     ImageFiles.png(image)?.let { ImageFiles.copyPng(context, it, "${name()}.png") }
@@ -209,10 +206,10 @@ fun PaletteExportButton(
                 }
             }
             extra { open = false }
-            MenuCellItem("Export ASE", icon = Icons.Outlined.IosShare) {
+            MenuCellItem("Export ASE", icon = pencil(R.drawable.pencil_share)) {
                 chosen { context, palette -> FileExport.share(context, PaletteExporter.ase(name(), palette, names), "${name()}.ase", "application/octet-stream") }
             }
-            MenuCellItem("Export Procreate", icon = Icons.Outlined.Brush) {
+            MenuCellItem("Export Procreate", icon = pencil(R.drawable.pencil_brush)) {
                 chosen { context, palette -> FileExport.share(context, PaletteExporter.procreate(name(), palette), "${name()}.swatches", "application/zip") }
             }
         }

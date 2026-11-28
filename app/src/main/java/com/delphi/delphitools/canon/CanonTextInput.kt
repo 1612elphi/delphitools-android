@@ -5,9 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentPaste
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,6 +18,7 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -73,13 +71,13 @@ fun CanonTextInput(
             label = label,
         )
         CanonGrid {
-            CanonButton("Paste", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.ContentPaste) {
+            CanonButton("Paste", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_clipboard)) {
                 scope.launch {
                     val clip = clipboard.getClipEntry()?.clipData ?: return@launch
                     if (clip.itemCount > 0) set(clip.getItemAt(0).coerceToText(context).toString())
                 }
             }
-            CanonButton("Clear", Modifier.weight(1f).fillMaxHeight(), enabled = text.isNotEmpty(), icon = Icons.Outlined.Delete) {
+            CanonButton("Clear", Modifier.weight(1f).fillMaxHeight(), enabled = text.isNotEmpty(), icon = pencil(R.drawable.pencil_trash_2)) {
                 set("")
             }
         }

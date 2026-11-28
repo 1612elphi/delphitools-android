@@ -5,6 +5,7 @@ import android.view.HapticFeedbackConstants
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import com.delphi.delphitools.R
 import kotlin.coroutines.cancellation.CancellationException
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -40,8 +41,6 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Keyboard
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -458,7 +457,7 @@ fun CanonMathField(
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
             CanonMathView(text.ifEmpty { placeholder }, size = size, variable = variable, alpha = if (text.isEmpty()) 0.35f else 1f)
         }
-        Icon(Icons.Outlined.Keyboard, contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(16.dp))
+        Icon(pencil(R.drawable.pencil_keyboard), contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(16.dp))
     }
     session?.let { keys ->
         MathSheet(text, variable, keys, centre, onValueChange) { final ->

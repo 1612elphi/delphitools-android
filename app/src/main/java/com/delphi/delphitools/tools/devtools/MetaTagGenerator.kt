@@ -1,5 +1,7 @@
 package com.delphi.delphitools.tools.devtools
 
+import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -23,9 +25,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -69,6 +68,7 @@ import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSegmented
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonTextArea
 import com.delphi.delphitools.canon.CanonTextCell
@@ -124,6 +124,10 @@ fun MetaTagGenerator(model: MetaTagGeneratorModel = viewModel()) {
     val c = LocalDelphiColours.current
     val f = model.fields
     val shown = model.shown
+    CanonSharedText {
+        model.fields = model.fields.copy(canonicalUrl = it)
+        model.shown = model.fields
+    }
     LaunchedEffect(f) {
         if (f.ogType != shown.ogType || f.twitterCard != shown.twitterCard) {
             model.shown = f
@@ -195,7 +199,7 @@ fun MetaTagGenerator(model: MetaTagGeneratorModel = viewModel()) {
 
     val action = CanonSection.of {
         CanonRows {
-            CanonButton("Copy", kind = CanonButtonKind.Primary, icon = Icons.Outlined.ContentCopy, oversized = true, flashesCopied = true) {
+            CanonButton("Copy", kind = CanonButtonKind.Primary, icon = pencil(R.drawable.pencil_copy), oversized = true, flashesCopied = true) {
                 context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("", html))
             }
         }
@@ -347,7 +351,7 @@ private fun PreviewImage(address: String, isLarge: Boolean, modifier: Modifier) 
         verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(Icons.Outlined.Image, null, tint = c.mutedForeground, modifier = Modifier.size(22.dp))
+        Icon(pencil(R.drawable.pencil_image), null, tint = c.mutedForeground, modifier = Modifier.size(22.dp))
         Text(label, style = imageLabel, color = c.mutedForeground, maxLines = 2, overflow = TextOverflow.MiddleEllipsis, textAlign = TextAlign.Center)
     }
 }

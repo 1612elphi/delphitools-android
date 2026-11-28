@@ -9,29 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.BugReport
-import androidx.compose.material.icons.rounded.CleaningServices
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.IosShare
-import androidx.compose.material.icons.rounded.MarkChatRead
-import androidx.compose.material.icons.rounded.North
-import androidx.compose.material.icons.rounded.NorthEast
-import androidx.compose.material.icons.rounded.NorthWest
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.Repeat
-import androidx.compose.material.icons.rounded.Shuffle
-import androidx.compose.material.icons.rounded.South
-import androidx.compose.material.icons.rounded.SouthEast
-import androidx.compose.material.icons.rounded.SouthWest
-import androidx.compose.material.icons.rounded.Stop
-import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material.icons.rounded.Circle
-import androidx.compose.material.icons.rounded.East
-import androidx.compose.material.icons.rounded.West
-import androidx.compose.material.icons.rounded.ZoomIn
-import androidx.compose.material.icons.rounded.ZoomOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -44,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonBar
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
@@ -66,6 +45,7 @@ import com.delphi.delphitools.canon.CanonToast
 import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.CanonValueLayout
 import com.delphi.delphitools.canon.CanonValueLine
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlin.math.roundToInt
 
@@ -97,7 +77,7 @@ private fun Rows() {
     CanonRows {
         CanonHeading("Rows")
         CanonRow("Plain") { CanonSwitch(plain) { plain = it } }
-        CanonRow("Detail and icon", detail = "Caption under title", icon = Icons.Rounded.BugReport) {
+        CanonRow("Detail and icon", detail = "Caption under title", icon = pencil(R.drawable.pencil_bug)) {
             CanonSwitch(detailed) { detailed = it }
         }
         CanonRow("No control")
@@ -151,7 +131,7 @@ private fun Rows() {
                 listOf("Top left", "Top", "Top right", "Left", "Centre", "Right", "Bottom left", "Bottom", "Bottom right"),
                 anchor,
                 columns = 3,
-                icons = with(Icons.Rounded) { listOf(NorthWest, North, NorthEast, West, Circle, East, SouthWest, South, SouthEast) },
+                icons = listOf(pencil(R.drawable.pencil_arrow_up_left), pencil(R.drawable.pencil_arrow_up), pencil(R.drawable.pencil_arrow_up_right), pencil(R.drawable.pencil_arrow_left), Icons.Rounded.Circle, pencil(R.drawable.pencil_arrow_right), pencil(R.drawable.pencil_arrow_down_left), pencil(R.drawable.pencil_arrow_down), pencil(R.drawable.pencil_arrow_down_right)),
             ) { anchor = it }
         }
         CanonRow("Actions", stacked = true) {
@@ -169,9 +149,9 @@ private fun Rows() {
         }
         CanonRow("Icon actions", detail = "3.60 – 6.00", flush = true) {
             CanonGrid(columns = null) {
-                CanonButton("", icon = Icons.Rounded.ZoomOut, contentDescription = "Zoom out") {}
-                CanonButton("", icon = Icons.Rounded.ZoomIn, contentDescription = "Zoom in") {}
-                CanonButton("", icon = Icons.Rounded.SwapHoriz, contentDescription = "Fit width") {}
+                CanonButton("", icon = pencil(R.drawable.pencil_zoom_out), contentDescription = "Zoom out") {}
+                CanonButton("", icon = pencil(R.drawable.pencil_zoom_in), contentDescription = "Zoom in") {}
+                CanonButton("", icon = pencil(R.drawable.pencil_arrow_left_right), contentDescription = "Fit width") {}
             }
         }
         CanonRow("Rules") {
@@ -191,31 +171,31 @@ private fun Classics() {
     var count by remember { mutableIntStateOf(0) }
     CanonRows {
         CanonHeading("Classics")
-        CanonButton("Generate", kind = CanonButtonKind.Primary, icon = Icons.Rounded.Refresh) {}
+        CanonButton("Generate", kind = CanonButtonKind.Primary, icon = pencil(R.drawable.pencil_rotate_cw)) {}
         CanonGrid {
-            CanonButton("Copy", Modifier.weight(1f).fillMaxHeight(), CanonButtonKind.Secondary, icon = Icons.Rounded.ContentCopy, flashesCopied = true) {}
-            CanonButton("Export", Modifier.weight(1f).fillMaxHeight(), CanonButtonKind.Primary, icon = Icons.Rounded.IosShare) {}
+            CanonButton("Copy", Modifier.weight(1f).fillMaxHeight(), CanonButtonKind.Secondary, icon = pencil(R.drawable.pencil_copy), flashesCopied = true) {}
+            CanonButton("Export", Modifier.weight(1f).fillMaxHeight(), CanonButtonKind.Primary, icon = pencil(R.drawable.pencil_share)) {}
         }
         CanonGrid(columns = null) {
-            CanonButton("Copy", kind = CanonButtonKind.Secondary, enabled = false, icon = Icons.Rounded.ContentCopy) {}
-            CanonButton("Export", kind = CanonButtonKind.Primary, enabled = false, icon = Icons.Rounded.IosShare) {}
+            CanonButton("Copy", kind = CanonButtonKind.Secondary, enabled = false, icon = pencil(R.drawable.pencil_copy)) {}
+            CanonButton("Export", kind = CanonButtonKind.Primary, enabled = false, icon = pencil(R.drawable.pencil_share)) {}
         }
-        CanonButton("Generate", kind = CanonButtonKind.Primary, icon = Icons.Rounded.Refresh, oversized = true) {}
+        CanonButton("Generate", kind = CanonButtonKind.Primary, icon = pencil(R.drawable.pencil_rotate_cw), oversized = true) {}
         CanonGrid(columns = null) {
-            CanonButton("Wipe", kind = CanonButtonKind.Secondary, icon = Icons.Rounded.CleaningServices, oversized = true) {}
-            CanonButton("Copy", kind = CanonButtonKind.Secondary, icon = Icons.Rounded.ContentCopy, oversized = true) {}
-            CanonButton("Export", kind = CanonButtonKind.Primary, icon = Icons.Rounded.IosShare, oversized = true) {}
-        }
-        CanonGrid(columns = null) {
-            CanonButton("Loop", kind = CanonButtonKind.Secondary, icon = Icons.Rounded.Repeat) {}
-            CanonButton("Play", kind = CanonButtonKind.Primary, icon = Icons.Rounded.PlayArrow) {}
-            CanonButton("Stop", kind = CanonButtonKind.Secondary, icon = Icons.Rounded.Stop) {}
-            CanonButton("Shuffle", kind = CanonButtonKind.Secondary, icon = Icons.Rounded.Shuffle) {}
-            CanonButton("Export", kind = CanonButtonKind.Secondary, icon = Icons.Rounded.IosShare) {}
-            CanonButton("Delete", kind = CanonButtonKind.Secondary, icon = Icons.Rounded.Delete) {}
+            CanonButton("Wipe", kind = CanonButtonKind.Secondary, icon = pencil(R.drawable.pencil_eraser), oversized = true) {}
+            CanonButton("Copy", kind = CanonButtonKind.Secondary, icon = pencil(R.drawable.pencil_copy), oversized = true) {}
+            CanonButton("Export", kind = CanonButtonKind.Primary, icon = pencil(R.drawable.pencil_share), oversized = true) {}
         }
         CanonGrid(columns = null) {
-            CanonButton("Toast", kind = CanonButtonKind.Secondary, icon = Icons.Rounded.MarkChatRead) {
+            CanonButton("Loop", kind = CanonButtonKind.Secondary, icon = pencil(R.drawable.pencil_repeat)) {}
+            CanonButton("Play", kind = CanonButtonKind.Primary, icon = pencil(R.drawable.pencil_play)) {}
+            CanonButton("Stop", kind = CanonButtonKind.Secondary, icon = pencil(R.drawable.pencil_square)) {}
+            CanonButton("Shuffle", kind = CanonButtonKind.Secondary, icon = pencil(R.drawable.pencil_shuffle)) {}
+            CanonButton("Export", kind = CanonButtonKind.Secondary, icon = pencil(R.drawable.pencil_share)) {}
+            CanonButton("Delete", kind = CanonButtonKind.Secondary, icon = pencil(R.drawable.pencil_trash_2)) {}
+        }
+        CanonGrid(columns = null) {
+            CanonButton("Toast", kind = CanonButtonKind.Secondary, icon = pencil(R.drawable.pencil_message_square)) {
                 CanonToast.show(view, "#3B82F6")
             }
             CanonButton("Held $count", kind = CanonButtonKind.Secondary, repeats = true) { count++ }

@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.modifiers.TextAutoSizeLayoutScope
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,6 +38,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import com.delphi.delphitools.ui.theme.DelphiMono
@@ -132,7 +131,7 @@ fun CanonValueLine(
         )
     }
     val glyph: @Composable () -> Unit = {
-        if (value != null) Icon(Icons.Rounded.ContentCopy, null, tint = c.mutedForeground, modifier = Modifier.size(12.dp))
+        if (value != null) Icon(pencil(R.drawable.pencil_copy), null, tint = c.mutedForeground, modifier = Modifier.size(12.dp))
     }
     val (gap, inset, minHeight) = when (layout) {
         CanonValueLayout.Beside -> Triple(8.dp, 0.dp, CanonMetrics.controlHeight)

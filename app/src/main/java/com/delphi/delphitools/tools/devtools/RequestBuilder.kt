@@ -13,9 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.RemoveCircleOutline
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -53,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonCodeBlock
@@ -62,12 +60,14 @@ import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSegmented
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonTextArea
 import com.delphi.delphitools.canon.CanonTextCell
 import com.delphi.delphitools.canon.CanonValueLayout
 import com.delphi.delphitools.canon.CanonValueLine
 import com.delphi.delphitools.canon.LocalCanonCanvas
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiFont
@@ -115,6 +115,11 @@ class RequestBuilderModel : ViewModel() {
         typed()
     }
 
+    fun takeUrl(text: String) {
+        url = text
+        refresh()
+    }
+
     fun typeBody(text: String) {
         body = text
         typed()
@@ -155,6 +160,7 @@ private val noAutocorrect = KeyboardOptions(capitalization = KeyboardCapitalizat
 // ponytail: a body pasted as one very long line can pass the layout size limit in the code blocks; iOS has no cap either
 @Composable
 fun RequestBuilder(model: RequestBuilderModel = viewModel()) {
+    CanonSharedText(model::takeUrl)
     val spec = model.spec
     val wire = remember(spec) { RequestBuilderEngine.toHttp(spec) }
     val curl = remember(spec) { RequestBuilderEngine.toCurl(spec) }
@@ -245,13 +251,13 @@ private fun PairList(rows: MutableList<PairRow>, keyPlaceholder: String, model: 
                     CanonButton(
                         "",
                         Modifier.width(CanonMetrics.controlHeight).fillMaxHeight(),
-                        icon = Icons.Outlined.RemoveCircleOutline,
+                        icon = pencil(R.drawable.pencil_square_minus),
                         contentDescription = "Remove",
                     ) { model.remove(rows, row) }
                 }
             }
         }
-        CanonButton("Add", Modifier.fillMaxWidth().height(CanonMetrics.controlHeight), icon = Icons.Outlined.Add) { model.add(rows) }
+        CanonButton("Add", Modifier.fillMaxWidth().height(CanonMetrics.controlHeight), icon = pencil(R.drawable.pencil_plus)) { model.add(rows) }
     }
 }
 

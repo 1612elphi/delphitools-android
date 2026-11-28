@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.TouchApp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -61,9 +59,11 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonFigure
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.LocalCanonCanvas
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiColours
 import com.delphi.delphitools.ui.theme.DelphiMono
@@ -315,7 +315,7 @@ fun PrintSheetView(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (hint != null) {
-                    Icon(Icons.Outlined.TouchApp, null, tint = c.mutedForeground, modifier = Modifier.size(14.dp))
+                    Icon(pencil(R.drawable.pencil_pointer), null, tint = c.mutedForeground, modifier = Modifier.size(14.dp))
                     Text(" $hint", style = CanonText.captionSemibold, color = c.mutedForeground, textAlign = TextAlign.Center)
                 }
             }

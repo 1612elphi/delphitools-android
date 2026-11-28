@@ -14,9 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.SubdirectoryArrowLeft
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -79,6 +77,7 @@ import com.delphi.delphitools.canon.math.CanonMathKey
 import com.delphi.delphitools.canon.math.CanonMathNode
 import com.delphi.delphitools.canon.math.CanonMathRow
 import com.delphi.delphitools.canon.mathInk
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import com.delphi.delphitools.ui.theme.DelphiMono
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -309,14 +308,14 @@ fun AlgebraCalc(model: AlgebraCalcModel = viewModel()) {
                     "Use as input",
                     kind = CanonButtonKind.Secondary,
                     enabled = result != null && !isSolve,
-                    icon = Icons.Outlined.SubdirectoryArrowLeft,
+                    icon = pencil(R.drawable.pencil_corner_left_up),
                     onClick = model::useAsInput,
                 )
                 CanonButton(
                     "Copy",
                     kind = CanonButtonKind.Primary,
                     enabled = result != null,
-                    icon = Icons.Rounded.ContentCopy,
+                    icon = pencil(R.drawable.pencil_copy),
                     oversized = true,
                     flashesCopied = true,
                 ) {

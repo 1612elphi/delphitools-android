@@ -1,5 +1,7 @@
 package com.delphi.delphitools.tools.typography
 
+import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -16,13 +18,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.ContentPaste
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.ExpandLess
-import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -54,6 +49,7 @@ import com.delphi.delphitools.canon.CanonHeading
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonTextArea
 import com.delphi.delphitools.canon.CanonTile
@@ -145,6 +141,7 @@ fun WordCounter(model: WordCounterModel = viewModel()) {
     val context = LocalContext.current
     val clipboard = context.getSystemService(ClipboardManager::class.java)
     val picker = rememberCanonTextFilePicker(arrayOf("text/plain"), model::set)
+    CanonSharedText(model::set)
     val stats = model.stats
     val isEmpty = stats.text.isEmpty()
     val top = model.top
@@ -154,17 +151,17 @@ fun WordCounter(model: WordCounterModel = viewModel()) {
         CanonRows {
             CanonTextArea(model.text, model::type, placeholder = "Paste or type text here…", height = 320.dp, label = "Text")
             CanonGrid {
-                CanonButton("Paste", Modifier.weight(1f), icon = Icons.Outlined.ContentPaste) {
+                CanonButton("Paste", Modifier.weight(1f), icon = pencil(R.drawable.pencil_clipboard)) {
                     clipboard?.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(context)?.let { model.set(it.toString()) }
                 }
-                CanonButton("Files", Modifier.weight(1f), icon = Icons.Outlined.Folder) { picker.open() }
-                CanonButton("Clear", Modifier.weight(1f), enabled = !isEmpty, icon = Icons.Outlined.Delete) { model.set("") }
+                CanonButton("Files", Modifier.weight(1f), icon = pencil(R.drawable.pencil_folder)) { picker.open() }
+                CanonButton("Clear", Modifier.weight(1f), enabled = !isEmpty, icon = pencil(R.drawable.pencil_trash_2)) { model.set("") }
             }
             CanonButton(
                 "Copy Stats",
                 kind = CanonButtonKind.Primary,
                 enabled = !isEmpty,
-                icon = Icons.Outlined.ContentCopy,
+                icon = pencil(R.drawable.pencil_copy),
                 oversized = true,
                 flashesCopied = true,
             ) { clipboard?.setPrimaryClip(ClipData.newPlainText("", model.report)) }
@@ -201,7 +198,7 @@ fun WordCounter(model: WordCounterModel = viewModel()) {
             if (top.size > FOLDED) {
                 CanonButton(
                     if (model.unfolded) "Show fewer" else "Show more",
-                    icon = if (model.unfolded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                    icon = if (model.unfolded) pencil(R.drawable.pencil_chevron_up) else pencil(R.drawable.pencil_chevron_down),
                     onClick = model::toggle,
                 )
             }

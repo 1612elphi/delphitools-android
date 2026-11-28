@@ -1,5 +1,6 @@
 package com.delphi.delphitools.canon
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,11 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.RadioButtonChecked
-import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +28,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -145,13 +140,13 @@ private fun TimecodeText(shape: String, blank: Boolean, modifier: Modifier, size
     }
 }
 
-enum class CanonLamp(internal val icon: ImageVector) {
-    Play(Icons.Filled.PlayArrow),
-    Pause(Icons.Filled.Pause),
-    Loop(Icons.Filled.Repeat),
+enum class CanonLamp(@DrawableRes internal val icon: Int) {
+    Play(R.drawable.pencil_play),
+    Pause(R.drawable.pencil_pause),
+    Loop(R.drawable.pencil_repeat),
 
     /** Lit in red. */
-    Record(Icons.Filled.RadioButtonChecked);
+    Record(R.drawable.pencil_circle_dot);
 
     companion object {
         val transport = listOf(Play, Pause, Loop)
@@ -183,7 +178,7 @@ fun CanonLamps(
             Box(Modifier.size(20.dp)) {
                 if (on) {
                     Icon(
-                        lamp.icon,
+                        pencil(lamp.icon),
                         contentDescription = null,
                         tint = colour.copy(alpha = 0.6f),
                         // no blur below API 31
@@ -191,7 +186,7 @@ fun CanonLamps(
                     )
                 }
                 Icon(
-                    lamp.icon,
+                    pencil(lamp.icon),
                     contentDescription = null,
                     tint = if (on) colour else c.mutedForeground.copy(alpha = 0.3f),
                     modifier = Modifier.fillMaxSize(),

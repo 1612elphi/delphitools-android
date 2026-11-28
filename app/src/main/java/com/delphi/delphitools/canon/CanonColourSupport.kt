@@ -1,5 +1,6 @@
 package com.delphi.delphitools.canon
 
+import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
@@ -35,19 +36,19 @@ private object ColourNamesAsset {
 }
 
 /** The nearest-name table from assets/colour-names.json, read once; null where the asset is missing. */
+internal fun colourNames(context: Context): ColourNames? = ColourNamesAsset.names ?: runCatching {
+    val entries = JSONArray(context.assets.open("colour-names.json").bufferedReader().use { it.readText() })
+    ColourNames(
+        (0 until entries.length()).map {
+            val entry = entries.getJSONObject(it)
+            entry.getString("name") to entry.getString("hex").removePrefix("#").toInt(16)
+        },
+    )
+}.getOrNull()?.also { ColourNamesAsset.names = it }
+
 @Composable
 internal fun colourNamesOrNull(): ColourNames? {
     val context = LocalContext.current
-    return remember {
-        ColourNamesAsset.names ?: runCatching {
-            val entries = JSONArray(context.assets.open("colour-names.json").bufferedReader().use { it.readText() })
-            ColourNames(
-                (0 until entries.length()).map {
-                    val entry = entries.getJSONObject(it)
-                    entry.getString("name") to entry.getString("hex").removePrefix("#").toInt(16)
-                },
-            )
-        }.getOrNull()?.also { ColourNamesAsset.names = it }
-    }
+    return remember { colourNames(context) }
 }
 

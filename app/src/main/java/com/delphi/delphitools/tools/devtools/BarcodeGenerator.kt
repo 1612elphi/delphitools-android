@@ -6,10 +6,6 @@ import android.content.Context
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.ViewWeek
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -31,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -49,6 +46,7 @@ import com.delphi.delphitools.canon.CanonTextCell
 import com.delphi.delphitools.canon.CanonTile
 import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.CanonTone
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.colour.contrastFigure
 import com.delphi.delphitools.colour.contrastRatio
@@ -264,10 +262,10 @@ fun BarcodeGenerator(model: BarcodeGeneratorModel = viewModel()) {
             CanonHeading("Format")
             CanonSegmented(listOf("PNG", "SVG"), if (model.svg) 1 else 0, Modifier.semantics { contentDescription = "Format" }) { model.svg = it == 1 }
             CanonGrid {
-                CanonButton("Copy", Modifier.weight(1f).fillMaxHeight(), enabled = sheet != null, icon = Icons.Outlined.ContentCopy, flashesCopied = true) {
+                CanonButton("Copy", Modifier.weight(1f).fillMaxHeight(), enabled = sheet != null, icon = pencil(R.drawable.pencil_copy), flashesCopied = true) {
                     model.copy(context)
                 }
-                CanonButton("Export", Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Primary, enabled = sheet != null, icon = Icons.Outlined.Share, oversized = true) {
+                CanonButton("Export", Modifier.weight(1f).fillMaxHeight(), kind = CanonButtonKind.Primary, enabled = sheet != null, icon = pencil(R.drawable.pencil_share), oversized = true) {
                     model.export(context)
                 }
             }
@@ -275,7 +273,7 @@ fun BarcodeGenerator(model: BarcodeGeneratorModel = viewModel()) {
     }
 
     val canvas = CanonSection.canvas(CanonCanvasSize.Aspect(1f), background = c.card, maxHeight = 520.dp) {
-        CodeSheetPicture(sheet, kind.label, model.pixels, Icons.Outlined.ViewWeek, if (sheet == null) null else model.shownText)
+        CodeSheetPicture(sheet, kind.label, model.pixels, pencil(R.drawable.pencil_barcode), if (sheet == null) null else model.shownText)
     }
 
     CanonSplit(sidebar = listOf(canvas), main = listOf(contentBlock, lookBlock, outputBlock), halves = true, collapsesTo = 240.dp)

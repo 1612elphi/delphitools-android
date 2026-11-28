@@ -20,13 +20,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.ClosedCaption
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.GraphicEq
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,6 +43,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonBar
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
@@ -69,6 +63,7 @@ import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonStatusRow
 import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.LocalCanonCanvas
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -348,7 +343,7 @@ fun AutoSubtitle(model: AutoSubtitleModel = viewModel()) {
             if (!loaded) {
                 CanonDropZone(
                     "Drop an audio or video file",
-                    icon = Icons.Outlined.GraphicEq,
+                    icon = pencil(R.drawable.pencil_audio_waveform),
                     mimeTypes = arrayOf("audio/*", "video/*"),
                     photos = PickVisualMedia.VideoOnly,
                     paste = false,
@@ -409,7 +404,7 @@ fun AutoSubtitle(model: AutoSubtitleModel = viewModel()) {
                 "Transcribe",
                 kind = CanonButtonKind.Primary,
                 enabled = model.canRun,
-                icon = Icons.Outlined.ClosedCaption,
+                icon = pencil(R.drawable.pencil_captions),
                 oversized = true,
             ) {
                 if (model.usesWhisper) model.run()
@@ -418,7 +413,7 @@ fun AutoSubtitle(model: AutoSubtitleModel = viewModel()) {
             }
             val failure = if (model.usesWhisper || model.available) model.problem else TranscribeFailure.Unavailable
             if (failure != null) CanonStatusRow(failure.message, CanonTone.Warn)
-            CanonButton("Download models…", enabled = !busy, icon = Icons.Outlined.ChevronRight) { showModels = true }
+            CanonButton("Download models…", enabled = !busy, icon = pencil(R.drawable.pencil_chevron_right)) { showModels = true }
         }
     }
 
@@ -433,7 +428,7 @@ fun AutoSubtitle(model: AutoSubtitleModel = viewModel()) {
                     }
                 }
                 if (model.progress > 0) CanonBar(model.progress, Modifier.fillMaxWidth().height(3.dp))
-                CanonButton("Cancel", icon = Icons.Outlined.Close, onClick = model::cancel)
+                CanonButton("Cancel", icon = pencil(R.drawable.pencil_x), onClick = model::cancel)
                 return@CanonRows
             }
             CanonRow(model.stats.ifEmpty { " " })
@@ -444,10 +439,10 @@ fun AutoSubtitle(model: AutoSubtitleModel = viewModel()) {
             }
             CanonGrid {
                 val cell = Modifier.weight(1f).fillMaxHeight()
-                CanonButton("Copy", cell, enabled = cues.isNotEmpty(), icon = Icons.Outlined.ContentCopy, flashesCopied = true, contentDescription = "Copy subtitles") {
+                CanonButton("Copy", cell, enabled = cues.isNotEmpty(), icon = pencil(R.drawable.pencil_copy), flashesCopied = true, contentDescription = "Copy subtitles") {
                     context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("", model.output))
                 }
-                CanonButton("Export", cell, kind = CanonButtonKind.Primary, enabled = cues.isNotEmpty(), icon = Icons.Outlined.Share) { model.export(context) }
+                CanonButton("Export", cell, kind = CanonButtonKind.Primary, enabled = cues.isNotEmpty(), icon = pencil(R.drawable.pencil_share)) { model.export(context) }
             }
         }
     }

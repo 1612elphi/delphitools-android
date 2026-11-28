@@ -1,5 +1,7 @@
 package com.delphi.delphitools.tools.devtools
 
+import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -22,8 +24,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -66,6 +66,7 @@ import com.delphi.delphitools.canon.CanonHeading
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonStatusRow
 import com.delphi.delphitools.canon.CanonTextInput
@@ -162,6 +163,10 @@ private fun counted(count: Int) = String.format("%,d", count)
 
 @Composable
 fun RegexTester(model: RegexTesterModel = viewModel()) {
+    CanonSharedText {
+        model.input = it
+        model.refresh()
+    }
     val view = LocalView.current
     val math = canonMathInks()
     val inks = listOf(math.blue, math.clay, math.green, math.yellow)
@@ -280,7 +285,7 @@ private fun PatternRow(pattern: String, flags: String, onType: (String) -> Unit,
         CanonButton(
             "",
             Modifier.padding(start = CanonMetrics.hairline).fillMaxHeight(),
-            icon = Icons.Outlined.ContentCopy,
+            icon = pencil(R.drawable.pencil_copy),
             contentDescription = "Copy Pattern",
             onClick = onCopy,
         )

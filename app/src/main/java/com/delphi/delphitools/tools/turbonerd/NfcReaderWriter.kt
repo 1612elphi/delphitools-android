@@ -15,11 +15,6 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Contactless
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Nfc
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -56,6 +51,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -81,6 +77,7 @@ import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.CanonValueLayout
 import com.delphi.delphitools.canon.CanonValueLine
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.canon.rememberCanonGlyphFlowState
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import com.delphi.delphitools.ui.theme.DelphiColours
@@ -353,9 +350,9 @@ fun NfcReaderWriter(model: NfcReaderWriterModel = viewModel()) {
                 },
                 kind = CanonButtonKind.Primary,
                 icon = when {
-                    scanning -> Icons.Outlined.Close
-                    reading -> Icons.Outlined.Nfc
-                    else -> Icons.Outlined.Contactless
+                    scanning -> pencil(R.drawable.pencil_x)
+                    reading -> pencil(R.drawable.pencil_audio_lines)
+                    else -> pencil(R.drawable.pencil_audio_lines)
                 },
                 oversized = true,
                 enabled = model.available,
@@ -382,7 +379,7 @@ fun NfcReaderWriter(model: NfcReaderWriterModel = viewModel()) {
             if (shown.size > 1) {
                 val all = shown.joinToString("\n") { "${it.typeDescription}: ${it.payload}" }
                 CanonGrid {
-                    CanonButton("Copy all", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.ContentCopy) { CanonCopyFeedback.copy(view, all) }
+                    CanonButton("Copy all", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_copy)) { CanonCopyFeedback.copy(view, all) }
                 }
             }
         }

@@ -3,8 +3,6 @@ package com.delphi.delphitools.tools.audiovideo
 import android.app.Application
 import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonCanvasBoxing
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonGrid
@@ -27,6 +26,7 @@ import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.canonSmpte
+import com.delphi.delphitools.canon.pencil
 import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.math.max
@@ -134,7 +134,7 @@ fun VideoMuter(model: VideoMuterModel = viewModel()) {
             AVEditJobPanel(
                 job,
                 "Mute",
-                Icons.AutoMirrored.Outlined.VolumeOff,
+                pencil(R.drawable.pencil_volume_x),
                 "Couldn't copy video tracks",
                 enabled = (tracks ?: 0) > 0,
                 onStart = model::mute,

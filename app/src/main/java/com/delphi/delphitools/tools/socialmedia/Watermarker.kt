@@ -16,17 +16,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.rounded.Circle
-import androidx.compose.material.icons.rounded.East
-import androidx.compose.material.icons.rounded.North
-import androidx.compose.material.icons.rounded.NorthEast
-import androidx.compose.material.icons.rounded.NorthWest
-import androidx.compose.material.icons.rounded.South
-import androidx.compose.material.icons.rounded.SouthEast
-import androidx.compose.material.icons.rounded.SouthWest
-import androidx.compose.material.icons.rounded.West
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -58,6 +48,7 @@ import androidx.core.graphics.withSave
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -76,6 +67,7 @@ import com.delphi.delphitools.canon.CanonSwitch
 import com.delphi.delphitools.canon.CanonTextCell
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonDisplayName
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.colour.Rgb
 import com.delphi.delphitools.colour.toArgb
 import com.delphi.delphitools.tools.FileExport
@@ -97,7 +89,7 @@ private const val TILE_GAP = 60f
 private val markSide = 7.dp
 private val markStroke = 1.5.dp
 
-private val positionIcons = with(Icons.Rounded) { listOf(NorthWest, North, NorthEast, West, Circle, East, SouthWest, South, SouthEast) }
+private val positionIcons @Composable get() = listOf(pencil(R.drawable.pencil_arrow_up_left), pencil(R.drawable.pencil_arrow_up), pencil(R.drawable.pencil_arrow_up_right), pencil(R.drawable.pencil_arrow_left), Icons.Rounded.Circle, pencil(R.drawable.pencil_arrow_right), pencil(R.drawable.pencil_arrow_down_left), pencil(R.drawable.pencil_arrow_down), pencil(R.drawable.pencil_arrow_down_right))
 
 private class WatermarkSettings(
     val kind: WatermarkKind,
@@ -332,7 +324,7 @@ fun Watermarker(model: WatermarkerModel = viewModel()) {
                 CanonDropZone("Drop an image to watermark", onFiles = { uris -> uris.firstOrNull()?.let(model::load) })
             } else {
                 CanonRow(model.sourceName, detail = model.sourceDetail, flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
             }
         }
@@ -366,7 +358,7 @@ fun Watermarker(model: WatermarkerModel = viewModel()) {
                 CanonDropZone("Drop a watermark image", onFiles = { uris -> uris.firstOrNull()?.let(model::loadStamp) })
             } else {
                 CanonRow(model.stampName, detail = model.stampDetail, flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clearStamp)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clearStamp)
                 }
             }
             CanonRow("Opacity", flush = true) {
@@ -398,7 +390,7 @@ fun Watermarker(model: WatermarkerModel = viewModel()) {
                 "Export Image",
                 kind = CanonButtonKind.Primary,
                 enabled = model.result != null,
-                icon = Icons.Outlined.Share,
+                icon = pencil(R.drawable.pencil_share),
                 oversized = true,
             ) { model.export(context) }
         }

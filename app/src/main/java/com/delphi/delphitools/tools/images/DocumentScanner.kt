@@ -17,16 +17,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.RotateLeft
-import androidx.compose.material.icons.automirrored.outlined.RotateRight
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Crop
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.DocumentScanner
-import androidx.compose.material.icons.outlined.FileCopy
-import androidx.compose.material.icons.outlined.PictureAsPdf
-import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -62,6 +52,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -86,6 +77,7 @@ import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonGrabPan
 import com.delphi.delphitools.canon.canonPlaced
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.tools.pdf.PdfDocuments
 import com.delphi.delphitools.tools.pdf.PdfImageDocument
@@ -403,14 +395,14 @@ fun DocumentScanner(model: DocumentScannerModel = viewModel()) {
     val input = CanonSection.of {
         CanonRows {
             CanonHeading("Source")
-            CanonButton("Scan", kind = CanonButtonKind.Primary, enabled = hasCamera && !busy, icon = Icons.Outlined.DocumentScanner, oversized = true) {
+            CanonButton("Scan", kind = CanonButtonKind.Primary, enabled = hasCamera && !busy, icon = pencil(R.drawable.pencil_scan_line), oversized = true) {
                 launchCamera()
             }
             if (!hasCamera) CanonStatusRow("No camera", CanonTone.Muted)
             if (denied) CanonStatusRow("Camera access denied", CanonTone.Warn)
             CanonDropZone(
                 "Drop images here",
-                icon = Icons.Outlined.FileCopy,
+                icon = pencil(R.drawable.pencil_copy),
                 photos = PickVisualMedia.ImageOnly,
                 multiple = true,
                 paste = false,
@@ -419,7 +411,7 @@ fun DocumentScanner(model: DocumentScannerModel = viewModel()) {
             if (model.unreadable) CanonStatusRow("That file can't be read as an image", CanonTone.Warn)
             if (has) {
                 CanonGrid {
-                    CanonButton("Clear", Modifier.weight(1f).fillMaxHeight(), icon = Icons.Outlined.Delete, enabled = !busy, onClick = model::clearAll)
+                    CanonButton("Clear", Modifier.weight(1f).fillMaxHeight(), icon = pencil(R.drawable.pencil_trash_2), enabled = !busy, onClick = model::clearAll)
                 }
             }
         }
@@ -431,8 +423,8 @@ fun DocumentScanner(model: DocumentScannerModel = viewModel()) {
             CanonGrid {
                 val cell = Modifier.weight(1f).fillMaxHeight()
                 val enabled = page != null && !busy
-                CanonButton("Rotate left", cell, enabled = enabled, icon = Icons.AutoMirrored.Outlined.RotateLeft) { model.rotate(false) }
-                CanonButton("Rotate right", cell, enabled = enabled, icon = Icons.AutoMirrored.Outlined.RotateRight) { model.rotate(true) }
+                CanonButton("Rotate left", cell, enabled = enabled, icon = pencil(R.drawable.pencil_rotate_ccw)) { model.rotate(false) }
+                CanonButton("Rotate right", cell, enabled = enabled, icon = pencil(R.drawable.pencil_rotate_cw)) { model.rotate(true) }
             }
             CanonRow("Corners", flush = true) {
                 CanonGrid {
@@ -442,9 +434,9 @@ fun DocumentScanner(model: DocumentScannerModel = viewModel()) {
                         cell,
                         selected = model.editing,
                         enabled = page != null && !busy,
-                        icon = if (model.editing) Icons.Outlined.Check else Icons.Outlined.Crop,
+                        icon = if (model.editing) pencil(R.drawable.pencil_check) else pencil(R.drawable.pencil_crop),
                     ) { model.editing = !model.editing }
-                    CanonButton("Reset", cell, enabled = page != null && !busy, icon = Icons.Rounded.RestartAlt, onClick = model::resetCorners)
+                    CanonButton("Reset", cell, enabled = page != null && !busy, icon = pencil(R.drawable.pencil_rotate_ccw), onClick = model::resetCorners)
                 }
             }
             if (page != null && !ImageDeskewEngine.isConvex(page.quad)) CanonStatusRow("Don't let the streams cross!", CanonTone.Warn)
@@ -470,7 +462,7 @@ fun DocumentScanner(model: DocumentScannerModel = viewModel()) {
     val pdf = CanonSection.of {
         CanonRows {
             CanonHeading("PDF")
-            PdfJobPanel(model.job, "Export PDF", Icons.Outlined.PictureAsPdf, "Build failed", enabled = has && !model.processing, onStart = model::exportPdf)
+            PdfJobPanel(model.job, "Export PDF", pencil(R.drawable.pencil_file_image), "Build failed", enabled = has && !model.processing, onStart = model::exportPdf)
         }
     }
 
@@ -513,7 +505,7 @@ private fun ScanPicture(image: ImageBitmap?, pixels: IntSize?) {
         if (image == null && pixels == null) {
             val side = 44.dp
             Icon(
-                Icons.Outlined.DocumentScanner,
+                pencil(R.drawable.pencil_scan_line),
                 null,
                 tint = c.mutedForeground.copy(alpha = 0.5f),
                 modifier = Modifier.canonPlaced(CanonDimensionPlacement(frame.center, with(density) { Size(side.toPx(), side.toPx()) })),

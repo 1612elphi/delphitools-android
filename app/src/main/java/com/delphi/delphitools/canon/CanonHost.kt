@@ -16,8 +16,14 @@ object CanonHost {
     /** True on a workflow leg whose exports are handed to the next leg. Reads Compose state. */
     var capturesFiles: () -> Boolean = { false }
 
-    /** An earlier leg's files for a drop zone of these MIME types; empty outside a workflow. */
+    /** Shared files, or an earlier workflow leg's, for a drop zone of these MIME types. */
     var pendingFiles: (mimeTypes: Array<String>, multiple: Boolean) -> List<Uri> = { _, _ -> emptyList() }
+
+    /** Text or a web address shared to the app for the page now opening, handed once. */
+    var pendingText: () -> String? = { null }
+
+    /** set by [CanonPinnable] */
+    var pinnable by mutableStateOf<Pair<String, () -> Unit>?>(null)
 
     /** The open page's enabled pass-along buttons, primary ones first; the shell's Next presses the first. */
     val passers = mutableListOf<() -> Unit>()
@@ -48,4 +54,21 @@ fun CanonPassAlongWhenDone(enabled: Boolean, busy: Boolean, output: File?, faile
         passesWhenDone = false
         output?.takeIf { !failed }?.let(send)
     }
+}
+
+/** Offers a second thing to pin from the shell's pin button while composed: [label] names it beside the tool's own shortcut. */
+@Composable
+fun CanonPinnable(label: String, enabled: Boolean, pin: () -> Unit) {
+    val current by rememberUpdatedState(pin)
+    DisposableEffect(label, enabled) {
+        val entry = (label to { current() }).takeIf { enabled }
+        CanonHost.pinnable = entry
+        onDispose { if (CanonHost.pinnable === entry) CanonHost.pinnable = null }
+    }
+}
+
+/** dt-ios PendingToolData.consume: [take] gets text shared to the app for this page, once. */
+@Composable
+fun CanonSharedText(take: (String) -> Unit) {
+    LaunchedEffect(Unit) { CanonHost.pendingText()?.let(take) }
 }

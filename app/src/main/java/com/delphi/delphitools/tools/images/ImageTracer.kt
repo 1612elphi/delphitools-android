@@ -17,10 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Gesture
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -66,6 +63,7 @@ import com.delphi.delphitools.canon.CanonTiles
 import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonDisplayName
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.colour.rgbOf
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
@@ -341,7 +339,7 @@ fun ImageTracer(model: ImageTracerModel = viewModel()) {
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Icon(Icons.Outlined.Gesture, null, tint = c.mutedForeground, modifier = Modifier.size(34.dp))
+                        Icon(pencil(R.drawable.pencil_spline), null, tint = c.mutedForeground, modifier = Modifier.size(34.dp))
                         Text("Image", style = headline, color = c.mutedForeground)
                     }
                 }
@@ -368,7 +366,7 @@ fun ImageTracer(model: ImageTracerModel = viewModel()) {
                 CanonDropZone("Drop an image", onFiles = { uris -> uris.firstOrNull()?.let(model::load) })
             } else {
                 CanonRow(model.name, detail = "${pixels.first} × ${pixels.second}", flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
             }
         }
@@ -478,7 +476,7 @@ fun ImageTracer(model: ImageTracerModel = viewModel()) {
                         "Export",
                         Modifier.weight(1f).fillMaxHeight(),
                         kind = CanonButtonKind.Primary,
-                        icon = Icons.Outlined.Share,
+                        icon = pencil(R.drawable.pencil_share),
                         oversized = true,
                     ) { model.export(context) }
                 }

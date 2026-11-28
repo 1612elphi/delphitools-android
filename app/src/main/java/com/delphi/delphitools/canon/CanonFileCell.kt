@@ -15,9 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Folder
-import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,6 +30,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 
@@ -99,11 +97,11 @@ fun CanonFileCell(
             }
             if (photos != null) {
                 MenuCellPopup(menu, { menu = false }) {
-                    MenuCellItem("Photos", icon = Icons.Outlined.PhotoLibrary) {
+                    MenuCellItem("Photos", icon = pencil(R.drawable.pencil_images)) {
                         menu = false
                         media.launch(PickVisualMediaRequest(photos))
                     }
-                    MenuCellItem("Files", icon = Icons.Outlined.Folder) {
+                    MenuCellItem("Files", icon = pencil(R.drawable.pencil_folder)) {
                         menu = false
                         files.launch(mimeTypes)
                     }

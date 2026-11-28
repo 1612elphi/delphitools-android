@@ -5,8 +5,6 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
@@ -29,9 +27,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonSection
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiColours
 
@@ -67,8 +67,8 @@ internal fun rememberWorkflowTicket(): WorkflowTicket? {
     val word = remember(measurer) {
         measurer.measure("WORKFLOW", CanonText.caption.copy(fontWeight = FontWeight.Bold, letterSpacing = 2.2.sp))
     }
-    val arrow = rememberVectorPainter(Icons.AutoMirrored.Outlined.ArrowForward)
-    val legs = last[0].map { rememberVectorPainter(it.icon) }
+    val arrow = rememberVectorPainter(pencil(R.drawable.pencil_arrow_right))
+    val legs = last[0].map { rememberVectorPainter(pencil(it.icon)) }
     return remember(word, legs, arrow) { WorkflowTicket(shown, word, legs, arrow) }
 }
 
@@ -166,7 +166,7 @@ private fun PassButton(enabled: Boolean, followsWorkflow: Boolean, pass: () -> U
         "Pass along",
         kind = CanonButtonKind.Primary,
         enabled = enabled,
-        icon = Icons.AutoMirrored.Outlined.ArrowForward,
+        icon = pencil(R.drawable.pencil_arrow_right),
         oversized = true,
         followsWorkflow = followsWorkflow,
         onClick = pass,

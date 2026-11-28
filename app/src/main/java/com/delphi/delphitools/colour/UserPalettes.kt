@@ -21,7 +21,7 @@ data class CuratedPalette(val id: String, val name: String, val category: String
 }
 
 // dt-ios user_palettes.json format
-private const val PALETTES = "userPalettes"
+internal const val PALETTES = "userPalettes"
 
 /**
  * dt-ios UserPalettesStore: the saved palettes, kept in SharedPreferences `delphitools` under `userPalettes` as

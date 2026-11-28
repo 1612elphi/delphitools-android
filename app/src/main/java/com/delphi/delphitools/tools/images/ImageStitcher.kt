@@ -28,21 +28,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.ContentPaste
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Folder
-import androidx.compose.material.icons.outlined.PhotoLibrary
-import androidx.compose.material.icons.outlined.PushPin
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.ArrowDownward
-import androidx.compose.material.icons.rounded.ArrowUpward
-import androidx.compose.material.icons.rounded.PushPin
-import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -87,6 +72,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -116,6 +102,7 @@ import com.delphi.delphitools.canon.canonClickable
 import com.delphi.delphitools.canon.canonDimensionLines
 import com.delphi.delphitools.canon.canonDisplayName
 import com.delphi.delphitools.canon.canonPlaced
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.ui.theme.DelphiMono
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -431,7 +418,7 @@ fun ImageStitcher(model: ImageStitcherModel = viewModel()) {
                 val base = model.source(model.baseId)
                 if (model.root == null || base == null) drop()
                 else CanonRow(base.name, detail = "Base · ${pixelSize(base.width, base.height)}", flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
             } else if (model.batchIds.isEmpty()) {
                 drop()
@@ -471,9 +458,9 @@ fun ImageStitcher(model: ImageStitcherModel = viewModel()) {
                 drop()
                 CanonGrid {
                     val cellModifier = Modifier.weight(1f).fillMaxHeight()
-                    CanonButton("A–Z", cellModifier, icon = Icons.Rounded.ArrowDownward) { model.sort(true) }
-                    CanonButton("Z–A", cellModifier, icon = Icons.Rounded.ArrowUpward) { model.sort(false) }
-                    CanonButton("Clear", cellModifier, icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("A–Z", cellModifier, icon = pencil(R.drawable.pencil_arrow_down)) { model.sort(true) }
+                    CanonButton("Z–A", cellModifier, icon = pencil(R.drawable.pencil_arrow_up)) { model.sort(false) }
+                    CanonButton("Clear", cellModifier, icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
             }
         }
@@ -497,10 +484,10 @@ fun ImageStitcher(model: ImageStitcherModel = viewModel()) {
                         if (isBase) "Base" else "Make base",
                         cellModifier,
                         enabled = !isBase,
-                        icon = if (isBase) Icons.Rounded.PushPin else Icons.Outlined.PushPin,
+                        icon = if (isBase) pencil(R.drawable.pencil_pin) else pencil(R.drawable.pencil_pin),
                         onClick = model::setBase,
                     )
-                    CanonButton("Remove", cellModifier, icon = Icons.Outlined.Delete, onClick = model::removeSelected)
+                    CanonButton("Remove", cellModifier, icon = pencil(R.drawable.pencil_trash_2), onClick = model::removeSelected)
                 }
             }
         }
@@ -522,13 +509,13 @@ fun ImageStitcher(model: ImageStitcherModel = viewModel()) {
             CanonSegmented(listOf("PNG", "JPEG"), model.png) { model.png = it }
             CanonGrid {
                 val ready = layout != null && !model.exporting
-                CanonButton("Copy", Modifier.weight(1f).fillMaxHeight(), enabled = ready, icon = Icons.Outlined.ContentCopy, flashesCopied = true) { model.copy(context) }
+                CanonButton("Copy", Modifier.weight(1f).fillMaxHeight(), enabled = ready, icon = pencil(R.drawable.pencil_copy), flashesCopied = true) { model.copy(context) }
                 CanonButton(
                     "Export",
                     Modifier.weight(1f).fillMaxHeight(),
                     kind = CanonButtonKind.Primary,
                     enabled = ready,
-                    icon = Icons.Outlined.Share,
+                    icon = pencil(R.drawable.pencil_share),
                     oversized = true,
                 ) { model.export(context) }
             }
@@ -718,15 +705,15 @@ private fun StitcherPicture(model: ImageStitcherModel, layout: StitchLayout?, on
             val drop = dragDrop
             if (drop != null) {
                 val (zone, edge, symbol) = when (drop) {
-                    is StitchDrop.Swap -> Triple(frames.firstOrNull { it.first == drop.key }?.second, null, Icons.Rounded.SwapHoriz)
+                    is StitchDrop.Swap -> Triple(frames.firstOrNull { it.first == drop.key }?.second, null, pencil(R.drawable.pencil_arrow_left_right))
                     is StitchDrop.Place -> Triple(
                         frames.firstOrNull { it.first == drop.key }?.second?.let { ImageStitcherEngine.zone(drop.side, it, unit) },
                         drop.side,
                         when (drop.side) {
-                            StitchSide.Top -> Icons.Rounded.ArrowUpward
-                            StitchSide.Left -> Icons.AutoMirrored.Rounded.ArrowBack
-                            StitchSide.Right -> Icons.AutoMirrored.Rounded.ArrowForward
-                            StitchSide.Bottom -> Icons.Rounded.ArrowDownward
+                            StitchSide.Top -> pencil(R.drawable.pencil_arrow_up)
+                            StitchSide.Left -> pencil(R.drawable.pencil_arrow_left)
+                            StitchSide.Right -> pencil(R.drawable.pencil_arrow_right)
+                            StitchSide.Bottom -> pencil(R.drawable.pencil_arrow_down)
                         },
                     )
                 }
@@ -821,7 +808,7 @@ private fun StitchTile(op: StitchOp, picture: ImageBitmap?, target: Rect, number
                 if (number != null) {
                     Text("$number", style = TextStyle(fontFamily = DelphiMono, fontSize = 10.sp, fontWeight = FontWeight.SemiBold), color = c.foreground, maxLines = 1)
                 } else {
-                    Icon(Icons.Rounded.PushPin, contentDescription = null, tint = c.foreground, modifier = Modifier.size(10.dp))
+                    Icon(pencil(R.drawable.pencil_pin), contentDescription = null, tint = c.foreground, modifier = Modifier.size(10.dp))
                 }
             }
         }
@@ -866,12 +853,12 @@ private fun AddButton(style: AddStyle, rect: Rect, target: StitchTarget, onAdd: 
             AddStyle.Plain -> c.primary
             AddStyle.Filled -> c.primaryForeground
         }
-        Icon(Icons.Rounded.Add, contentDescription = null, tint = tint, modifier = Modifier.size(16.dp))
+        Icon(pencil(R.drawable.pencil_plus), contentDescription = null, tint = tint, modifier = Modifier.size(16.dp))
         MenuCellPopup(open, { open = false }) {
             val items: List<Triple<String, ImageVector, AddSource>> = listOf(
-                Triple("Photos", Icons.Outlined.PhotoLibrary, AddSource.Photos),
-                Triple("Files", Icons.Outlined.Folder, AddSource.Files),
-                Triple("Paste", Icons.Outlined.ContentPaste, AddSource.Paste),
+                Triple("Photos", pencil(R.drawable.pencil_images), AddSource.Photos),
+                Triple("Files", pencil(R.drawable.pencil_folder), AddSource.Files),
+                Triple("Paste", pencil(R.drawable.pencil_clipboard), AddSource.Paste),
             )
             for ((title, icon, source) in items) {
                 // ponytail: hidden, not greyed, with no image on the clipboard

@@ -1,5 +1,7 @@
 package com.delphi.delphitools.tools.images
 
+import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import android.app.Application
 import android.content.Context
@@ -24,10 +26,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -323,7 +321,7 @@ fun ImageConverter(model: ImageConverterModel = viewModel()) {
                 CanonDropZone("Drop an image", paste = false, onFiles = { uris -> uris.firstOrNull()?.let(model::load) })
             } else {
                 CanonRow(model.sourceName, detail = model.sourceDetail, flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
             }
         }
@@ -418,7 +416,7 @@ fun ImageConverter(model: ImageConverterModel = viewModel()) {
                             Modifier.weight(1f).fillMaxHeight(),
                             kind = CanonButtonKind.Secondary,
                             enabled = ready,
-                            icon = Icons.Rounded.ContentCopy,
+                            icon = pencil(R.drawable.pencil_copy),
                             flashesCopied = true,
                         ) { model.copy(context) }
                         CanonButton(
@@ -426,7 +424,7 @@ fun ImageConverter(model: ImageConverterModel = viewModel()) {
                             Modifier.weight(1f).fillMaxHeight(),
                             kind = CanonButtonKind.Primary,
                             enabled = ready,
-                            icon = Icons.Outlined.Share,
+                            icon = pencil(R.drawable.pencil_share),
                             oversized = true,
                         ) { model.export(context) }
                     }

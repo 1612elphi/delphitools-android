@@ -1,0 +1,12 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+	android:width="24dp"
+	android:height="24dp"
+	android:viewportWidth="24"
+	android:viewportHeight="24">
+	<path
+		android:pathData="M11.92 4.61 Q11.63 10.91 11.62 12.09 Q11.61 13.26 11.29 13.19 Q10.97 13.11 8.93 12.91 Q6.88 12.70 6.08 12.71 Q5.29 12.72 7.06 14.26 Q8.83 15.80 10.10 17.15 Q11.38 18.49 11.55 18.64 Q11.72 18.78 11.85 18.83 Q11.98 18.88 12.52 18.24 Q13.06 17.60 14.04 16.59 Q15.02 15.58 16.67 14.03 Q18.32 12.49 18.52 12.34 Q18.72 12.18 18.70 12.27 L18.69 12.36"
+		android:strokeColor="#FF000000"
+		android:strokeWidth="2"
+		android:strokeLineCap="round"
+		android:strokeLineJoin="round" />
+</vector>

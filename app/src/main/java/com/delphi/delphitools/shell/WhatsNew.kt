@@ -34,11 +34,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
-import androidx.compose.material.icons.outlined.Celebration
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -69,6 +64,7 @@ import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonGrid
 import com.delphi.delphitools.canon.CanonMetrics
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 import kotlinx.coroutines.CancellationException
@@ -193,7 +189,7 @@ fun WhatsNewSheet(onDismiss: () -> Unit) {
                         .semantics { contentDescription = "Close" },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Outlined.Close, contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(22.dp))
+                    Icon(pencil(R.drawable.pencil_x), contentDescription = null, tint = c.mutedForeground, modifier = Modifier.size(22.dp))
                 }
             }
             HorizontalPager(pager, Modifier.weight(1f).fillMaxWidth()) { WhatsNewSlide(WhatsNew.slides[it]) }
@@ -207,14 +203,14 @@ fun WhatsNewSheet(onDismiss: () -> Unit) {
                     CanonButton(
                         "Back",
                         kind = CanonButtonKind.Secondary,
-                        icon = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
+                        icon = pencil(R.drawable.pencil_chevron_left),
                         enabled = pager.currentPage > 0,
                     ) { show(pager.currentPage - 1) }
                     val isLast = pager.currentPage == last
                     CanonButton(
                         if (isLast) "Let’s go" else "Next",
                         kind = CanonButtonKind.Primary,
-                        icon = if (isLast) Icons.Outlined.Celebration else Icons.AutoMirrored.Outlined.ArrowForward,
+                        icon = if (isLast) pencil(R.drawable.pencil_party_popper) else pencil(R.drawable.pencil_arrow_right),
                     ) { if (isLast) leave() else show(pager.currentPage + 1) }
                 }
             }

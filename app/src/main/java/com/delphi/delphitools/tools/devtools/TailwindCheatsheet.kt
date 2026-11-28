@@ -21,10 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -64,6 +60,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasSize
 import com.delphi.delphitools.canon.CanonCopyFeedback
@@ -76,6 +73,7 @@ import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonTextCell
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.TYPING_DELAY_MS
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiMono
@@ -223,7 +221,7 @@ private fun SearchRow(field: String, count: Int, onType: (String) -> Unit, onCle
         Modifier.fillMaxWidth().heightIn(min = CanonMetrics.controlHeight).background(c.card).padding(start = CanonMetrics.panelPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(Icons.Rounded.Search, null, tint = c.mutedForeground, modifier = Modifier.size(16.dp))
+        Icon(pencil(R.drawable.pencil_search), null, tint = c.mutedForeground, modifier = Modifier.size(16.dp))
         CanonTextCell(
             field,
             onType,
@@ -232,7 +230,7 @@ private fun SearchRow(field: String, count: Int, onType: (String) -> Unit, onCle
             textStyle = searchMono,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, autoCorrectEnabled = false, imeAction = ImeAction.Search),
         )
-        if (field.isNotEmpty()) CanonButton("", icon = Icons.Filled.Cancel, contentDescription = "Clear", onClick = onClear)
+        if (field.isNotEmpty()) CanonButton("", icon = pencil(R.drawable.pencil_circle_x), contentDescription = "Clear", onClick = onClear)
     }
 }
 
@@ -279,7 +277,7 @@ private fun ClassRow(item: TailwindClass, category: String, isLit: Boolean, inks
         CanonButton(
             "",
             Modifier.padding(start = CanonMetrics.hairline).width(CanonMetrics.controlHeight + 8.dp).fillMaxHeight(),
-            icon = Icons.Outlined.ContentCopy,
+            icon = pencil(R.drawable.pencil_copy),
             contentDescription = "Copy",
         ) { CanonCopyFeedback.copy(view, item.name) }
     }
@@ -317,7 +315,7 @@ private fun ClassCard(
                 CanonButton(
                     "",
                     Modifier.width(CanonMetrics.controlHeight).fillMaxHeight(),
-                    icon = Icons.Outlined.ContentCopy,
+                    icon = pencil(R.drawable.pencil_copy),
                     contentDescription = "Copy",
                 ) { CanonCopyFeedback.copy(view, item.name) }
             }

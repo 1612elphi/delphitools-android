@@ -34,6 +34,7 @@ import com.delphi.delphitools.canon.CanonHeading
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSegmented
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonTextInput
 import com.delphi.delphitools.canon.CanonTextOutput
@@ -55,6 +56,10 @@ fun BrailleConverter() {
     var mode by rememberSaveable { mutableIntStateOf(0) }
     var text by rememberSaveable { mutableStateOf("") }
     var settled by rememberSaveable { mutableStateOf("") }
+    CanonSharedText {
+        text = it
+        settled = it
+    }
 
     val toText = mode == 2 || (mode == 0 && BrailleEngine.looksLikeBraille(settled))
     val converted = if (toText) BrailleEngine.fromBraille(settled) else BrailleEngine.toBraille(settled)

@@ -13,10 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ExpandLess
-import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonBar
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonCanvasSize
@@ -53,6 +50,7 @@ import com.delphi.delphitools.canon.CanonRow
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSegmented
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonStatusRow
 import com.delphi.delphitools.canon.CanonTextCell
@@ -60,6 +58,7 @@ import com.delphi.delphitools.canon.CanonTextInput
 import com.delphi.delphitools.canon.CanonTextOutput
 import com.delphi.delphitools.canon.CanonTone
 import com.delphi.delphitools.canon.canonClickable
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiFont
 import com.delphi.delphitools.ui.theme.DelphiMono
@@ -167,6 +166,7 @@ class CipherDecoderModel : ViewModel() {
 
 @Composable
 fun CipherDecoder(model: CipherDecoderModel = viewModel()) {
+    CanonSharedText(model::set)
     val text = model.input
     val cipher = model.cipher
     val params = model.params
@@ -266,7 +266,7 @@ fun CipherDecoder(model: CipherDecoderModel = viewModel()) {
         CanonRows {
             CanonButton(
                 "Cipher reference",
-                icon = if (model.referenceOpen) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                icon = if (model.referenceOpen) pencil(R.drawable.pencil_chevron_up) else pencil(R.drawable.pencil_chevron_down),
             ) { model.referenceOpen = !model.referenceOpen }
             if (model.referenceOpen) {
                 for ((title, entries) in reference) {
@@ -337,7 +337,7 @@ private fun CandidateRow(candidate: CipherCandidate, isLit: Boolean, onTweak: ((
             Text(candidate.output, style = candidateText, color = c.foreground, maxLines = 3, overflow = TextOverflow.Ellipsis)
         }
         if (onTweak != null) {
-            CanonButton("", Modifier.width(56.dp).fillMaxHeight(), icon = Icons.Outlined.Tune, contentDescription = "Tweak", onClick = onTweak)
+            CanonButton("", Modifier.width(56.dp).fillMaxHeight(), icon = pencil(R.drawable.pencil_sliders_horizontal), contentDescription = "Tweak", onClick = onTweak)
         }
     }
 }

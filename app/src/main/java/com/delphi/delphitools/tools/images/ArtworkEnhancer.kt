@@ -15,11 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.Autorenew
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasBoxing
@@ -63,6 +59,7 @@ import com.delphi.delphitools.canon.CanonSlider
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.LocalCanonCanvas
 import com.delphi.delphitools.canon.canonDisplayName
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.ui.theme.CanonText
 import com.delphi.delphitools.ui.theme.DelphiMono
@@ -221,7 +218,7 @@ fun ArtworkEnhancer(model: ArtworkEnhancerModel = viewModel()) {
                 CanonDropZone("Drop artwork to add noise overlay", paste = false, onFiles = { uris -> uris.firstOrNull()?.let(model::load) })
             } else {
                 CanonRow(model.name, detail = "${size.width} × ${size.height}", flush = true) {
-                    CanonButton("Clear", icon = Icons.Outlined.Delete, onClick = model::clear)
+                    CanonButton("Clear", icon = pencil(R.drawable.pencil_trash_2), onClick = model::clear)
                 }
             }
         }
@@ -251,7 +248,7 @@ fun ArtworkEnhancer(model: ArtworkEnhancerModel = viewModel()) {
             CanonSegmented((1..4).map { "$it×" }, model.noiseScale - 1) { model.changeScale(it + 1) }
             CanonGrid {
                 val cell = Modifier.weight(1f).fillMaxHeight()
-                CanonButton("Regenerate", cell, enabled = loaded, icon = Icons.Outlined.Autorenew) {
+                CanonButton("Regenerate", cell, enabled = loaded, icon = pencil(R.drawable.pencil_refresh_cw)) {
                     haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
                     model.regenerate()
                 }
@@ -260,7 +257,7 @@ fun ArtworkEnhancer(model: ArtworkEnhancerModel = viewModel()) {
                     cell,
                     kind = CanonButtonKind.Primary,
                     enabled = model.result != null && !model.exporting,
-                    icon = Icons.Outlined.Share,
+                    icon = pencil(R.drawable.pencil_share),
                     oversized = true,
                 ) { model.export(context) }
             }
@@ -286,7 +283,7 @@ private fun ArtworkFrame(aspect: IntSize?, caption: String? = null, content: @Co
             verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Icon(Icons.Outlined.AutoAwesome, null, tint = c.mutedForeground, modifier = Modifier.size(34.dp))
+            Icon(pencil(R.drawable.pencil_sparkles), null, tint = c.mutedForeground, modifier = Modifier.size(34.dp))
             Text("Original", style = CanonText.bodySemibold, color = c.mutedForeground)
         }
         return

@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
@@ -20,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonBigNumberField
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
@@ -43,6 +41,7 @@ import com.delphi.delphitools.canon.CanonTextInput
 import com.delphi.delphitools.canon.CanonTextOutput
 import com.delphi.delphitools.canon.CanonTile
 import com.delphi.delphitools.canon.CanonTiles
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.canon.rememberCanonTextFilePicker
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
 
@@ -142,7 +141,7 @@ fun FieldsGallery() {
         CanonRows {
             CanonHeading("Text input")
             CanonTextInput(input, { input = it }, { output = it.uppercase() })
-            CanonButton("Open", icon = Icons.Outlined.FileOpen, kind = CanonButtonKind.Secondary) { picker.open() }
+            CanonButton("Open", icon = pencil(R.drawable.pencil_folder), kind = CanonButtonKind.Secondary) { picker.open() }
         }
         CanonTextOutput(output, heading = picker.fileName ?: "Text output", fileName = "gallery.txt")
 
@@ -159,7 +158,7 @@ fun FieldsGallery() {
                 language = "copies the whole",
                 copyText = "<path d=\"M 0 0 L 12 0 L 12 4 Z\" />",
             )
-            CanonDropZone(DROP_PROMPT, icon = Icons.Outlined.Description, mimeTypes = arrayOf("*/*"), photos = null, multiple = true, paste = false, onFiles = {})
+            CanonDropZone(DROP_PROMPT, icon = pencil(R.drawable.pencil_file), mimeTypes = arrayOf("*/*"), photos = null, multiple = true, paste = false, onFiles = {})
         }
     }
 }

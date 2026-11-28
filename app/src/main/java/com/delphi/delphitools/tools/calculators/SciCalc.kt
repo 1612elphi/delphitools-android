@@ -23,12 +23,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Backspace
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.SubdirectoryArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -98,6 +92,7 @@ import com.delphi.delphitools.canon.SplitLayout
 import com.delphi.delphitools.canon.canonClickable
 import com.delphi.delphitools.canon.canonPress
 import com.delphi.delphitools.canon.mix
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.canon.rememberCanonPress
 import com.delphi.delphitools.canon.splitLayout
 import com.delphi.delphitools.ui.theme.CanonText
@@ -354,7 +349,7 @@ fun SciCalc(model: SciCalcModel = viewModel()) {
                 )
             }
             CanonGrid {
-                CanonButton("Clear", Modifier.weight(1f), icon = Icons.Rounded.Delete, onClick = model::clearHistory)
+                CanonButton("Clear", Modifier.weight(1f), icon = pencil(R.drawable.pencil_trash_2), onClick = model::clearHistory)
             }
         }
     }
@@ -371,8 +366,8 @@ fun SciCalc(model: SciCalcModel = viewModel()) {
             CanonGrid {
                 CanonButton("DEG", Modifier.weight(1f), kind = CanonButtonKind.Segment, selected = model.degrees) { press("DEG") }
                 CanonButton("RAD", Modifier.weight(1f), kind = CanonButtonKind.Segment, selected = !model.degrees) { press("RAD") }
-                if (stacked) CanonButton("History", Modifier.weight(1f), icon = Icons.Rounded.History) { showsHistory = true }
-                CanonButton("Copy", Modifier.weight(1f), enabled = model.readoutText != null, icon = Icons.Rounded.ContentCopy, flashesCopied = true) {
+                if (stacked) CanonButton("History", Modifier.weight(1f), icon = pencil(R.drawable.pencil_history)) { showsHistory = true }
+                CanonButton("Copy", Modifier.weight(1f), enabled = model.readoutText != null, icon = pencil(R.drawable.pencil_copy), flashesCopied = true) {
                     val text = model.readoutText ?: return@CanonButton
                     context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("", text))
                 }
@@ -699,7 +694,7 @@ private fun SciKey(id: String, onPress: (String) -> Unit) {
     ) {
         val scale = (maxHeight.value / TYPE_HEIGHT).coerceIn(0.85f, 1.5f)
         if (id == "⌫") {
-            Icon(Icons.AutoMirrored.Outlined.Backspace, contentDescription = null, tint = ink, modifier = Modifier.size((20 * scale).dp))
+            Icon(pencil(R.drawable.pencil_delete), contentDescription = null, tint = ink, modifier = Modifier.size((20 * scale).dp))
         } else {
             BasicText(
                 id,
@@ -750,11 +745,11 @@ private fun TapeRow(entry: SciEntry, onLoad: () -> Unit, onUse: () -> Unit) {
             )
         }
         MenuCellPopup(menu, { menu = false }) {
-            MenuCellItem("Copy", icon = Icons.Rounded.ContentCopy) {
+            MenuCellItem("Copy", icon = pencil(R.drawable.pencil_copy)) {
                 menu = false
                 context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("", entry.result))
             }
-            MenuCellItem("Use", icon = Icons.Rounded.SubdirectoryArrowRight) {
+            MenuCellItem("Use", icon = pencil(R.drawable.pencil_corner_down_right)) {
                 menu = false
                 onUse()
             }

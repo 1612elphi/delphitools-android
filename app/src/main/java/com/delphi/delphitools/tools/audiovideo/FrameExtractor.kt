@@ -17,13 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.CenterFocusStrong
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.GridOn
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.delphi.delphitools.R
 import com.delphi.delphitools.canon.CanonButton
 import com.delphi.delphitools.canon.CanonButtonKind
 import com.delphi.delphitools.canon.CanonCanvasBoxing
@@ -72,6 +66,7 @@ import com.delphi.delphitools.canon.MenuCellItem
 import com.delphi.delphitools.canon.MenuCellPopup
 import com.delphi.delphitools.canon.canonClickable
 import com.delphi.delphitools.canon.canonSmpte
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.tools.FileExport
 import com.delphi.delphitools.ui.theme.DelphiMono
 import com.delphi.delphitools.ui.theme.LocalDelphiColours
@@ -266,7 +261,7 @@ fun FrameExtractor(model: FrameExtractorModel = viewModel()) {
                 "Grab frame",
                 kind = CanonButtonKind.Primary,
                 enabled = ready && !model.grabbing && playback.ready,
-                icon = Icons.Outlined.CenterFocusStrong,
+                icon = pencil(R.drawable.pencil_scan),
                 oversized = true,
                 onClick = model::grab,
             )
@@ -281,7 +276,7 @@ fun FrameExtractor(model: FrameExtractorModel = viewModel()) {
                 CanonEmptyRow("None")
             } else {
                 StillGrid(stills, onShare = { avEditShare(context, it.file) }, onRemove = model::remove)
-                CanonButton("Share all", icon = Icons.Outlined.Share) {
+                CanonButton("Share all", icon = pencil(R.drawable.pencil_share)) {
                     FileExport.send(context, stills.map { it.file }, "image/png")
                 }
             }
@@ -303,7 +298,7 @@ fun FrameExtractor(model: FrameExtractorModel = viewModel()) {
             AVEditJobPanel(
                 sheetJob,
                 "Contact sheet",
-                Icons.Outlined.GridOn,
+                pencil(R.drawable.pencil_grid_3x3),
                 "Couldn't build the contact sheet.",
                 enabled = ready,
                 oversized = false,
@@ -356,7 +351,7 @@ fun FrameExtractor(model: FrameExtractorModel = viewModel()) {
                     "",
                     cell,
                     enabled = ready,
-                    icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                    icon = pencil(R.drawable.pencil_chevron_left),
                     repeats = true,
                     contentDescription = "Back one frame",
                 ) { playback.step(-1) }
@@ -365,7 +360,7 @@ fun FrameExtractor(model: FrameExtractorModel = viewModel()) {
                     "",
                     cell,
                     enabled = ready,
-                    icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    icon = pencil(R.drawable.pencil_chevron_right),
                     repeats = true,
                     contentDescription = "Forward one frame",
                 ) { playback.step(1) }
@@ -422,11 +417,11 @@ private fun StillCell(still: FrameStill, modifier: Modifier, onShare: (FrameStil
             )
         }
         MenuCellPopup(open, { open = false }) {
-            MenuCellItem("Share", icon = Icons.Outlined.Share) {
+            MenuCellItem("Share", icon = pencil(R.drawable.pencil_share)) {
                 open = false
                 onShare(still)
             }
-            MenuCellItem("Remove", icon = Icons.Outlined.Close) {
+            MenuCellItem("Remove", icon = pencil(R.drawable.pencil_x)) {
                 open = false
                 onRemove(still)
             }

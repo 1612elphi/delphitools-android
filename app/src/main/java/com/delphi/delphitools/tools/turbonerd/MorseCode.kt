@@ -4,24 +4,18 @@ import android.app.Activity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material.icons.automirrored.filled.Backspace
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.SpaceBar
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
+import com.delphi.delphitools.R
+import com.delphi.delphitools.canon.pencil
 import com.delphi.delphitools.ui.theme.CanonText
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.filled.Stop
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -70,6 +64,7 @@ import com.delphi.delphitools.canon.CanonReadoutRowHeight
 import com.delphi.delphitools.canon.CanonRows
 import com.delphi.delphitools.canon.CanonSection
 import com.delphi.delphitools.canon.CanonSegmented
+import com.delphi.delphitools.canon.CanonSharedText
 import com.delphi.delphitools.canon.CanonSlider
 import com.delphi.delphitools.canon.CanonSplit
 import com.delphi.delphitools.canon.CanonTextInput
@@ -146,6 +141,10 @@ private val COLLAPSED_STRIP = 70.dp
 
 @Composable
 fun MorseCode(model: MorseCodeModel = viewModel()) {
+    CanonSharedText {
+        model.text = it
+        model.settle(it)
+    }
     val player = model.player
     val activity = LocalContext.current as? Activity
     DisposableEffect(model) {
@@ -225,16 +224,16 @@ fun MorseCode(model: MorseCodeModel = viewModel()) {
             Column(verticalArrangement = Arrangement.spacedBy(CanonMetrics.hairline)) {
                 if (model.keying) MorseKeypad(model::press, canDelete = model.text.isNotEmpty())
                 CanonGrid {
-                    CanonButton("Loop", Modifier.weight(1f).fillMaxHeight(), selected = model.looping, icon = Icons.Filled.Repeat, onClick = model::toggleLoop)
+                    CanonButton("Loop", Modifier.weight(1f).fillMaxHeight(), selected = model.looping, icon = pencil(R.drawable.pencil_repeat), onClick = model::toggleLoop)
                     CanonButton(
                         if (running) "Pause" else "Play",
                         Modifier.weight(1f).fillMaxHeight(),
                         kind = CanonButtonKind.Primary,
                         enabled = MorseEngine.looksLikeMorse(morse),
-                        icon = if (running) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                        icon = if (running) pencil(R.drawable.pencil_pause) else pencil(R.drawable.pencil_play),
                         onClick = model::toggle,
                     )
-                    CanonButton("Stop", Modifier.weight(1f).fillMaxHeight(), enabled = player.isPlaying, icon = Icons.Filled.Stop, onClick = player::stop)
+                    CanonButton("Stop", Modifier.weight(1f).fillMaxHeight(), enabled = player.isPlaying, icon = pencil(R.drawable.pencil_square), onClick = player::stop)
                 }
             }
         },
@@ -249,17 +248,17 @@ private fun MorseKeypad(onPress: (MorseEngine.Key) -> Unit, canDelete: Boolean) 
         CanonGrid(Modifier.heightIn(min = keyHeight)) {
             val cell = Modifier.weight(1f).fillMaxHeight()
             CanonButton("Dit", cell, icon = MorseKeyIcons.dit, textStyle = CanonText.title2) { onPress(MorseEngine.Key.Dit) }
-            CanonButton("Dah", cell, icon = Icons.Filled.Remove, textStyle = CanonText.title2) { onPress(MorseEngine.Key.Dah) }
+            CanonButton("Dah", cell, icon = pencil(R.drawable.pencil_minus), textStyle = CanonText.title2) { onPress(MorseEngine.Key.Dah) }
         }
         CanonGrid {
             val cell = Modifier.weight(1f).fillMaxHeight()
-            CanonButton("Letter gap", cell, icon = Icons.Filled.SpaceBar) { onPress(MorseEngine.Key.Letter) }
+            CanonButton("Letter gap", cell, icon = pencil(R.drawable.pencil_space)) { onPress(MorseEngine.Key.Letter) }
             CanonButton("Word gap", cell, icon = MorseKeyIcons.slash) { onPress(MorseEngine.Key.Word) }
             CanonButton(
                 "Backspace",
                 cell,
                 enabled = canDelete,
-                icon = Icons.AutoMirrored.Filled.Backspace,
+                icon = pencil(R.drawable.pencil_delete),
                 repeats = true,
             ) { onPress(MorseEngine.Key.Back) }
         }
